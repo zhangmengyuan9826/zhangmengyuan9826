@@ -67,7 +67,7 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
+      <!-- <el-col :span="1.5">
         <el-button
           type="danger"
           plain
@@ -87,7 +87,7 @@
           @click="handleClean"
           v-hasPermi="['monitor:operlog:remove']"
         >清空</el-button>
-      </el-col>
+      </el-col> -->
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -95,6 +95,7 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
+          :disabled="multiple"
           v-hasPermi="['monitor:operlog:export']"
         >导出</el-button>
       </el-col>
@@ -295,8 +296,9 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
+      const operIds = row.operId || this.ids;
       this.download('monitor/operlog/export', {
-        ...this.queryParams
+        ...operIds
       }, `operlog_${new Date().getTime()}.xlsx`)
     }
   }

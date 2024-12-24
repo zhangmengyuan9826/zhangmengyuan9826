@@ -58,7 +58,7 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
+      <!-- <el-col :span="1.5">
         <el-button
           type="danger"
           plain
@@ -78,7 +78,7 @@
           @click="handleClean"
           v-hasPermi="['monitor:job:remove']"
         >清空</el-button>
-      </el-col>
+      </el-col> -->
       <el-col :span="1.5">
         <el-button
           type="warning"

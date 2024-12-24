@@ -234,10 +234,10 @@
               :src="image" 
               height="300px"
               width="500px"
-              v-if="image"                  
+              v-if="image && form.coaPicList"                  
               alt="预览"
             />
-            <button v-if="hoverIndex === index" @click="deleteImage(index)">删除</button>
+            <button v-if="hoverIndex === index && form.checkStatus === 'un_checkout'" @click="deleteImage(index)">删除</button>
           </div>
           
         </el-row>

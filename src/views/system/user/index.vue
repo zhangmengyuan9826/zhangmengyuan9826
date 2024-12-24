@@ -440,9 +440,26 @@ export default {
         nickName: [
           { required: true, message: "用户昵称不能为空", trigger: "blur" }
         ],
-        password: [
-          { required: true, message: "用户密码不能为空", trigger: "blur" },
-          { min: 5, max: 20, message: '用户密码长度必须介于 5 和 20 之间', trigger: 'blur' }
+        // password: [
+        //   { required: true, message: "用户密码不能为空", trigger: "blur" },
+        //   { min: 5, max: 20, message: '用户密码长度必须介于 5 和 20 之间', trigger: 'blur' }
+        // ],
+        password: [   
+     //在rule内可以插入多组数组来验证用户名、密码等，数组内可以插入多个对象，同时起作用      
+            {
+              required: true,
+              trigger: "blur",
+              message: "密码不能为空",
+            },
+            {
+              //插入正则验证：大小写、数字、至少8位、不常用字符
+            pattern:
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@#!%^*?&+-])[A-Za-z\d$@#!%^*?&+-]{8,}/,
+            message: "密码应当至少8位且含有数字、大小写字母及特殊字符",
+           },
+                    
+          //rule中插入比较复杂的验证方法
+          // { validator: checkPassword, trigger: "blur" },
         ],
         email: [
           {
@@ -473,9 +490,9 @@ export default {
   created() {
     this.getList();
     this.getTreeselect();
-    this.getConfigKey("sys.user.initPassword").then(response => {
-      this.initPassword = response.msg;
-    });
+    // this.getConfigKey("sys.user.initPassword").then(response => {
+    //   this.initPassword = response.msg;
+    // });
   },
   methods: {
     /** 查询用户列表 */
@@ -580,7 +597,8 @@ export default {
         this.roleOptions = response.roles;
         this.open = true;
         this.title = "添加用户";
-        this.form.password = this.initPassword;
+        // this.form.password = this.initPassword;
+        this.form.password = undefined;
       });
     },
     /** 修改按钮操作 */
@@ -605,7 +623,7 @@ export default {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         closeOnClickModal: false,
-        inputPattern: /^.{5,20}$/,
+        inputPattern: /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[^a-zA-Z0-9]).{8,20}/,
         inputErrorMessage: "用户密码长度必须介于 5 和 20 之间"
       }).then(({ value }) => {
           resetUserPwd(row.userId, value).then(response => {
