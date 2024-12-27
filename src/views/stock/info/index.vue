@@ -1,13 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form
-      :model="queryParams"
-      ref="queryForm"
-      size="small"
-      :inline="true"
-      v-show="showSearch"
-      label-width="68px"
-    >
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="仓库" prop="warehouseCode">
         <el-select v-model="queryParams.warehouseCode" placeholder="请选择仓库">
           <el-option
@@ -69,16 +62,8 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="el-icon-search"
-          size="mini"
-          @click="handleQuery"
-          >搜索</el-button
-        >
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-          >重置</el-button
-        >
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
@@ -91,32 +76,14 @@
           size="mini"
           @click="handleExport"
           v-hasPermi="['stock:info:export']"
-          >导出</el-button
-        >
+        >导出</el-button>
       </el-col>
-      <right-toolbar
-        :showSearch.sync="showSearch"
-        @queryTable="getList"
-      ></right-toolbar>
+      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table
-      v-loading="loading"
-      :data="infoList"
-      @sort-change="handleSortChange"
-    >
-      <el-table-column
-        label="仓库"
-        align="center"
-        prop="warehouseName"
-      />
-      <el-table-column
-        label="货位"
-        align="center"
-        prop="locationCode"
-        :sort-orders="['descending', 'ascending']"
-        sortable="custom"
-      />
+    <el-table v-loading="loading" :data="infoList">
+      <el-table-column label="仓库" align="center" prop="warehouseName" />
+      <el-table-column label="货位" align="center" prop="locationCode" />
       <el-table-column label="物料编码" align="center" prop="matCode" />
       <el-table-column label="物料名称" align="center" prop="matName" />
       <el-table-column label="批次" align="center" prop="batch" />
@@ -124,61 +91,33 @@
       <el-table-column label="数量" align="center" prop="quantity" />
       <el-table-column label="集团单位" align="center" prop="unitCode">
         <template slot-scope="scope">
-          <dict-tag
-            :options="dict.type.base_mat_unit"
-            :value="scope.row.unitCode"
-          />
+          <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
         </template>
       </el-table-column>
-      <el-table-column
-        label="供应商"
-        align="center"
-        prop="supplierName"
-        :sort-orders="['descending', 'ascending']"
-        sortable="custom"
-      />
-      <el-table-column
-        label="有效期"
-        width="100"
-        prop="expiredTime"
-        :sort-orders="['descending', 'ascending']"
-        sortable="custom"
-      >
+      <el-table-column label="供应商" align="center" prop="supplierName" />
+      <el-table-column label="有效期" width="100">        
         <template slot-scope="scope">
           <span :style="getExpiringStyle(scope.row.expiredTime)">
-            {{ parseTime(formatDate(scope.row.expiredTime), "{y}-{m}-{d}") }}
+            {{ parseTime(formatDate(scope.row.expiredTime),'{y}-{m}-{d}') }}
           </span>
         </template>
       </el-table-column>
-      <el-table-column
-        label="创建日期"
-        align="center"
-        prop="createTime"
-        :sort-orders="['descending', 'ascending']"
-        sortable="custom"
-      />
-      <el-table-column
-        label="操作"
-        align="center"
-        width="180"
-        class-name="small-padding"
-        v-hasPermi="['stock:info:editAdmin']"
-      >
+       <el-table-column label="创建日期" align="center" prop="createTime" />
+       <el-table-column label="操作" align="center" width="180"  class-name="small-padding" v-hasPermi="['stock:info:editAdmin']">
         <template slot-scope="scope">
-          <el-button
+        <el-button
             size="mini"
             type="text"
             icon="el-icon-edit"
             @click="handleEdit(scope.row)"
             v-hasPermi="['stock:info:editAdmin']"
-            >修改</el-button
-          >
+          >修改</el-button>
         </template>
-      </el-table-column>
+       </el-table-column>
     </el-table>
-
+    
     <pagination
-      v-show="total > 0"
+      v-show="total>0"
       :total="total"
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
@@ -191,46 +130,46 @@
       append-to-body
       :close-on-click-modal="false"
     >
-      <el-form ref="form" :model="form" label-width="80px">
-        <el-row>
+    <el-form ref="form" :model="form" label-width="80px">
+      <el-row>
           <el-col :span="12">
-            <el-form-item label="物料编码" prop="matCode">
-              <el-input v-model="form.matCode" type="text" :disabled="true" />
-            </el-form-item>
-          </el-col>
+      <el-form-item label="物料编码" prop="matCode">
+          <el-input v-model="form.matCode" type="text" :disabled="true"/>
+        </el-form-item>
+        </el-col>
           <el-col :span="12">
-            <el-form-item label="物料描述" prop="matName">
-              <el-input v-model="form.matName" :disabled="true" />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="物料描述" prop="matName">
+          <el-input v-model="form.matName" :disabled="true"/>
+        </el-form-item>
+         </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="规格" prop="figNum">
-              <el-input v-model="form.figNum" :disabled="true" />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="规格" prop="figNum">
+          <el-input v-model="form.figNum" :disabled="true"/>
+        </el-form-item>
+         </el-col>
           <el-col :span="12">
-            <el-form-item label="批次" prop="batch">
-              <el-input v-model="form.batch" :disabled="true" />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="批次" prop="batch">
+          <el-input v-model="form.batch" :disabled="true" />
+        </el-form-item>
+        </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="仓库编码" prop="warehouseCode">
-              <el-input v-model="form.warehouseCode" :disabled="true" />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="仓库编码" prop="warehouseCode">
+          <el-input v-model="form.warehouseCode" :disabled="true" />
+        </el-form-item>
+         </el-col>
           <el-col :span="12">
-            <el-form-item label="货位编码" prop="locationCode">
-              <el-input v-model="form.locationCode" :disabled="true" />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="货位编码" prop="locationCode">
+          <el-input v-model="form.locationCode" :disabled="true"/>
+        </el-form-item>
+        </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="火眼单位" prop="unitCode">
+        <el-form-item label="火眼单位" prop="unitCode">
               <el-select
                 v-model="form.unitCode"
                 placeholder="请输入火眼单位"
@@ -247,7 +186,7 @@
                 </el-option>
               </el-select>
             </el-form-item>
-          </el-col>
+         </el-col>
           <!-- <el-col :span="12">
         <el-form-item label="货位编码" prop="locationCode">
           <el-input v-model="form.locationCode" :disabled="true"/>
@@ -256,71 +195,46 @@
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="采购数量" prop="quantity">
-              <el-input-number
-                v-model="form.quantity"
-                controls-position="right"
-                :min="1"
-                integer
-              />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="采购数量" prop="quantity">
+          <el-input-number v-model="form.quantity" controls-position="right" :min="1" integer/>
+        </el-form-item>
+        </el-col>
           <el-col :span="12">
-            <el-form-item label="合格数量" prop="usableQuantity">
-              <el-input-number
-                v-model="form.usableQuantity"
-                controls-position="right"
-                :min="0"
-                :max="form.quantity"
-                integer
-              />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="合格数量" prop="usableQuantity">
+          <el-input-number v-model="form.usableQuantity" controls-position="right" :min="0" :max="form.quantity" integer/>
+        </el-form-item>
+        </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="已出库数量" prop="receivedQuantity">
-              <el-input-number
-                v-model="form.receivedQuantity"
-                controls-position="right"
-                :min="0"
-                :max="form.usableQuantity"
-                integer
-              />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="已出库数量" prop="receivedQuantity">
+          <el-input-number v-model="form.receivedQuantity" controls-position="right" :min="0" :max="form.usableQuantity" integer/>
+        </el-form-item>
+         </el-col>
           <el-col :span="12">
-            <el-form-item label="库存数量" prop="remainQuantity">
-              <el-input-number
-                v-model="form.remainQuantity"
-                controls-position="right"
-                :min="0"
-                :max="form.usableQuantity"
-                integer
-              />
-            </el-form-item>
-          </el-col>
+        <el-form-item label="库存数量" prop="remainQuantity">
+          <el-input-number v-model="form.remainQuantity" controls-position="right" :min="0" :max="form.usableQuantity" integer/>
+        </el-form-item>
+        </el-col>
         </el-row>
-      </el-form>
-      <p>
-        <b>*数量校验规则：</b>1.
-        所有数量需大于0；2.合格数量不得大于采购数量；3.出库数量不得大于合格数量；4.库存数量不得大于合格数量；5.库存数量+出库数量需等于合格数量；
-      </p>
-      <div slot="footer" class="dialog-footer">
+    </el-form>
+    <p><b>*数量校验规则：</b>1. 所有数量需大于0；2.合格数量不得大于采购数量；3.出库数量不得大于合格数量；4.库存数量不得大于合格数量；5.库存数量+出库数量需等于合格数量；</p>
+    <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
   </div>
 </template>
 
 <script>
-import { listInfo, getStockInfoDetail, handleUpdate } from "@/api/stock/info";
+import { listInfo,getStockInfoDetail,handleUpdate } from "@/api/stock/info";
 import { listAllWarehouse } from "@/api/base/warehouse";
 
 export default {
   name: "Info",
-  dicts: ["base_mat_unit"],
+  dicts: ['base_mat_unit'],
   data() {
     return {
       // 遮罩层
@@ -355,10 +269,7 @@ export default {
         supplierName: null,
         isExpired: null,
       },
-      isExpiredList: [
-        { value: "1", label: "过期" },
-        { value: "2", label: "未过期" },
-      ],
+      isExpiredList:[{value:'1','label':'过期'},{value:'2','label':'未过期'}],
       //选择仓库、实验室
       warehouseList: [],
       form: {},
@@ -367,24 +278,19 @@ export default {
   },
   created() {
     var currentUrl = window.location.href;
-    if (currentUrl.indexOf("isExpired=1") > -1) {
-      this.queryParams["isExpired"] = "1";
-    } else if (currentUrl.indexOf("isExpired=2") > -1) {
-      this.queryParams["isExpired"] = "2";
+    if(currentUrl.indexOf("isExpired=1") > -1){
+      this.queryParams['isExpired']='1'
+    } else if(currentUrl.indexOf("isExpired=2") > -1){
+      this.queryParams['isExpired']='2'
     }
     this.getList();
     this.getWarehouseList();
   },
   methods: {
-    handleSortChange(column) {
-      this.queryParams.orderByColumn = column.prop; //查询字段是表格中字段名字
-      this.queryParams.isAsc = column.order; //动态取值排序顺序
-      this.getList();
-    },
     /** 查询库存信息列表 */
     getList() {
       this.loading = true;
-      listInfo(this.queryParams).then((response) => {
+      listInfo(this.queryParams).then(response => {
         this.infoList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -398,89 +304,64 @@ export default {
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
-      this.queryParams["isExpired"] = "";
+      this.queryParams['isExpired']=''
       this.handleQuery();
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download(
-        "stock/info/export",
-        {
-          ...this.queryParams,
-        },
-        `info_${new Date().getTime()}.xlsx`
-      );
+      this.download('stock/info/export', {
+        ...this.queryParams
+      }, `info_${new Date().getTime()}.xlsx`)
     },
     handleEdit(row) {
       getStockInfoDetail(row).then((response) => {
-        this.form = response.data;
-        this.form["remainQuantity"] = row.quantity;
-        this.form["infoId"] = row.infoId;
-        console.log(this.form);
-        this.open = true;
-      });
+        this.form = response.data
+        this.form['remainQuantity'] = row.quantity
+        this.form['infoId'] = row.infoId
+        console.log(this.form)
+        this.open = true
+      })
     },
     getCurVal_unit(val) {
-      this.value = val.target.value;
+      this.value = val.target.value
     },
     submitForm() {
       let that = this;
-      if (
-        (that.form.quantity < 0) |
-        (that.form.usableQuantity < 0) |
-        (that.form.usableQuantity > that.form.quantity) |
-        (that.form.receivedQuantity < 0) |
-        (that.form.receivedQuantity > that.form.usableQuantity) |
-        (that.form.remainQuantity < 0) |
-        (that.form.remainQuantity >
-          that.form.usableQuantity - that.form.receivedQuantity)
-      ) {
+      if(that.form.quantity<0 | that.form.usableQuantity <0 | that.form.usableQuantity>that.form.quantity | that.form.receivedQuantity <0 | that.form.receivedQuantity > that.form.usableQuantity | that.form.remainQuantity<0| that.form.remainQuantity > that.form.usableQuantity- that.form.receivedQuantity){
         that.$modal.msgError("库存数量校验不合格！");
-        return;
+        return
       }
-      if (
-        that.form.receivedQuantity + that.form.remainQuantity !==
-        that.form.usableQuantity
-      ) {
+      if(that.form.receivedQuantity+that.form.remainQuantity !== that.form.usableQuantity){
         that.$modal.msgError("库存数量校验不合格！");
-        return;
+        return
       }
-      that.form["params"] = {
-        infoId: that.form.infoId,
-        quantity: that.form.remainQuantity,
-      };
-      that.$modal
-        .confirm(
-          '是否确认修改物料标签编号为"' + that.form.matCode + '"的数据项？'
-        )
-        .then(function () {
-          handleUpdate(that.form)
-            .then((response) => {
-              that.getList();
-              that.$modal.msgSuccess("修改成功");
-              that.open = false;
-            })
-            .catch(() => {});
-        });
+      that.form['params'] = {"infoId":that.form.infoId, "quantity":that.form.remainQuantity}
+      that.$modal.confirm('是否确认修改物料标签编号为"' + that.form.matCode + '"的数据项？').then(function() {
+        handleUpdate(that.form).then(response => {
+        that.getList();
+        that.$modal.msgSuccess("修改成功");
+        that.open=false;
+      }).catch(() => {})
+      });
     },
-    cancel() {
-      this.open = false;
+    cancel(){
+      this.open=false;
     },
 
     //查询仓库
-    getWarehouseList() {
-      listAllWarehouse().then((response) => {
+    getWarehouseList(){
+      listAllWarehouse().then(response => {
         this.warehouseList = response;
       });
     },
     formatDate(dateString) {
       // return new Date(dateString).toLocaleDateString();
       // 尝试将字符串转换为日期对象
-      if (dateString === "") {
-        return dateString;
+      if(dateString === ""){
+        return dateString
       }
-      if (!dateString) {
-        return dateString;
+      if(! dateString){
+        return dateString
       }
 
       const date = new Date(dateString);
@@ -499,13 +380,13 @@ export default {
       threeMonthsLater.setMonth(today.getMonth() + 3);
       oneMonthsLater.setMonth(today.getMonth() + 1);
       if (!isNaN(expDate) && expDate < today) {
-        return { color: "red" };
-      }
+        return { color: 'red' };
+      };
       if (!isNaN(expDate) && expDate < threeMonthsLater) {
-        return { color: "orange" };
+        return { color: 'orange' };
       }
       return {};
-    },
-  },
+    }
+  }
 };
 </script>
