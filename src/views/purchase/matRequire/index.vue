@@ -1652,12 +1652,12 @@
         />        
       </el-table>
       <div slot="footer" class="dialog-footer">
-        <el-button
+        <!-- <el-button
           type="primary"
           v-if="actionType !== 'view'"
           @click="confirmAddExistMat"
           >保持我的输入</el-button
-        >
+        > -->
         <el-button 
         @click="cancelAddExistMat">
         返回重新选择</el-button>
@@ -2512,7 +2512,7 @@ export default {
       this.selectMatOpen = false;
     },
     checkExistMatByArtnum(artNum){
-      if(artNum === null || artNum.length < 5){
+      if(artNum === null || artNum.length < 4){
         return false;
       }
       var matObj = {"artNum":artNum}

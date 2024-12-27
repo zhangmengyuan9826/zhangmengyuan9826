@@ -187,7 +187,6 @@
         <el-table-column label="物料编码" align="center" prop="matCode"/>
         <el-table-column label="物料名称" align="center" prop="matName"/>
         <el-table-column label="规格" align="center" prop="figNum"/>
-        <el-table-column label="批次" align="center" prop="batch"/>
         <el-table-column label="数量" align="center" prop="quantity">
           <template slot-scope="scope">
             <el-input-number style="width: 100px" size="small" v-model="scope.row.quantity" controls-position="right" :min="1" :max="scope.row.max_quantity" integer/>
@@ -259,7 +258,6 @@
         <el-table-column label="物料编码" align="center" prop="matCode"/>
         <el-table-column label="物料名称" align="center" prop="matName"/>
         <el-table-column label="规格" align="center" prop="figNum"/>
-        <el-table-column label="批次" align="center" prop="batch"/>
         <el-table-column label="数量" align="center" prop="quantity"/>
         <el-table-column label="已领" align="center" prop="receivedQuantity"/>
         <el-table-column label="单位" align="center" prop="unitCode">
@@ -560,7 +558,6 @@ export default {
           figNum: item.figNum,
           matGroup: item.matGroup,
           matClass: item.matClass,
-          batch: item.batch,
           quantity: 0,
           max_quantity:item.quantity,
           unitCode: item.unitCode,
