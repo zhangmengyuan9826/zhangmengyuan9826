@@ -94,6 +94,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['monitor:operlog:export']"
         >导出</el-button>
@@ -296,7 +297,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('monitor/operlog/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `operlog_${new Date().getTime()}.xlsx`)
     }
   }

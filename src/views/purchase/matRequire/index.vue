@@ -1575,14 +1575,7 @@
         :data="existtMatList"
         style="width: 100%"
         max-height="700"
-        @selection-change="handleSelectionChange3"
       >
-      <el-table-column
-          fixed
-          align="center"
-          type="select"
-          width="50"
-        />
       <el-table-column
           label="物料编码"
           align="center"
@@ -2459,7 +2452,7 @@ export default {
       this.download(
         "stock/matRequire/export",
         {
-          ...params,
+          ...params
         },
         `matRequire_${new Date().getTime()}.xlsx`
       );
@@ -2519,6 +2512,9 @@ export default {
       listMat(matObj).then((response) => {
         this.existtMatList = response.rows;
       });
+      if(this.existtMatList.length === 0){
+        return false
+      }
       return true
 
     },
@@ -2555,8 +2551,8 @@ export default {
     },
 
     confirmAddMatDetail() {
-      if(!this.isSelect && this.checkExistMatByArtnum(this.matForm.artNum)){        
-            this.existMatDialog = true  
+      if(this.checkExistMatByArtnum(this.matForm.artNum)){        
+          this.existMatDialog = true  
       } else{
         this.confirmSecAddMatDetail();        
       }
@@ -2606,7 +2602,7 @@ export default {
       listMatLabel(label_query_param).then((response) => {
         var matLabelList = response.rows;
         matlabel_quantity = matLabelList
-          .map((item) => item.receivedQuantity)
+          .map((item) => item.usableQuantity - item.receivedQuantity)
           .reduce((acc, num) => acc + num, 0);
         this.matForm.warehouseQuantity = matlabel_quantity;
       });

@@ -187,7 +187,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('stock/record/export', {
-        ...this.queryParams
+        ...queryParams
       }, `record_${new Date().getTime()}.xlsx`)
     },
   }

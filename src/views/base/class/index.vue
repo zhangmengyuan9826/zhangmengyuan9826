@@ -62,6 +62,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['base:class:export']"
         >导出</el-button>
@@ -261,9 +262,11 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('base/class/export', {
-        ...this.queryParams
-      }, `class_${new Date().getTime()}.xlsx`)
+      this.download('base/class/export', 
+      {
+          ids: this.ids.join(',')
+          }, 
+      `class_${new Date().getTime()}.xlsx`)
     }
   }
 };

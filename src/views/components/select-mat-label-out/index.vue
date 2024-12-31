@@ -108,6 +108,7 @@
           {{ scope.row.usableQuantity - scope.row.receivedQuantity }}
         </template>
       </el-table-column>
+      <el-table-column label="货位码" align="center" prop="locationCode" width="100" />
       <el-table-column label="火眼单位" align="center" prop="unitCode" width="80">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
@@ -126,7 +127,7 @@
       <el-table-column label="集团编码" align="center" prop="fdCode" width="100" />
       <el-table-column label="物料组" align="center" prop="matGroupName" width="80" />
       <el-table-column label="分类" align="center" prop="matClassName" width="80" />
-      <el-table-column label="入库单号" align="center" prop="orderNo" width="120" />
+      <el-table-column v-if="false" label="入库单号" align="center" prop="orderNo" width="120" />
       <el-table-column v-if="false" label="合格数量" align="center" prop="usableQuantity" width="80" />
       <el-table-column v-if="false" label="已领数量" align="center" prop="receivedQuantity" width="80" />
       <el-table-column v-if="false" label="单价" align="center" prop="unitPrice" width="80" />
@@ -167,6 +168,7 @@
         <el-table-column label="物料名称" align="center" prop="matName"/>
         <el-table-column label="规格" align="center" prop="figNum"/>
         <el-table-column label="数量" align="center" prop="quantity"/>
+        <el-table-column label="货位码" align="center" prop="locationCode"/>
         <el-table-column label="单位" align="center" prop="unitCode">
           <template slot-scope="scope">
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>

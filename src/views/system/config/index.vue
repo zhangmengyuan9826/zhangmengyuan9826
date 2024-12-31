@@ -85,6 +85,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['system:config:export']"
         >导出</el-button>
@@ -329,7 +330,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('system/config/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `config_${new Date().getTime()}.xlsx`)
     },
     /** 刷新缓存按钮操作 */

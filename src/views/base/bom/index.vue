@@ -51,6 +51,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['base:bom:export']"
         >导出</el-button>
@@ -225,9 +226,11 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('base/bom/export', {
-        ...this.queryParams
-      }, `bom_${new Date().getTime()}.xlsx`)
+      this.download('base/bom/export', 
+      {
+          ids: this.ids.join(',')
+          }, 
+      `bom_${new Date().getTime()}.xlsx`)
     },
     /** 导入按钮操作 */
     handleImport() {

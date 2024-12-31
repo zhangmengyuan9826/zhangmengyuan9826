@@ -66,6 +66,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:record:export']"
         >导出</el-button>
@@ -229,7 +230,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('stock/info/statsExport', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `stock_summary_${new Date().getTime()}.xlsx`)
     },
     /** 查询组、分类 */
