@@ -79,6 +79,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['monitor:logininfor:export']"
         >导出</el-button>
@@ -210,7 +211,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('monitor/logininfor/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `logininfor_${new Date().getTime()}.xlsx`)
     }
   }

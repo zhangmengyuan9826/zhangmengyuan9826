@@ -90,6 +90,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['system:dict:export']"
         >导出</el-button>
@@ -332,7 +333,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('system/dict/type/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `type_${new Date().getTime()}.xlsx`)
     },
     /** 刷新缓存按钮操作 */

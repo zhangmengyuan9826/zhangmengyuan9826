@@ -72,6 +72,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['base:location:export']"
         >导出</el-button>
@@ -311,7 +312,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('base/location/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `location_${new Date().getTime()}.xlsx`)
     },
     /** 查询仓库 */

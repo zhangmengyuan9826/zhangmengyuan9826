@@ -65,6 +65,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:prodOrder:export']"
         >导出</el-button>

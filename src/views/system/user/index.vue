@@ -128,7 +128,8 @@
               plain
               icon="el-icon-download"
               size="mini"
-              @click="handleExport"
+              :disabled="multiple"
+          @click="handleExport"
               v-hasPermi="['system:user:export']"
             >导出</el-button>
           </el-col>
@@ -663,7 +664,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('system/user/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `user_${new Date().getTime()}.xlsx`)
     },
     /** 导入按钮操作 */

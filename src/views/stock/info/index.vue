@@ -74,6 +74,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:info:export']"
         >导出</el-button>
@@ -81,7 +82,8 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="infoList">
+    <el-table v-loading="loading" :data="infoList"  @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="仓库" align="center" prop="warehouseName" />
       <el-table-column label="货位" align="center" prop="locationCode" />
       <el-table-column label="物料编码" align="center" prop="matCode" />
@@ -218,7 +220,7 @@
         </el-col>
         </el-row>
     </el-form>
-    <p><b>*数量校验规则：</b>1. 所有数量需大于0；2.合格数量不得大于采购数量；3.出库数量不得大于合格数量；4.库存数量不得大于合格数量；5.库存数量+出库数量需等于合格数量；</p>
+    <p><b>*物料数量校验规则：</b>1. 所有数量需大于0；2.合格数量不得大于采购数量；3.出库数量不得大于合格数量；4.库存数量不得大于合格数量；5.库存数量+出库数量需等于合格数量；</p>
     <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
@@ -276,20 +278,21 @@ export default {
       open: false,
     };
   },
-  created() {
+  created() {   
+    // 获取get url的请求参数：是否过期
     var currentUrl = window.location.href;
     if(currentUrl.indexOf("isExpired=1") > -1){
       this.queryParams['isExpired']='1'
     } else if(currentUrl.indexOf("isExpired=2") > -1){
       this.queryParams['isExpired']='2'
-    }
+    } 
     this.getList();
     this.getWarehouseList();
   },
   methods: {
     /** 查询库存信息列表 */
     getList() {
-      this.loading = true;
+      this.loading = true;      
       listInfo(this.queryParams).then(response => {
         this.infoList = response.rows;
         this.total = response.total;
@@ -307,10 +310,15 @@ export default {
       this.queryParams['isExpired']=''
       this.handleQuery();
     },
+    handleSelectionChange(selection) {
+      this.ids = selection.map(item => item.infoId)
+      this.single = selection.length!==1
+      this.multiple = !selection.length
+    },
     /** 导出按钮操作 */
     handleExport() {
       this.download('stock/info/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `info_${new Date().getTime()}.xlsx`)
     },
     handleEdit(row) {

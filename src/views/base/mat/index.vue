@@ -148,6 +148,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['base:mat:export']"
           >导出</el-button
@@ -716,12 +717,12 @@ export default {
         .catch(() => {});
     },
     /** 导出按钮操作 */
-    handleExport() {
+    handleExport() {      
       this.download(
-        "base/mat/export",
+        "base/mat/export",        
         {
-          ...this.queryParams,
-        },
+          ids: this.ids.join(',')
+          },
         `mat_${new Date().getTime()}.xlsx`
       );
     },

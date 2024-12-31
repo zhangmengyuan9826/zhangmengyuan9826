@@ -157,7 +157,7 @@
           plain
           icon="el-icon-download"
           size="mini"
-          :disabled="true"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:matRequire:export']"
           >导出</el-button

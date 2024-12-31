@@ -102,6 +102,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:allotOrder:export']"
           >导出</el-button
@@ -658,8 +659,8 @@ export default {
       this.download(
         "stock/allotOrder/export",
         {
-          ...this.queryParams,
-        },
+          ids: this.ids.join(',')
+          },
         `allotOrder_${new Date().getTime()}.xlsx`
       );
     },

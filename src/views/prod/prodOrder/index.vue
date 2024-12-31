@@ -87,6 +87,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:prodOrder:export']"
         >导出</el-button>
@@ -335,7 +336,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('stock/prodOrder/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `prodOrder_${new Date().getTime()}.xlsx`)
     },
     //选择物料

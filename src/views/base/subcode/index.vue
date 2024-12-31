@@ -62,6 +62,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['base:subcode:export']"
         >导出</el-button>
@@ -262,7 +263,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('base/subcode/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `subcode_${new Date().getTime()}.xlsx`)
     }
   }

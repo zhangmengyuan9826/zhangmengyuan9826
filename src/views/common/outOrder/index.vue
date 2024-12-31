@@ -90,6 +90,7 @@
           plain
           icon="el-icon-download"
           size="mini"
+          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:outOrder:export']"
         >导出</el-button>
@@ -182,8 +183,6 @@
       </el-form>
       <el-table :data="matLabelList" style="width: 100%">
         <el-table-column label="行号" align="center" type="index" />
-                <el-table-column label="id" fixed align="center" prop="labelId"/>
-
         <el-table-column label="物料编码" align="center" prop="matCode"/>
         <el-table-column label="物料名称" align="center" prop="matName"/>
         <el-table-column label="规格" align="center" prop="figNum"/>
@@ -197,6 +196,7 @@
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
           </template>
         </el-table-column>
+        <el-table-column label="货位码" align="center" prop="locationCode"/>
         <el-table-column label="操作" align="center" width="80" class-name="small-padding fixed-width">
           <template slot-scope="scope">
             <el-button
@@ -265,7 +265,7 @@
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
           </template>
         </el-table-column>
-        <el-table-column label="推荐货位" align="center" prop="locationCode"/>
+        <el-table-column label="货位" align="center" prop="locationCode"/>
       </el-table>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="confirmPrintOutOrder">打 印</el-button>
@@ -508,7 +508,7 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       this.download('stock/outOrder/export', {
-        ...this.queryParams
+        ids: this.ids.join(',')
       }, `outOrder_${new Date().getTime()}.xlsx`)
     },
     //查询仓库、实验室
@@ -541,7 +541,8 @@ export default {
         max_quantity: item.remainQuantity,
         unitCode: item.unitCode,
         batch: item.batch,
-        supplierCode: item.supplierCode
+        supplierCode: item.supplierCode,
+        locationCode: item.locationCode
       };
       this.matLabelList.unshift(detail);
       this.labelIdArr.push(item.labelId);
@@ -561,6 +562,7 @@ export default {
           quantity: 0,
           max_quantity:item.quantity,
           unitCode: item.unitCode,
+          locationCode: item.locationCode
         };
         that.matLabelList.unshift(detail);
         that.labelIdArr.push(item.labelId);
