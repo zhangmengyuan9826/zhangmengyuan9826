@@ -880,7 +880,7 @@
       >
         <el-row>
           <el-col :span="12">
-            <el-form-item label="库存数量" prop="warehouseQuantity">
+            <el-form-item label="库存数量" prop="warehouseQuantity" width="200">
               <el-input v-model="matForm.warehouseQuantity" disabled />
             </el-form-item>
           </el-col>
@@ -890,6 +890,7 @@
               type="primary"
               icon="el-icon-search"
               size="mini"
+              style="margin-left:10px"
               @click="handleSwitchAuto"
               >转手动填写</el-button
             >
@@ -898,6 +899,7 @@
               type="primary"
               icon="el-icon-search"
               size="mini"
+              style="margin-left:10px"
               @click="handleSwitchAuto"
               >转查询</el-button
             >
@@ -1033,6 +1035,7 @@
                 v-model="matForm.unitPrice"
                 controls-position="right"
                 :min="0"
+                :precision="2"
               />
             </el-form-item>
           </el-col>
@@ -1161,11 +1164,11 @@
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span="8">
+          <el-col :span="10">
             <el-form-item
               label="是否直接出库至实验室"
               prop="isWorkshop"
-              label-width="160px"
+              label-width="170px"
             >
               <el-radio-group
                 v-model="matForm.isWorkshop"
@@ -1194,7 +1197,7 @@
             <el-form-item
               label="是否需安全库存提醒"
               prop="stockNotice"
-              label-width="150px"
+              label-width="170px"
             >
               <el-radio-group
                 v-model="matForm.stockNotice"
@@ -2079,6 +2082,9 @@ export default {
     },
     getSumSumPriceLabel(requireId) {
       var multiDetailList = this.allRequireDetailList[requireId];
+      if(!multiDetailList){
+        return 0.00
+      }
       var reuqireSumPrice = multiDetailList
         .map((item) => Number(item.unitPrice) * Number(item.quantity))
         .reduce(
@@ -2571,6 +2577,7 @@ export default {
     confirmSecAddMatDetail(){
       this.$refs["matForm"].validate((valid) => {
         if (valid) {
+          this.matForm['matSource'] = this.isSelect ? "1" : "0"
           let _matForm = this.matForm;
           if (this.isEditMat) {
             this.requireDetailList[this.matIndex] = JSON.parse(
@@ -2586,7 +2593,6 @@ export default {
               JSON.parse(JSON.stringify(_matForm))
             );
           }
-
           this.addMatDetailOpen = false;
           this.resetMatForm();
         }
@@ -2664,6 +2670,8 @@ export default {
       this.addMatDetailOpen = true;
       this.matIndex = index;
       this.matForm = this.requireDetailList[index];
+      this.isSelect = this.matForm['matSource']=="1" ? true :false
+      console.log(this.isSelect)
     },
     handleDetailMat(index, row) {
       this.addMatDetailOpen = true;

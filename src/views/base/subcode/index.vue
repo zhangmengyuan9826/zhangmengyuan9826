@@ -1,18 +1,18 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="组编码" prop="subcodeCode">
+      <el-form-item label="三级编码" prop="subcodeCode">
         <el-input
           v-model="queryParams.subcodeCode"
-          placeholder="请输入物料组编码"
+          placeholder="请输入三级编码"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="组名称" prop="subcodeName">
+      <el-form-item label="三级编码名称" prop="subcodeName" label-width="170">
         <el-input
           v-model="queryParams.subcodeName"
-          placeholder="请输入物料组名称"
+          placeholder="请输入三级编码名称"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -73,8 +73,8 @@
     <el-table v-loading="loading" :data="subcodeList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="编号" align="center" prop="subcodeId" />
-      <el-table-column label="组编码" align="center" prop="subcodeCode" />
-      <el-table-column label="组名称" align="center" prop="subcodeName" />
+      <el-table-column label="三级编码" align="center" prop="subcodeCode" />
+      <el-table-column label="三级编码名称" align="center" prop="subcodeName" />
       <!-- <el-table-column label="操作" align="center" class-name="small-padding fixed-width"> -->
         <!-- <template slot-scope="scope"> -->
           <!-- <el-button
@@ -103,14 +103,14 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改物料组对话框 -->
+    <!-- 添加或修改三级编码对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="组编码" prop="subcodeCode">
-          <el-input v-model="form.subcodeCode" placeholder="请输入物料组编码" :disabled="form.subcodeId != null"/>
+        <el-form-item label="三级编码" prop="subcodeCode">
+          <el-input v-model="form.subcodeCode" placeholder="请输入三级编码" :disabled="form.subcodeId != null"/>
         </el-form-item>
-        <el-form-item label="组名称" prop="subcodeName">
-          <el-input v-model="form.subcodeName" placeholder="请输入物料组名称" />
+        <el-form-item label="三级编码名称" prop="subcodeName" label-width="110px">
+          <el-input v-model="form.subcodeName" placeholder="请输入三级编码名称" width="330px"/>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -158,10 +158,10 @@ export default {
       // 表单校验
       rules: {
         subcodeCode: [
-          { required: true, message: "物料组编码不能为空", trigger: "blur" },
+          { required: true, message: "三级编码不能为空", trigger: "blur" },
         ],
         subcodeName: [
-          { required: true, message: "物料组名称不能为空", trigger: "blur" },
+          { required: true, message: "三级编码名称不能为空", trigger: "blur" },
         ],
       }
     };
@@ -218,7 +218,7 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加物料组";
+      this.title = "添加三级编码";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
@@ -227,7 +227,7 @@ export default {
       getSubcode(subcodeId).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改物料组";
+        this.title = "修改三级编码";
       });
     },
     /** 提交按钮 */
@@ -253,7 +253,7 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const subcodeIds = row.subcodeId || this.ids;
-      this.$modal.confirm('是否确认删除物料组编号为"' + subcodeIds + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认删除三级编码编号为"' + subcodeIds + '"的数据项？').then(function() {
         return delSubcode(subcodeIds);
       }).then(() => {
         this.getList();
