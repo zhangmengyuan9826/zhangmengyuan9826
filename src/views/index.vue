@@ -19,7 +19,7 @@
     <el-row>
       <el-col :xs="24" :sm="24" :lg="16">
         <div class="chart-wrapper left">
-          <line-chart />
+          <!-- <line-chart /> -->
           <el-table :data="recordList" style="width: 100%">
             <el-table-column prop="createTime" label="时间">
               <template slot-scope="scope">

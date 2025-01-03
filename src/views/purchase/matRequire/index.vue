@@ -1163,6 +1163,35 @@
         <el-row>
           <el-col :span="8">
             <el-form-item
+              label="是否直接出库至实验室"
+              prop="isWorkshop"
+              label-width="160px"
+            >
+              <el-radio-group
+                v-model="matForm.isWorkshop"
+                @change="valueChange4"
+              >
+                <el-radio label="1">是</el-radio>
+                <el-radio label="0">否</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="实验室" prop="workshopCode">
+              <el-select v-model="matForm.workshopCode" placeholder="请选择实验室">
+                <el-option
+                  v-for="item in workshopList"
+                  :key="item.workshopCode"
+                  :label="item.workshopName"
+                  :value="item.workshopCode"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item
               label="是否需安全库存提醒"
               prop="stockNotice"
               label-width="150px"
@@ -1680,6 +1709,7 @@ import { listAllGroup } from "@/api/base/group";
 import { listAllClass } from "@/api/base/class";
 import { listAllSubcode } from "@/api/base/subcode";
 import { listAllBrand } from "@/api/base/brand";
+import { listAllWorkshop } from "@/api/base/workshop";
 import { listMatLabel } from "@/api/stock/matLabel";
 import { getCurrentUser, listUserAll } from "@/api/system/user";
 import selectMat from "../../components/select-mat/index";
@@ -1800,6 +1830,9 @@ export default {
         manageBy: [
           { required: true, message: "物料负责人不能为空", trigger: "blur" },
         ],
+        isWorkshop: [
+          { required: true, message: "请选择是否直接出库至实验室", trigger: "blur" },
+        ],
       },
       requireDetailList: [],
 
@@ -1909,9 +1942,10 @@ export default {
         },
       ],
       defaultSort: true,
-      existtMatList: null,
+      existtMatList: [],
       existMatDialog: false,
       notConfirm: true,
+      workshopList: [],
     };
   },
   created() {
@@ -1922,6 +1956,7 @@ export default {
     this.getUser();
     this.getList();
     this.getUserList();
+    this.getWorkshopList();
   },
   change: {},
   computed: {
@@ -2281,6 +2316,9 @@ export default {
     valueChange3(value) {
       this.$nextTick(() => {});
     },
+    valueChange4(value) {
+      this.$nextTick(() => {});
+    },
     valueChangeStatus(value) {
       this.$nextTick(() => {});
     },
@@ -2496,6 +2534,11 @@ export default {
         console.log(this.userList);
       });
     },
+    getWorkshopList(){
+      listAllWorkshop().then(response => {
+        this.workshopList = response;
+      });
+    },
     //选择物料
     openSelectMatDialog() {
       this.selectMatOpen = true;
@@ -2505,7 +2548,7 @@ export default {
       this.selectMatOpen = false;
     },
     checkExistMatByArtnum(artNum){
-      if(artNum === null || artNum.length < 4){
+      if(!artNum || artNum === null || artNum.length < 4){
         return false;
       }
       var matObj = {"artNum":artNum}
@@ -2551,7 +2594,7 @@ export default {
     },
 
     confirmAddMatDetail() {
-      if(this.checkExistMatByArtnum(this.matForm.artNum)){        
+      if(!this.isSelect && this.checkExistMatByArtnum(this.matForm.artNum)){        
           this.existMatDialog = true  
       } else{
         this.confirmSecAddMatDetail();        
@@ -2657,6 +2700,7 @@ export default {
       }
       return boolType;
     },
+    
   },
 };
 </script>
