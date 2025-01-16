@@ -132,7 +132,7 @@
       append-to-body
       :close-on-click-modal="false"
     >
-    <el-form ref="form" :model="form" label-width="80px">
+    <el-form ref="form" :model="form" label-width="80px" :rules="rules">
       <el-row>
           <el-col :span="12">
       <el-form-item label="物料编码" prop="matCode">
@@ -219,6 +219,11 @@
         </el-form-item>
         </el-col>
         </el-row>
+      <el-row>
+        <el-form-item label="修改原因" prop="comment" required=true>
+              <el-input v-model="form.comment" placeholder="请输入修改原因" />
+            </el-form-item>
+      </el-row>
     </el-form>
     <p><b>*物料数量校验规则：</b>1. 所有数量需大于0；2.合格数量不得大于采购数量；3.出库数量不得大于合格数量；4.库存数量不得大于合格数量；5.库存数量+出库数量需等于合格数量；</p>
     <div slot="footer" class="dialog-footer">
@@ -276,6 +281,11 @@ export default {
       warehouseList: [],
       form: {},
       open: false,
+      rules: {
+        comment: [
+          { required: true, message: "修改原因不能为空", trigger: "blur" },
+        ]
+        }
     };
   },
   created() {   
@@ -343,14 +353,19 @@ export default {
         that.$modal.msgError("库存数量校验不合格！");
         return
       }
-      that.form['params'] = {"infoId":that.form.infoId, "quantity":that.form.remainQuantity}
-      that.$modal.confirm('是否确认修改物料标签编号为"' + that.form.matCode + '"的数据项？').then(function() {
-        handleUpdate(that.form).then(response => {
-        that.getList();
-        that.$modal.msgSuccess("修改成功");
-        that.open=false;
-      }).catch(() => {})
-      });
+      that.form['params'] = {"infoId":that.form.infoId, "quantity":that.form.remainQuantity,"comment":that.form.comment}
+      that.$refs["form"].validate((valid) => {
+        if (valid) {
+          that.$modal.confirm('是否确认修改物料标签编号为"' + that.form.matCode + '"的数据项？').then(function() {
+          handleUpdate(that.form).then(response => {
+          that.getList();
+          that.$modal.msgSuccess("修改成功");
+          that.open=false;
+        }).catch(() => {})
+        });
+        }
+      })
+      
     },
     cancel(){
       this.open=false;
