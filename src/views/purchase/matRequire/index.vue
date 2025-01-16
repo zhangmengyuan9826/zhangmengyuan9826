@@ -2109,6 +2109,9 @@ export default {
         matClass: [
           { required: true, message: "物料分类不能为空", trigger: "blur" },
         ],
+        matGroup: [
+          { required: true, message: "物料组不能为空", trigger: "blur" },
+        ],
         safetyStock: [
           { required: true, message: "安全库存不能为空", trigger: "blur" },
         ],

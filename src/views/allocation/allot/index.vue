@@ -240,12 +240,9 @@
         <el-table-column label="物料名称" align="center" prop="matName" width="120" />
         <el-table-column label="集团编码" align="center" prop="fdCode" width="100" />
         <el-table-column label="规格" align="center" prop="figNum" width="120" />
-        <el-table-column label="数量" align="center" prop="quantity" width="80" />
-        <!-- <el-table-column label="调拨数量" align="center" prop="allotQuantity" width="100">
-          <template slot-scope="scope">
-            <el-input-number v-model="scope.row.allotQuantity" style="width: 90px" size="small" controls-position="right" :min="1" :max="scope.row.quantity" integer/>
-          </template>
-        </el-table-column> -->
+        <el-table-column v-if="true" label="可用数量" align="center" prop="quantity" width="80" >
+          
+        </el-table-column>
         <el-table-column label="单位" align="center" prop="unitCode" width="80">
           <template slot-scope="scope">
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
@@ -551,6 +548,7 @@ export default {
       } else if (this.currentLocationCode === ''){
         this.currentLocationCode = this.form.srclocationCode;
       }
+      item['quantity'] = item['usableQuantity'] -item['receivedQuantity'] 
       this.matLabelList.unshift(item);
       this.labelIdArr.push(item.labelId);
       this.selectMatLabelOpen = false;
@@ -572,6 +570,7 @@ export default {
       let that = this;
       arr && arr.length > 0 && arr.forEach(item => {
         that.labelIdArr.push(item.labelId);
+        item['quantity'] = item['usableQuantity'] -item['receivedQuantity']
         that.matLabelList.unshift(item);
       });
       that.selectMatLabelOpen = false;
@@ -666,8 +665,7 @@ export default {
           if(that.form.srclocationCode !== that.currentLocationCode){
             that.$modal.msgError("货位与物料不一致！");
             return;
-          }
-         
+          }         
           that.form.srcLocationCode = that.locationList[that.form.srclocationCode].locationCode
           that.form.destLocationCode = that.locationList[that.form.destlocationCode].locationCode
           console.log(that.form)
