@@ -59,6 +59,14 @@ export function updateMatRequireStatus(data) {
   })
 }
 
+// 修改物料需求单状态_物料到货
+export function submitDoneDetailByDetailIds(detailIds) {
+  return request({
+    url: '/stock/matRequire/changeStatusDone/' + detailIds,
+    method: 'get'
+  })
+}
+
 // 删除物料需求单
 export function delMatRequire(requireId) {
   return request({
@@ -68,12 +76,13 @@ export function delMatRequire(requireId) {
 }
 
 // 查询物料需求单详细
-export function getMatDetailListbyRequireIds(requireId) {
+export function getMatDetailListbyRequireIds(requireIds) {
   return request({
-    url: '/stock/matRequire/detailList/' + requireId,
+    url: '/stock/matRequire/detailList/' + requireIds,
     method: 'get'
   })
 }
+
 
 // 查询物料需求单详细
 export function getRequireLogs(requireId) {

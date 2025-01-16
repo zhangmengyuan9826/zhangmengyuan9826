@@ -1296,6 +1296,291 @@
       </div>
     </el-dialog>
     <el-dialog
+    :title="'物料详情 —— 到货确认'"
+      :visible.sync="viewMultiDoneMatDetail"
+      width="90%"
+      height="90%"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+    <div>
+      <el-button type="primary" @click="submitDoneDetails">确 定 到 货</el-button>
+      <el-button @click="cancelDoneDialog">取 消</el-button>
+    </div>
+    <el-table
+        v-loading="loading"
+        :data="multiDoneDetailList"
+        style="width: 100%"
+        max-height="700"
+        @selection-change="handleSelectionChange2"
+      >
+        <el-table-column type="selection" width="50" align="center" :selectable="checkSelectable"/>
+        <el-table-column
+          label="序号"
+          fixed
+          align="center"
+          type="index"
+          width="50"
+        />
+        <el-table-column
+          label="需求单号"
+          align="center"
+          prop="requireNo"
+          width="120"
+        />
+        <el-table-column
+          label="申请人"
+          align="center"
+          prop="requireBy"
+          width="80"
+        />
+        <el-table-column
+          label="创建日期"
+          align="center"
+          prop="createTime"
+          width="110"
+        >
+          <template slot-scope="scope">
+            {{ parseTime(formatDate(scope.row.createTime), "{y}-{m}-{d}") }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="收货人"
+          align="center"
+          prop="consignee"
+          width="80"
+        />
+        <el-table-column
+          label="最晚到货"
+          align="center"
+          prop="requireDate"
+          width="110"
+        >
+          <template slot-scope="scope">
+            {{ parseTime(formatDate(scope.row.requireDate), "{y}-{m}-{d}") }}
+          </template>
+        </el-table-column>
+        
+        <el-table-column
+          label="物料名称"
+          fixed
+          align="center"
+          prop="matName"
+          width="190"
+        >
+          <template slot-scope="scope">
+            <el-popover
+              placement="top"
+              width="300"
+              trigger="hover"
+              :disabled="scope.row.matLink === '' || scope.row.matLink === null"
+            >
+              <div>
+                <el-link
+                  :href="`${scope.row.matLink}`"
+                  :underline="false"
+                  target="_blank"
+                  ><b>采购链接：</b>{{ scope.row.matLink }}</el-link
+                >
+              </div>
+              <span slot="reference" v-if="scope.row.matLink !== null">
+                <b style="color: red">*</b>{{ scope.row.matName }}
+              </span>
+              <span
+                slot="reference"
+                v-if="scope.row.matLink === '' || scope.row.matLink === null"
+                >{{ scope.row.matName }}</span
+              >
+            </el-popover>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="物料编码"
+          align="center"
+          prop="matCode"
+          width="150"
+        />
+        <el-table-column
+          label="规格"
+          align="center"
+          prop="figNum"
+          width="120"
+        />
+        <el-table-column
+          label="货号"
+          align="center"
+          prop="artNum"
+          width="100"
+        />
+        <el-table-column label="品牌" align="center" prop="brand" width="100" />
+
+        <el-table-column
+          label="采购单位"
+          align="center"
+          prop="unitCode"
+          width="55"
+        >
+          <template slot-scope="scope">
+            <dict-tag
+              :options="dict.type.base_mat_unit"
+              :value="scope.row.unitCode"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="数量"
+          align="center"
+          prop="quantity"
+          width="60"
+        />
+        <el-table-column
+          label="单价（RMB）"
+          align="center"
+          prop="unitPrice"
+          width="80"
+        >
+          <template #header>
+            <div>
+              <span>单价</span>
+              <br />
+              <span>（RMB）</span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          label="总价（RMB）"
+          align="center"
+          prop="sumPrice"
+          width="120"
+        >
+          <template #header>
+            <div>
+              <span>总价（RMB）</span>
+              <br />
+              <span>{{ sumSumPriceLabel }}</span>
+            </div>
+          </template>
+
+          <template slot-scope="scope">
+            <span
+              :style="
+                formatSumPriceStyle(scope.row.sumPrice, scope.row.unitPrice)
+              "
+            >
+              {{
+                getSumPrice(
+                  scope.row.sumPrice,
+                  scope.row.unitPrice,
+                  scope.row.quantity
+                )
+              }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="是否单一"
+          align="center"
+          prop="isSingle"
+          width="50"
+        >
+          <template slot-scope="scope">
+            <el-popover
+              placement="top"
+              width="300"
+              trigger="hover"
+              :disabled="scope.row.isSingle === '0'"
+            >
+              <div><b>单一原因：</b>{{ scope.row.singleReason }}</div>
+              <span slot="reference" v-if="scope.row.isSingle === '1'"
+                >{{ formatBoolType(scope.row.isSingle)
+                }}<b style="color: red">*</b></span
+              >
+              <span slot="reference" v-if="scope.row.isSingle === '0'">{{
+                formatBoolType(scope.row.isSingle)
+              }}</span>
+            </el-popover>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="是否进口"
+          align="center"
+          prop="isImport"
+          width="50"
+        >
+          <template slot-scope="scope">
+            <el-popover
+              placement="top"
+              width="300"
+              trigger="hover"
+              :disabled="scope.row.isImport === '0'"
+            >
+              <div><b>进口原因：</b>{{ scope.row.importReason }}</div>
+              <span slot="reference" v-if="scope.row.isImport === '1'"
+                >{{ formatBoolType(scope.row.isImport)
+                }}<b style="color: red">*</b></span
+              >
+              <span slot="reference" v-if="scope.row.isImport === '0'">{{
+                formatBoolType(scope.row.isImport)
+              }}</span>
+            </el-popover>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="用途" align="center" prop="purpose" width="120">
+          <template slot-scope="scope">
+            <el-popover
+              placement="top"
+              width="300"
+              trigger="hover"
+              :disabled="scope.row.purpose.length < 15"
+            >
+              <div><b>用途：</b>{{ scope.row.purpose }}</div>
+              <span slot="reference">
+                {{ formatLongPurpose(scope.row.purpose) }}
+              </span>
+            </el-popover>
+          </template>
+        </el-table-column>
+        
+        
+        <el-table-column
+          label="三级编码"
+          align="center"
+          prop="subcode"
+          width="100"
+        />
+        <el-table-column
+          label="物料分类"
+          align="center"
+          prop="matClass"
+          width="80"
+        />
+        <el-table-column
+          label="物料组"
+          align="center"
+          prop="matGroup"
+          width="80"
+        />
+
+        <el-table-column
+          label="状态"
+          align="center"
+          prop="matStatus"
+          width="100"
+          fixed="right"
+        >
+          <template slot-scope="scope">
+            <span :style="formatStatusStyle(scope.row.matStatus)">
+              {{ formatStatus(scope.row.matStatus) }}
+            </span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+
+
+    <el-dialog
       :title="'物料详情'"
       :visible.sync="viewMultiMatDetail"
       width="90%"
@@ -1308,7 +1593,6 @@
         :data="multiDetailList"
         style="width: 100%"
         max-height="700"
-        @selection-change="handleSelectionChange2"
       >
         <el-table-column
           label="序号"
@@ -1705,6 +1989,7 @@ import {
   updateMatRequireStatus,
   getMatDetailListbyRequireIds,
   getRequireLogs,
+  submitDoneDetailByDetailIds
 } from "@/api/stock/matRequire";
 import { Message } from "element-ui";
 import { listMat } from "@/api/base/mat";
@@ -1949,6 +2234,9 @@ export default {
       existMatDialog: false,
       notConfirm: true,
       workshopList: [],
+      multiDoneDetailList: [],
+      viewMultiDoneMatDetail: false,
+      doneDetailIds: [],
     };
   },
   created() {
@@ -1995,6 +2283,29 @@ export default {
     },
   },
   methods: {
+    submitDoneDetails() {
+      console.log(this.doneDetailIds)
+      if(!this.doneDetailIds || this.doneDetailIds.length == 0){
+        Message.warning("请先选择物料！")
+        return
+      }
+      submitDoneDetailByDetailIds(this.doneDetailIds).then((response) => {
+        Message.success("提交成功！")
+      }).catch(() => {});
+      this.viewMultiDoneMatDetail = false;
+      this.getList();
+    },
+    cancelDoneDialog() {
+      this.viewMultiDoneMatDetail = false
+    },
+    //是否可选
+    checkSelectable(row){
+      if(row.matStatus === "done"){
+        return false;
+      }else{
+        return true;
+      }
+    },
     handleSortChange(column) {
       this.queryParams.orderByColumn = column.prop; //查询字段是表格中字段名字
       this.queryParams.isAsc = column.order; //动态取值排序顺序
@@ -2216,17 +2527,29 @@ export default {
           Message.warning("未审核通过的需求单不可发起采购！");
           return;
         } else if (oldStatus === "done") {
-          Message.warning("需求单已入库！");
+          Message.warning("需求单物料已全部入库！");
           return;
         } else if (oldStatus === "processing" && status === "processing") {
           Message.warning("需求单已经在采购中！");
           return;
         }
       }
-      this.newStatus = status;
-      this.checkform = {};
-      this.isRemark = true;
-      this.openUnapprovedReason = true;
+      // 入库最小单位改成物料
+      if(status === "done"){
+        this.multiDoneDetailList = [];
+        const requireIds = this.ids;
+        getMatDetailListbyRequireIds(requireIds)
+          .then((response) => {
+            this.multiDoneDetailList = response;           
+            this.viewMultiDoneMatDetail = true;
+          })
+          .catch(() => {});
+      } else {
+        this.newStatus = status;
+        this.checkform = {};
+        this.isRemark = true;
+        this.openUnapprovedReason = true;
+      }      
     },
 
     submitApprovedForm() {
@@ -2405,10 +2728,8 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange2(selection) {
-      this.ids = selection.map((item) => item.requireId);
-      // this.selectItems = selection;
-      // this.single2 = selection.length !== 1;
-      // this.multiple2 = !selection.length;
+      this.doneDetailIds = selection.map((item) => item.detailId);
+      console.log(this.doneDetailIds);
     },
     // 未完成
     handleDetail(row) {

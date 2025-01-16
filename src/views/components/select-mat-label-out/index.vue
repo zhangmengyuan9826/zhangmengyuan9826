@@ -257,6 +257,10 @@ export default {
     this.getClassList();
   },
   methods: {
+    init(val) {
+      this.queryParams.locationCode = val   //接收父组件传递的id值
+      this.getList()
+    },
     /** 查询物料标签列表 */
     getList() {
       this.loading = true;

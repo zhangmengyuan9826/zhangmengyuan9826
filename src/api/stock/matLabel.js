@@ -25,6 +25,14 @@ export function listMatLabelDialogOut(query) {
     params: query
   })
 }
+// 查询物料标签列表（弹窗-调拨单）
+export function listMatLabelDialogAllot(query) {
+  return request({
+    url: '/stock/matLabel/listDialogAllot',
+    method: 'get',
+    params: query
+  })
+}
 export function checkBatchMat(query) {
   return request({
     url: '/stock/matLabel/listCheckBatchMat',

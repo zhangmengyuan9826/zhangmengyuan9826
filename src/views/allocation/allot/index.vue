@@ -230,22 +230,22 @@
         <el-row>
           <el-col :span="8">
             <el-form-item label="选择物料标签">
-              <el-button size="small" type="success" icon="el-icon-search" @click="openSelectStockInfoDialog" :disabled="form.srclocationCode === null">物料标签清单</el-button>
+              <el-button size="small" type="success" icon="el-icon-search" @click="openSelectMatLabelDialog" :disabled="form.srclocationCode === null">物料标签清单</el-button>
             </el-form-item>
           </el-col>
         </el-row>
-      <el-table :data="stockInfoList" style="width: 100%">
+      <el-table :data="matLabelList" style="width: 100%">
         <el-table-column label="行号" align="center" type="index" />
         <el-table-column label="物料编码" align="center" prop="matCode" width="100" />
         <el-table-column label="物料名称" align="center" prop="matName" width="120" />
         <el-table-column label="集团编码" align="center" prop="fdCode" width="100" />
         <el-table-column label="规格" align="center" prop="figNum" width="120" />
         <el-table-column label="数量" align="center" prop="quantity" width="80" />
-        <el-table-column label="调拨数量" align="center" prop="allotQuantity" width="100">
+        <!-- <el-table-column label="调拨数量" align="center" prop="allotQuantity" width="100">
           <template slot-scope="scope">
             <el-input-number v-model="scope.row.allotQuantity" style="width: 90px" size="small" controls-position="right" :min="1" :max="scope.row.quantity" integer/>
           </template>
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column label="单位" align="center" prop="unitCode" width="80">
           <template slot-scope="scope">
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
@@ -270,12 +270,21 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
-    <el-dialog :title="'选择物料标签'" :visible.sync="selectStockInfoOpen" width="1200px" append-to-body :close-on-click-modal="false">
+    <!-- <el-dialog :title="'选择物料标签'" :visible.sync="selectStockInfoOpen" width="1200px" append-to-body :close-on-click-modal="false">
       <selectStockInfo ref="stockInfoPage" :infoIdArr="infoIdArr" 
         @confirmSelectArr="confirmSelectStockInfoArr" @confirmSelect="confirmSelectStockInfo">
       </selectStockInfo>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelSelectStockInfo">取 消</el-button>
+      </div>
+    </el-dialog> -->
+
+    <el-dialog :title="'选择物料标签'" :visible.sync="selectMatLabelOpen" width="1200px" append-to-body :close-on-click-modal="false">
+      <selectMatLabel ref="matLabelPage" :labelIdArr="labelIdArr" 
+        @confirmSelectArr="confirmSelectMatLabelArr" @confirmSelect="confirmSelectMatLabel">
+      </selectMatLabel>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancelSelectMatLabel">取 消</el-button>
       </div>
     </el-dialog>
 
@@ -387,15 +396,15 @@ import {
 } from "@/api/stock/allotOrder";
 import { listAllWarehouse } from "@/api/base/warehouse";
 import { listAllLocation } from "@/api/base/location";
-import selectStockInfo from "../../components/select-stock-info/index";
-
+// import selectStockInfo from "../../components/select-stock-info/index";
+import selectMatLabel from "../../components/select-mat-label-out/index";
 import QRCode from "qrcodejs2";
 import { Message } from 'element-ui';
 
 export default {
   name: "AllotOrder",
   dicts: ["base_mat_unit"],
-  components: { selectStockInfo },
+  components: { selectMatLabel },
   data() {
     return {
       // 遮罩层
@@ -447,14 +456,17 @@ export default {
       warehouseList: [],
       locationList: [],
 
-      selectStockInfoOpen: false,
+      // selectStockInfoOpen: false,
+      selectMatLabelOpen: false,
 
       //详情
       allotOrderDetailOpen: false,
       allotDetailList: [],
-      stockInfoList: [],
+      // stockInfoList: [],
+      matLabelList: [],
       //防重复标签
-      infoIdArr: [],
+      // infoIdArr: [],
+      labelIdArr: [],
       currentLocationCode: '',
 
     };
@@ -485,8 +497,10 @@ export default {
       this.open = false;
       this.reset();
       this.getList();
-      this.infoIdArr = [];
-      this.stockInfoList = [];
+      // this.infoIdArr = [];
+      // this.stockInfoList = [];
+      this.labelIdArr = [];
+      this.matLabelList = [];
     },
     // 表单重置
     reset() {
@@ -506,43 +520,80 @@ export default {
       };
       this.resetForm("form");
     },
-    //选择物料标签
-    openSelectStockInfoDialog(){
-      this.selectStockInfoOpen = true;
+    openSelectMatLabelDialog(){
+      this.selectMatLabelOpen = true;
       this.$nextTick(function(){ 
         let _locationCode = this.locationList[this.form.srclocationCode].locationCode
         var queryParamsOut= {locationCode:_locationCode};
-        this.$refs.stockInfoPage.init(_locationCode);
+        this.$refs.matLabelPage.init(_locationCode);
       })
     },
-    cancelSelectStockInfo(){
-      this.selectStockInfoOpen = false;
+    // //选择物料标签
+    // openSelectStockInfoDialog(){
+    //   this.selectStockInfoOpen = true;
+    //   this.$nextTick(function(){ 
+    //     let _locationCode = this.locationList[this.form.srclocationCode].locationCode
+    //     var queryParamsOut= {locationCode:_locationCode};
+    //     this.$refs.stockInfoPage.init(_locationCode);
+    //   })
+    // },
+    cancelSelectMatLabel(){
+      this.selectMatLabelOpen = false;
     },
-    confirmSelectStockInfo(item){
+    // cancelSelectStockInfo(){
+    //   this.selectStockInfoOpen = false;
+    // },
+    confirmSelectMatLabel(item){
       if(this.currentLocationCode !== '' & this.form.srclocationCode !== this.currentLocationCode){
-        this.stockInfoList=[];
-        this.infoIdArr=[];
+        this.matLabelList=[];
+        this.labelIdArr=[];
         this.currentLocationCode = this.form.srclocationCode;
       } else if (this.currentLocationCode === ''){
         this.currentLocationCode = this.form.srclocationCode;
       }
-      this.stockInfoList.unshift(item);
-      this.infoIdArr.push(item.infoId);
-      this.selectStockInfoOpen = false;
+      this.matLabelList.unshift(item);
+      this.labelIdArr.push(item.labelId);
+      this.selectMatLabelOpen = false;
+      console.log("this.currentLocationCode", this.currentLocationCode)
     },
-    confirmSelectStockInfoArr(arr){
+    // confirmSelectStockInfo(item){
+    //   if(this.currentLocationCode !== '' & this.form.srclocationCode !== this.currentLocationCode){
+    //     this.stockInfoList=[];
+    //     this.infoIdArr=[];
+    //     this.currentLocationCode = this.form.srclocationCode;
+    //   } else if (this.currentLocationCode === ''){
+    //     this.currentLocationCode = this.form.srclocationCode;
+    //   }
+    //   this.stockInfoList.unshift(item);
+    //   this.infoIdArr.push(item.infoId);
+    //   this.selectStockInfoOpen = false;
+    // },
+    confirmSelectMatLabelArr(arr){
       let that = this;
       arr && arr.length > 0 && arr.forEach(item => {
-        that.infoIdArr.push(item.infoId);
-        that.stockInfoList.unshift(item);
+        that.labelIdArr.push(item.labelId);
+        that.matLabelList.unshift(item);
       });
-      that.selectStockInfoOpen = false;
+      that.selectMatLabelOpen = false;
     },
+    // confirmSelectStockInfoArr(arr){
+    //   let that = this;
+    //   arr && arr.length > 0 && arr.forEach(item => {
+    //     that.infoIdArr.push(item.infoId);
+    //     that.stockInfoList.unshift(item);
+    //   });
+    //   that.selectStockInfoOpen = false;
+    // },
     //去除物料标签
     handleRemove(index, row){
-      this.infoIdArr.splice(this.infoIdArr.indexOf(row.infoId), 1);
-      this.stockInfoList.splice(index, 1);
+      this.labelIdArr.splice(this.labelIdArr.indexOf(row.labelId), 1);
+      this.matLabelList.splice(index, 1);
     },
+    // //去除物料标签
+    // handleRemove(index, row){
+    //   this.infoIdArr.splice(this.infoIdArr.indexOf(row.infoId), 1);
+    //   this.stockInfoList.splice(index, 1);
+    // },
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
@@ -599,17 +650,19 @@ export default {
     submitForm() {
       this.$refs["form"].validate((valid) => {
         if (valid) {
-        console.log(this.stockInfoList)
+        console.log(this.matLabelList)
         // return;
           let that = this;
           if(that.form.destlocationCode === that.form.srclocationCode){
             Message.warning("目标货位不能与发起货位一致！")
             return
           }
-          if(!that.stockInfoList || that.stockInfoList.length === 0){
+          if(!that.matLabelList || that.matLabelList.length === 0){
             that.$modal.msgError("请选择物料标签");
             return;
           }
+          console.log(that.form.srclocationCode)
+          console.log(that.currentLocationCode)
           if(that.form.srclocationCode !== that.currentLocationCode){
             that.$modal.msgError("货位与物料不一致！");
             return;
@@ -617,23 +670,16 @@ export default {
          
           that.form.srcLocationCode = that.locationList[that.form.srclocationCode].locationCode
           that.form.destLocationCode = that.locationList[that.form.destlocationCode].locationCode
-          for(let i = 0; i < that.stockInfoList.length; i++){
-            if(!that.stockInfoList[i].allotQuantity >0){
-              that.$modal.msgError("调拨物料数不能为0！");
-              return;
-            }
-            that.stockInfoList[i].quantity = that.stockInfoList[i].allotQuantity
-          }
           console.log(that.form)
           that.$modal.confirm("是否确认创建调拨单？").then(function () {            
-            that.form.detailList = that.stockInfoList
+            that.form.detailList = that.matLabelList
             addAllotOrder(that.form).then((response) => {
               that.$modal.msgSuccess("新增成功");
               that.open = false;
               that.getList();
               that.reset();
-              that.infoIdArr = [];
-              that.stockInfoList = [];
+              that.labelIdArr = [];
+              that.matLabelList = [];
             });
           });
         }
