@@ -130,7 +130,7 @@ export default {
       // 非单个禁用
       single: true,
       // 非多个禁用
-      multiple: true,
+      multiple: false,
       // 显示搜索条件
       showSearch: true,
       // 总条数

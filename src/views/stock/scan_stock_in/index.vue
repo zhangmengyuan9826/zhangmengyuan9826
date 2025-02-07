@@ -63,7 +63,7 @@
 							<span>数量：{{item.quantity}}</span>
 							<span class="unit">单位：{{item.unitName}}</span>
 						</div>
-						<div>入库货位：{{item.locationCode ? item.locationCode : ''}}</div>
+						<div>入库货位：{{ item.locationCode ? formatLocation(item.locationCode) : ''}}</div>
 					</div>
 					<div class="tag">
 						<el-tag text="" type="error" v-if="!item.locationCode">待完成</el-tag>
@@ -84,6 +84,7 @@
 // 引入
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { getInfoM,submitStockIn  } from "@/api/stock/inOrder";
+import { listAllLocation } from "@/api/base/location";
 import { Message } from "element-ui";
 export default {
   // 注册
@@ -123,13 +124,27 @@ export default {
 			selectItem: {},
       selected :false,
       matLabelList: [],
-
+      locationList: [],
+      locationDict: {},
       };
   },
- created(){
-      // this.onDecode("111")
-      },
+  created(){
+    this.getBaselocationList();
+  },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
       onDecode(result) {
           Message.success(result)
           // result="ORDER:IP20240123113873"

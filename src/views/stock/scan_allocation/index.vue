@@ -48,7 +48,7 @@
 						<div>物料名称：{{item.matName}}</div>
 						<div>规格：{{item.figNum}}</div>
             <div>供应商：{{item.supplierName}}</div>
-            <div>所在货位：{{item.locationCode}}</div>
+            <div>所在货位：{{ formatLocation(item.locationCode) }}</div>
 						<div>
 							<span>数量：{{item.quantity}}</span>
 							<span class="unit">单位：{{item.unitCode}}</span>
@@ -69,7 +69,7 @@
 						</div>
 						<div>
 							<span>接收数量：{{item.signQuantity}}</span>
-							<span class="unit">接收货位：{{item.destLocationCode ? item.destLocationCode : ''}}</span>
+							<span class="unit">接收货位：{{ item.destLocationCode ? formatLocation(item.destLocationCode) : ''}}</span>
 						</div>
             <div class="tag">
 						<el-tag text="" type="error" v-if="item.allotProgress==='created'">待完成</el-tag>
@@ -85,10 +85,10 @@
 <script>
 // 引入
 import { QrcodeStream } from 'vue-qrcode-reader';
-import axios from 'axios';
 import { getInfo,submitAllot } from "@/api/stock/allotOrder";
 import { getMatLabel } from "@/api/stock/matLabel";
 import { Message } from "element-ui";
+import { listAllLocation } from "@/api/base/location";
 
 export default {
   components: { QrcodeStream },
@@ -138,99 +138,85 @@ export default {
       locationCode: '',
       scanAim: '',
       matLabelListResult:[],
-      allowConfirm: true
+      allowConfirm: true,
+      locationList: [],
+      locationDict: {},
 		}
 
 	},
+  created() {
+    this.getBaselocationList();
+  },
   methods: {
-    onDecode_old(result) {
-          // alert(result)
-          this.result = result;
-          this.ifscan=false;
-          if(result.indexOf("ORDER:") === 0){
-						this.order.allotNo = result.replace("ORDER:", "");            
-						this.loadAllotOrder();
-					} else if(result.indexOf("LABEL") === 0){// //扫码货位
-						if(!this.order.allotNo){
-							Message.warning('请先扫描调拨单');
-							return;
-						}
-            let labelId = result.replace("LABEL:", "");
-						this.loadMatLabel(labelId);						
-					}else if(result.indexOf("LOCATION") === 0){//扫码物料标签
-            if(!this.order.allotNo){
-                  Message.warning('请先扫描调拨单')
-                  return;
-                }
-						if(this.order.allotProgress !== 'picking'){
-							Message.warning('请发起仓库完成拣货')
-							return;
-						}
-						let codeArr = result.match(/:(\S*)/)[1].split(":");
-						if(codeArr && codeArr.length === 2){
-							this.selectItem.destLocationCode = codeArr[0];
-							this.selectItem.signQuantity = this.selectItem.quantity;
-						}
-					}else{
-            Message.error('二维码不正确');
-					}
-      },
-      onDecode(result) {
-          // alert(result)
-          this.result = result;
-          this.ifscan=false;
-          if(result.indexOf("ORDER:") === 0){            
-						this.order.allotNo = result.replace("ORDER:", "");            
-						this.loadAllotOrder();
-            Message.success("扫码成功：调拨单："+this.order.allotNo)
-					} else if(result.indexOf("LOCATION") === 0){// //扫码货位
-						if(!this.order.allotNo){
-							Message.warning('请先扫描调拨单');
-							return;
-						}
-            if(this.order.allotProgress !== 'picking'){
-							Message.warning('请发起仓库完成拣货')
-							return;
-						}
-						let codeArr = result.match(/:(\S*)/)[1].split(":");            
-						if(codeArr && codeArr.length === 2){
-							// this.selectItem.destLocationCode = codeArr[0];
-							this.selectItem.signQuantity = this.selectItem.quantity;
-              this.locationCode = codeArr[0];
-						}     
-                         
-            if (this.locationCode === this.order.srcLocationCode){
-              // 挑货
-              Message.success("扫码成功：挑拣货位单："+codeArr)
-              this.scanAim = 'OUT'
-            } else if (this.locationCode === this.order.destLocationCode){
-              // 入货
-              Message.success("扫码成功：入库货位单："+codeArr)
-              this.scanAim = 'IN'
-            } else {              
-              Message.warning('非该调拨单的出库和入库货位！')
-              return;
-            } 
-            this.loadLocationMatlabel();
-					}else if(result.indexOf("LABEL") === 0){//扫码物料标签
-            if(!this.order.allotNo){
-                  Message.warning('请先扫描调拨单')
-                  return;
-                }
-            if(!this.locationCode){
-                  Message.warning('请先扫描货位单')
-                  return;
-                }
-            let labelId = result.replace("LABEL:", "");
-						this.scanMatLabel(labelId);
-            				
-					}else{
-            Message.error('二维码不正确');
-					}
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
+    onDecode(result) {
+        // alert(result)
+        this.result = result;
+        this.ifscan=false;
+        if(result.indexOf("ORDER:") === 0){            
+          this.order.allotNo = result.replace("ORDER:", "");            
+          this.loadAllotOrder();
+          Message.success("扫码成功：调拨单："+this.order.allotNo)
+        } else if(result.indexOf("LOCATION") === 0){// //扫码货位
+          if(!this.order.allotNo){
+            Message.warning('请先扫描调拨单');
+            return;
+          }
+          if(this.order.allotProgress !== 'picking'){
+            Message.warning('请发起仓库完成拣货')
+            return;
+          }
+          let codeArr = result.match(/:(\S*)/)[1].split(":");            
+          if(codeArr && codeArr.length === 2){
+            // this.selectItem.destLocationCode = codeArr[0];
+            this.selectItem.signQuantity = this.selectItem.quantity;
+            this.locationCode = codeArr[0];
+          }     
+                        
+          if (this.locationCode === this.order.srcLocationCode){
+            // 挑货
+            Message.success("扫码成功：挑拣货位单："+codeArr)
+            this.scanAim = 'OUT'
+          } else if (this.locationCode === this.order.destLocationCode){
+            // 入货
+            Message.success("扫码成功：入库货位单："+codeArr)
+            this.scanAim = 'IN'
+          } else {              
+            Message.warning('非该调拨单的出库和入库货位！')
+            return;
+          } 
+          this.loadLocationMatlabel();
+        }else if(result.indexOf("LABEL") === 0){//扫码物料标签
+          if(!this.order.allotNo){
+                Message.warning('请先扫描调拨单')
+                return;
+              }
+          if(!this.locationCode){
+                Message.warning('请先扫描货位单')
+                return;
+              }
+          let labelId = result.replace("LABEL:", "");
+          this.scanMatLabel(labelId);
+                  
+        }else{
+          Message.error('二维码不正确');
+        }
       },
       reScan(){
-    this.ifscan=!this.ifscan;
-   },
+      this.ifscan=!this.ifscan;
+    },
     loadAllotOrder(){
       getInfo((this.order.allotNo)).then((res) => {
         console.log(res)

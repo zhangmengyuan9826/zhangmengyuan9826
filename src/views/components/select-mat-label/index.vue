@@ -61,10 +61,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="供应商" prop="supplierName">
+      <el-form-item label="品牌" prop="brand">
         <el-input
-          v-model="queryParams.supplierName"
-          placeholder="请输入供应商"
+          v-model="queryParams.brand"
+          placeholder="请输入品牌"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -111,7 +111,7 @@
         </template>
       </el-table-column>
       <el-table-column label="批次" align="center" prop="batch" width="180" />
-      <el-table-column label="供应商" align="center" prop="supplierName" width="180" />
+      <el-table-column label="品牌" align="center" prop="brand" width="180" />
       <el-table-column label="生产时间" align="center" prop="prodTime" width="120">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.prodTime, '{y}-{m}-{d}') }}</span>
@@ -191,8 +191,7 @@ export default {
         matClass: null,
         unitCode: null,
         batch: null,
-        supplierCode: null,
-        supplierName: null,
+        brand: null,
         prodTime: null,
         quantity: null,
         unitPrice: null,

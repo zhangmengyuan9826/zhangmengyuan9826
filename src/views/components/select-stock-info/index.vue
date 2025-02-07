@@ -12,14 +12,17 @@
         </el-select>
       </el-form-item>
       <el-form-item label="货位" prop="locationCode">
-        <el-input
+        <el-select
           v-model="queryParams.locationCode"
-          placeholder="请输入货位"
-          clearable
-          @keyup.enter.native="handleQuery"
-          disabled
-        />
-        
+          placeholder="请选择货位"
+        >
+          <el-option
+            v-for="(item, index) in locationList"
+            :key="item.locationCode"
+            :label="formatLocation(item.locationCode)"
+            :value="item.locationCode"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="物料编码" prop="matCode">
         <el-input
@@ -63,7 +66,11 @@
       <el-table-column type="selection" :selectable="checkSelectable" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="infoId" />
       <el-table-column label="仓库" align="center" prop="warehouseName" />
-      <el-table-column label="货位" align="center" prop="locationCode" />
+      <el-table-column label="货位" align="center" prop="locationCode" >
+        <template slot-scope="scope">
+          {{ formatLocation(scope.row.locationCode) }}
+        </template>
+      </el-table-column>
       <el-table-column label="物料编码" align="center" prop="matCode" />
       <el-table-column label="物料名称" align="center" prop="matName" />
       <el-table-column label="批次" align="center" prop="batch" />
@@ -105,6 +112,7 @@
 <script>
 import { listInfo } from "@/api/stock/info";
 import { listAllWarehouse } from "@/api/base/warehouse";
+import { listAllLocation } from "@/api/base/location";
 
 export default {
   name: "Info",
@@ -151,18 +159,34 @@ export default {
 
       //选择仓库、实验室
       warehouseList: [],
+      locationList: [],
+      locationDict: {},
     };
   },
   
   created() {
     // this.getList();
     this.getWarehouseList();
+    this.getBaselocationList();
   },
   methods: {
     /** 查询库存信息列表 */
     init (val) {
       this.queryParams.locationCode = val   //接收父组件传递的id值
       this.getList()
+    },
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
     },
     getList() {
       this.loading = true;

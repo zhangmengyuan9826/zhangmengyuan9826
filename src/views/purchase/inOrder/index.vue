@@ -156,7 +156,7 @@
           </template>
         </el-table-column>
         <el-table-column label="批次" align="center" prop="batch" width="160" />
-        <el-table-column label="供应商" align="center" prop="supplierName" width="180" />
+        <el-table-column label="品牌" align="center" prop="brand" width="180" />
         <el-table-column label="操作" align="center" width="80" class-name="small-padding fixed-width">
           <template slot-scope="scope">
             <el-button
@@ -227,7 +227,7 @@
           </template>
         </el-table-column>
         <el-table-column label="批次" align="center" prop="batch" width="180" />
-        <el-table-column label="供应商" align="center" prop="supplierName" width="180" />
+        <el-table-column label="品牌" align="center" prop="brand" width="180" />
       </el-table>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" icon="el-icon-printer" @click="confirmPrintInOrder">打 印</el-button>

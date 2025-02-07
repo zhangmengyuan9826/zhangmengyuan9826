@@ -32,11 +32,12 @@
           <el-option
             v-for="item in locationList"
             :key="item.locationCode"
-            :label="item.locationName"
+            :label="formatLocation(item.locationCode)"
             :value="item.locationCode"
           ></el-option>
         </el-select>
       </el-form-item>
+      
       <el-form-item label="目标货位" prop="destlocationCode">
         <el-select
           v-model="queryParams.destlocationCode"
@@ -45,7 +46,7 @@
           <el-option
             v-for="item in locationList"
             :key="item.locationCode"
-            :label="item.locationName"
+            :label="formatLocation(item.locationCode)"
             :value="item.locationCode"
           ></el-option>
         </el-select>
@@ -267,14 +268,6 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
-    <!-- <el-dialog :title="'选择物料标签'" :visible.sync="selectStockInfoOpen" width="1200px" append-to-body :close-on-click-modal="false">
-      <selectStockInfo ref="stockInfoPage" :infoIdArr="infoIdArr" 
-        @confirmSelectArr="confirmSelectStockInfoArr" @confirmSelect="confirmSelectStockInfo">
-      </selectStockInfo>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="cancelSelectStockInfo">取 消</el-button>
-      </div>
-    </el-dialog> -->
 
     <el-dialog :title="'选择物料标签'" :visible.sync="selectMatLabelOpen" width="1200px" append-to-body :close-on-click-modal="false">
       <selectMatLabel ref="matLabelPage" :labelIdArr="labelIdArr" 
@@ -349,17 +342,27 @@
         <el-table-column label="物料编码" align="center" prop="matCode" />
         <el-table-column label="物料名称" align="center" prop="matName" />
         <el-table-column label="规格" align="center" prop="figNum" />
-        <el-table-column
+        <!-- <el-table-column
           label="发起货位"
           align="center"
           prop="srcLocationCode"
-        />
+        /> -->
+        <el-table-column label="发起货位" align="center" prop="srcLocationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.srcLocationCode) }}
+          </template>
+        </el-table-column>
         <el-table-column label="发起数" align="center" prop="quantity" />
-        <el-table-column
+        <!-- <el-table-column
           label="接收货位"
           align="center"
           prop="destLocationCode"
-        />
+        /> -->
+        <el-table-column label="接收货位" align="center" prop="destLocationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.destLocationCode) }}
+          </template>
+        </el-table-column>
         <el-table-column label="接收数" align="center" prop="signQuantity" />
         <el-table-column label="单位" align="center" prop="unitCode">
           <template slot-scope="scope">
@@ -453,18 +456,16 @@ export default {
       warehouseList: [],
       locationList: [],
 
-      // selectStockInfoOpen: false,
       selectMatLabelOpen: false,
 
       //详情
       allotOrderDetailOpen: false,
       allotDetailList: [],
-      // stockInfoList: [],
       matLabelList: [],
       //防重复标签
-      // infoIdArr: [],
       labelIdArr: [],
       currentLocationCode: '',
+      locationDict:{},
 
     };
   },
@@ -477,6 +478,9 @@ export default {
        
   },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
     /** 查询调拨单列表 */
     getList() {
       this.loading = true;
@@ -494,8 +498,6 @@ export default {
       this.open = false;
       this.reset();
       this.getList();
-      // this.infoIdArr = [];
-      // this.stockInfoList = [];
       this.labelIdArr = [];
       this.matLabelList = [];
     },
@@ -525,21 +527,11 @@ export default {
         this.$refs.matLabelPage.init(_locationCode);
       })
     },
-    // //选择物料标签
-    // openSelectStockInfoDialog(){
-    //   this.selectStockInfoOpen = true;
-    //   this.$nextTick(function(){ 
-    //     let _locationCode = this.locationList[this.form.srclocationCode].locationCode
-    //     var queryParamsOut= {locationCode:_locationCode};
-    //     this.$refs.stockInfoPage.init(_locationCode);
-    //   })
-    // },
+
     cancelSelectMatLabel(){
       this.selectMatLabelOpen = false;
     },
-    // cancelSelectStockInfo(){
-    //   this.selectStockInfoOpen = false;
-    // },
+
     confirmSelectMatLabel(item){
       if(this.currentLocationCode !== '' & this.form.srclocationCode !== this.currentLocationCode){
         this.matLabelList=[];
@@ -554,18 +546,7 @@ export default {
       this.selectMatLabelOpen = false;
       console.log("this.currentLocationCode", this.currentLocationCode)
     },
-    // confirmSelectStockInfo(item){
-    //   if(this.currentLocationCode !== '' & this.form.srclocationCode !== this.currentLocationCode){
-    //     this.stockInfoList=[];
-    //     this.infoIdArr=[];
-    //     this.currentLocationCode = this.form.srclocationCode;
-    //   } else if (this.currentLocationCode === ''){
-    //     this.currentLocationCode = this.form.srclocationCode;
-    //   }
-    //   this.stockInfoList.unshift(item);
-    //   this.infoIdArr.push(item.infoId);
-    //   this.selectStockInfoOpen = false;
-    // },
+
     confirmSelectMatLabelArr(arr){
       let that = this;
       arr && arr.length > 0 && arr.forEach(item => {
@@ -575,24 +556,13 @@ export default {
       });
       that.selectMatLabelOpen = false;
     },
-    // confirmSelectStockInfoArr(arr){
-    //   let that = this;
-    //   arr && arr.length > 0 && arr.forEach(item => {
-    //     that.infoIdArr.push(item.infoId);
-    //     that.stockInfoList.unshift(item);
-    //   });
-    //   that.selectStockInfoOpen = false;
-    // },
+
     //去除物料标签
     handleRemove(index, row){
       this.labelIdArr.splice(this.labelIdArr.indexOf(row.labelId), 1);
       this.matLabelList.splice(index, 1);
     },
-    // //去除物料标签
-    // handleRemove(index, row){
-    //   this.infoIdArr.splice(this.infoIdArr.indexOf(row.infoId), 1);
-    //   this.stockInfoList.splice(index, 1);
-    // },
+
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
@@ -718,6 +688,10 @@ export default {
     getBaselocationList() {
       listAllLocation().then((response) => {
         this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
       });
     },
     createQrCode(allotNo) {

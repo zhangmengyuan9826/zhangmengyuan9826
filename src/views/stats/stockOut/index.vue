@@ -25,22 +25,32 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="货位号" prop="locationCode">
-        <el-input
+      <el-form-item label="货位" prop="locationCode">
+        <el-select
           v-model="queryParams.locationCode"
-          placeholder="请输入货位号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+          placeholder="请选择货位"
+        >
+          <el-option
+            v-for="(item, index) in locationList"
+            :key="item.locationCode"
+            :label="formatLocation(item.locationCode)"
+            :value="item.locationCode"
+          ></el-option>
+        </el-select>
       </el-form-item>
+
+
       <el-form-item label="实验室" prop="workshopCode">
-        <el-input
-          v-model="queryParams.workshopCode"
-          placeholder="请输入货位号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+        <el-select v-model="queryParams.workshopCode" placeholder="请选择实验室">
+          <el-option
+            v-for="item in workshopList"
+            :key="item.workshopCode"
+            :label="item.workshopName"
+            :value="item.workshopCode"
+          ></el-option>
+        </el-select>
       </el-form-item>
+
       <el-form-item label="操作人" prop="updateBy">
         <el-input
           v-model="queryParams.updateBy"
@@ -85,9 +95,17 @@
       <el-table-column label="物料名称" align="center" prop="matName" />
       <el-table-column label="规格" align="center" prop="figNum" />
       <el-table-column label="批次" align="center" prop="batch" />
-      <el-table-column label="货位号" align="center" prop="locationCode" />
-      <el-table-column label="实验室" align="center" prop="workshopCode" />
-      <el-table-column label="供应商" align="center" prop="supplierName" />
+      <el-table-column label="货位" align="center" prop="locationCode" >
+        <template slot-scope="scope">
+          {{ formatLocation(scope.row.locationCode) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="实验室" align="center" prop="workshopCode" >
+        <template slot-scope="scope">
+            {{ formatWorkshop(scope.row.workshopCode) }}
+          </template>
+      </el-table-column>
+      <el-table-column label="品牌" align="center" prop="brand" />
       <el-table-column label="出库操作者" align="center" prop="updateBy" />
       <el-table-column label="出库时间" align="center" prop="updateTime" />
 
@@ -113,6 +131,8 @@
 
 <script>
 import { listStatsStockOut } from "@/api/stats/stockOut";
+import { listAllWorkshop } from "@/api/base/workshop";
+import { listAllLocation } from "@/api/base/location";
 
 export default {
   name: "StatsStockOut",
@@ -133,12 +153,34 @@ export default {
       statsStockOutList: [],
        // 日期范围
       dateRange: [],
+      locationList: [],
+      locationDict: {},
+      workshopList: [],
+      workshopDict: {},
     };
   },
   created() {
     this.getList();
+    this.getWorkshopList();
+    this.getBaselocationList();
   },
   methods: {
+    formatLocation(locationCode){
+      return   locationCode ? locationCode.concat("-", this.locationDict[locationCode]) : ''
+    },
+    formatWorkshop(workshopCode){
+      return this.workshopDict[workshopCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     /** 查询生产订单列表 */
     getList() {
       this.loading = true;
@@ -164,6 +206,16 @@ export default {
         ...this.queryParams
       }, `stock_out_stats_${new Date().getTime()}.xlsx`)
     },
+    getWorkshopList(){
+      listAllWorkshop().then(response => {
+        this.workshopList = response;
+        this.workshopDict = this.workshopList.reduce((dict, obj) => {
+          dict[obj.workshopCode] = obj.workshopName;
+          return dict;
+        }, {});
+      });
+    },
   }
+  
 };
 </script>
