@@ -233,7 +233,11 @@
         </el-table-column>
         <el-table-column label="批次" align="center" prop="batch" width="180" />
         <el-table-column label="供应商" align="center" prop="supplierName" width="180" />
-        <el-table-column label="所在货位" align="center" prop="locationCode" width="100" />
+        <el-table-column label="所在货位" align="center" prop="locationCode" width="100">
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.locationCode) }}
+          </template>
+        </el-table-column>
       </el-table>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" icon="el-icon-printer" @click="confirmPrintInOrderReturn">打 印</el-button>
@@ -247,7 +251,7 @@
 import { listInReturn, getInReturn, delInReturn, addInReturn, printInOrderReturn } from "@/api/stock/inReturn";
 import { returnListRecord } from "@/api/stock/record";
 import { listAllWarehouse } from "@/api/base/warehouse";
-import { getInOrder } from "@/api/stock/inOrder";
+import { listAllLocation } from "@/api/base/location";
 
 import selectInOrder from "../../components/select-in-order/index"
 
@@ -311,13 +315,29 @@ export default {
       //入库退货详情
       inOrderReturnDetailOpen: false,
       inReturnDetailList: [],
+      locationList: [],
+      locationDict: {},
     };
   },
   created() {
     this.getList();
     this.getWarehouseList();
+    this.getBaselocationList();
   },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     /** 查询入库单退货列表 */
     getList() {
       this.loading = true;

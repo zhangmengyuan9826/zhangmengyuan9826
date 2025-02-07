@@ -9,14 +9,20 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+
       <el-form-item label="货位" prop="locationCode">
-        <el-input
-          v-model="queryParams.locationCode"
-          placeholder="请输入货位"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+          <el-select
+            v-model="queryParams.locationCode"
+            placeholder="请选择货位"
+          >
+            <el-option
+              v-for="(item, index) in locationList"
+              :key="item.locationCode"
+              :label="formatLocation(item.locationCode)"
+              :value="item.locationCode"
+            ></el-option>
+          </el-select>
+        </el-form-item>
       <el-form-item label="批次" prop="batch">
         <el-input
           v-model="queryParams.batch"
@@ -81,7 +87,11 @@
       <el-table-column label="物料组" align="center" prop="matGroupName" width="80" />
       <el-table-column label="物料分类" align="center" prop="matClassName" width="80" />
       <el-table-column label="仓库" align="center" prop="warehouseName" width="80" />
-      <el-table-column label="货位" align="center" prop="locationCode" width="80" />
+      <el-table-column label="货位" align="center" prop="locationCode" width="120" >
+        <template slot-scope="scope">
+          {{ formatLocation(scope.row.locationCode) }}
+        </template>
+      </el-table-column>
       <el-table-column label="数量" align="center" prop="quantity" width="80" />
       <el-table-column label="单位" align="center" prop="unitCode" width="80">
         <template slot-scope="scope">
@@ -113,6 +123,7 @@
 
 <script>
 import { listRecord } from "@/api/stock/record";
+import { listAllLocation } from "@/api/base/location";
 
 export default {
   name: "Record",
@@ -152,14 +163,29 @@ export default {
 
       // 日期范围
       dateRange: [],
+      locationDict: {},
     };
   },
   created() {
     const matCode = this.$route.params && this.$route.params.matCode;
     this.setDefaultMatCode(matCode);
+    this.getBaselocationList();
     this.getList();
   },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+    //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     setDefaultMatCode(matCode){
       this.queryParams.matCode = matCode;
     },

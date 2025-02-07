@@ -176,7 +176,7 @@
         </template>
       </el-table-column>
       <el-table-column label="批次" align="center" prop="batch" width="180" />
-      <el-table-column label="供应商" align="center" prop="supplierName" width="180" />
+      <el-table-column label="品牌" align="center" prop="brand" width="180" />
       <!-- <el-table-column label="生产时间" align="center" prop="prodTime" width="120">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.prodTime, '{y}-{m}-{d}') }}</span>
@@ -294,14 +294,6 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="集团单位" prop="fdunitCode">
-              <!-- <el-select v-model="form.fdunitCode" placeholder="集团单位" :disabled="addSelect" :required="addSelect" >
-                <el-option
-                  v-for="dict in dict.type.base_mat_unit"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="dict.value"
-                ></el-option>
-              </el-select> -->
               <el-select
                 v-model="form.fdunitCode"
                 placeholder="请输入集团单位"
@@ -319,6 +311,11 @@
                 >
                 </el-option>
               </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="品牌" prop="brand">
+              <el-input v-model="form.brand" placeholder="请输入规格" :disabled="addSelect" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -620,6 +617,7 @@ export default {
         batch: null,
         supplierCode: null,
         supplierName: null,
+        brand: null,
         prodTime: null,
         quantity: null,
         qualifiedQuantity: null,
@@ -760,6 +758,7 @@ export default {
       this.form.matName = item.matName;
       this.form.fdCode = item.fdCode;
       this.form.figNum = item.figNum;
+      this.form.brand = item.brand;
       this.form.matGroup = item.matGroup;
       this.form.matClass = item.matClass;
       this.form.fdunitCode = item.fdunitCode;
@@ -779,6 +778,7 @@ export default {
       this.form.matName = item.matName;
       this.form.fdCode = item.fdCode;
       this.form.figNum = item.figNum;
+      this.form.brand = item.brand;
       this.form.matGroup = item.matGroup;
       this.form.matClass = item.matClass;
       this.form.fdunitCode = item.unitCode;

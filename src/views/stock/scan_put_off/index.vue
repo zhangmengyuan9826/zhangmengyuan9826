@@ -39,7 +39,7 @@
 						<div>物料编码：{{item.matCode}}</div>
 						<div>物料名称：{{item.matName}}</div>
 						<div>规格：{{item.figNum}}</div>
-            <div>所在货位：{{item.locationCode}}</div>
+            <div>所在货位：{{ item.locationCode ? formatLocation(item.locationCode) :'' }}</div>
 						<div>
 							<span>数量：{{item.remainingQuantity}}</span>
 							<span class="unit">单位：{{item.unitName}}</span>
@@ -58,6 +58,7 @@
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { submitPutOff } from "@/api/stock/info";
 import { getMatLabel } from "@/api/stock/matLabel";
+import { listAllLocation } from "@/api/base/location";
 import { Message } from "element-ui";
 
 export default {
@@ -90,12 +91,30 @@ export default {
 				message: "正在加载",
 				iconUrl: 'https://cdn.uviewui.com/uview/demo/toast/loading.png',
 				duration: 60000,
+        locationList: [],
+        locationDict: {},
 			},
 			
 		}
 
 	},
+  created() {
+    this.getBaselocationList();
+  },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     onDecode(result) {
           // alert(result)
           this.result = result;

@@ -187,7 +187,11 @@
         <el-table-column label="集团编码" align="center" prop="fdCode" width="120" />
         <el-table-column label="规格" align="center" prop="figNum" width="120" />
         <el-table-column label="仓库" align="center" prop="warehouseName" width="80" />
-        <el-table-column label="货位" align="center" prop="locationCode" width="80" />
+        <el-table-column label="货位" align="center" prop="locationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.locationCode) }}
+          </template>
+        </el-table-column>        
         <el-table-column label="已领取" align="center" prop="receivedQuantity" width="80" />
         <el-table-column label="需退货" align="center" prop="quantity" width="100">
           <template slot-scope="scope">
@@ -290,7 +294,11 @@
             </template>
         </el-table-column>
         <el-table-column label="批次" align="center" prop="batch" width="180" />
-        <el-table-column label="所在货位" align="center" prop="locationCode" width="180" />
+        <el-table-column label="货位" align="center" prop="locationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.locationCode) }}
+          </template>
+        </el-table-column>
       </el-table>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" icon="el-icon-printer" @click="confirmPrintOutOrderReturn">打 印</el-button>
@@ -305,6 +313,7 @@ import { listOutReturn, getOutReturn, delOutReturn, addOutReturn, printOutOrderR
 import { returnListRecord } from "@/api/stock/record";
 import { listAllWorkshop } from "@/api/base/workshop";
 import { listAllWarehouse } from "@/api/base/warehouse";
+import { listAllLocation } from "@/api/base/location";
 
 import selectOutOrder from "../../components/select-out-order/index"
 
@@ -378,14 +387,30 @@ export default {
       //出库退货详情
       outOrderReturnDetailOpen: false,
       outReturnDetailList: [],
+      locationList: [],
+      locationDict: {},
     };
   },
   created() {
     this.getList();
     this.getWarehouseList();
     this.getWorkshopList();
+    this.getBaselocationList();
   },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     /** 查询出库单退货列表 */
     getList() {
       this.loading = true;

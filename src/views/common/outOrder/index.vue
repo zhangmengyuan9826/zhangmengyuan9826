@@ -194,9 +194,13 @@
         <el-table-column label="单位" align="center" prop="unitCode">
           <template slot-scope="scope">
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
-          </template>
+          </template>  
         </el-table-column>
-        <el-table-column label="货位码" align="center" prop="locationCode"/>
+        <el-table-column label="货位" align="center" prop="locationCode" >
+        <template slot-scope="scope">
+          {{ formatLocation(scope.row.locationCode) }}
+        </template>
+      </el-table-column>
         <el-table-column label="操作" align="center" width="80" class-name="small-padding fixed-width">
           <template slot-scope="scope">
             <el-button
@@ -254,7 +258,6 @@
       </el-form>
       <el-table class="detail-table" :data="matLabelList" style="width: 100%">
         <el-table-column label="行号" align="center" prop="lineNo" />
-
         <el-table-column label="物料编码" align="center" prop="matCode"/>
         <el-table-column label="物料名称" align="center" prop="matName"/>
         <el-table-column label="规格" align="center" prop="figNum"/>
@@ -265,7 +268,11 @@
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
           </template>
         </el-table-column>
-        <el-table-column label="货位" align="center" prop="locationCode"/>
+        <el-table-column label="货位" align="center" prop="locationCode" >
+        <template slot-scope="scope">
+          {{ formatLocation(scope.row.locationCode) }}
+        </template>
+      </el-table-column>
       </el-table>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="confirmPrintOutOrder">打 印</el-button>
@@ -286,6 +293,7 @@
 import { listOutOrder, getOutOrder, delOutOrder, addOutOrder, printOutOrder } from "@/api/stock/outOrder";
 import { listAllWorkshop } from "@/api/base/workshop";
 import { listAllWarehouse } from "@/api/base/warehouse";
+import { listAllLocation } from "@/api/base/location";
 
 // import selectMat from "../../components/select-mat/index"
 import selectMatLabel from "../../components/select-mat-label-out/index";
@@ -369,14 +377,30 @@ export default {
       matLabelList: [],
       //防重复标签
       labelIdArr: [],
+      locationList: [],
+      locationDict: {},
     };
   },
   created() {
     this.getList();
     this.getWarehouseList();
     this.getWorkshopList();
+    this.getBaselocationList();
   },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     /** 查询出库单列表 */
     getList() {
       this.loading = true;
@@ -541,6 +565,7 @@ export default {
         max_quantity: item.remainQuantity,
         unitCode: item.unitCode,
         batch: item.batch,
+        brand: item.brand,
         supplierCode: item.supplierCode,
         locationCode: item.locationCode
       };

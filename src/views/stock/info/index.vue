@@ -11,13 +11,19 @@
           ></el-option>
         </el-select>
       </el-form-item>
+
       <el-form-item label="货位" prop="locationCode">
-        <el-input
+        <el-select
           v-model="queryParams.locationCode"
-          placeholder="请输入货位编码"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+          placeholder="请选择货位"
+        >
+          <el-option
+            v-for="(item, index) in locationList"
+            :key="item.locationCode"
+            :label="formatLocation(item.locationCode)"
+            :value="item.locationCode"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="物料编码" prop="matCode">
         <el-input
@@ -85,7 +91,11 @@
     <el-table v-loading="loading" :data="infoList"  @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="仓库" align="center" prop="warehouseName" />
-      <el-table-column label="货位" align="center" prop="locationCode" />
+      <el-table-column label="货位" align="center" prop="locationCode" >
+        <template slot-scope="scope">
+          {{ formatLocation(scope.row.locationCode) }}
+        </template>
+      </el-table-column>
       <el-table-column label="物料编码" align="center" prop="matCode" />
       <el-table-column label="物料名称" align="center" prop="matName" />
       <el-table-column label="批次" align="center" prop="batch" />
@@ -164,8 +174,19 @@
         </el-form-item>
          </el-col>
           <el-col :span="12">
-        <el-form-item label="货位编码" prop="locationCode">
-          <el-input v-model="form.locationCode" :disabled="true"/>
+        <el-form-item label="货位" prop="locationCode">
+          <el-select
+            v-model="form.locationCode"
+            placeholder="请选择货位"
+            :disabled="true"
+          >
+            <el-option
+              v-for="(item, index) in locationList"
+              :key="item.locationCode"
+              :label="formatLocation(item.locationCode)"
+              :value="item.locationCode"
+            ></el-option>
+          </el-select>
         </el-form-item>
         </el-col>
         </el-row>
@@ -189,11 +210,7 @@
               </el-select>
             </el-form-item>
          </el-col>
-          <!-- <el-col :span="12">
-        <el-form-item label="货位编码" prop="locationCode">
-          <el-input v-model="form.locationCode" :disabled="true"/>
-        </el-form-item>
-        </el-col> -->
+
         </el-row>
         <el-row>
           <el-col :span="12">
@@ -236,8 +253,9 @@
 </template>
 
 <script>
-import { listInfo,getStockInfoDetail,handleUpdate } from "@/api/stock/info";
+import { listInfo, getStockInfoDetail, handleUpdate } from "@/api/stock/info";
 import { listAllWarehouse } from "@/api/base/warehouse";
+import { listAllLocation } from "@/api/base/location";
 
 export default {
   name: "Info",
@@ -285,7 +303,9 @@ export default {
         comment: [
           { required: true, message: "修改原因不能为空", trigger: "blur" },
         ]
-        }
+        },
+      locationList: [],
+      locationDict: {},
     };
   },
   created() {   
@@ -298,8 +318,22 @@ export default {
     } 
     this.getList();
     this.getWarehouseList();
+    this.getBaselocationList();
   },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     /** 查询库存信息列表 */
     getList() {
       this.loading = true;      

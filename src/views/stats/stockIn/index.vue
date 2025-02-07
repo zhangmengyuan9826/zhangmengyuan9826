@@ -25,13 +25,18 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="货位号" prop="locationCode">
-        <el-input
+      <el-form-item label="货位" prop="locationCode">
+        <el-select
           v-model="queryParams.locationCode"
-          placeholder="请输入货位号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+          placeholder="请选择货位"
+        >
+          <el-option
+            v-for="(item, index) in locationList"
+            :key="item.locationCode"
+            :label="formatLocation(item.locationCode)"
+            :value="item.locationCode"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="操作人" prop="updateBy">
         <el-input
@@ -65,7 +70,6 @@
           plain
           icon="el-icon-download"
           size="mini"
-          :disabled="multiple"
           @click="handleExport"
           v-hasPermi="['stock:prodOrder:export']"
         >导出</el-button>
@@ -78,8 +82,12 @@
       <el-table-column label="物料名称" align="center" prop="matName" />
       <el-table-column label="规格" align="center" prop="figNum" />
       <el-table-column label="批次" align="center" prop="batch" />
-      <el-table-column label="货位号" align="center" prop="locationCode" />
-      <el-table-column label="供应商" align="center" prop="supplierName" />
+      <el-table-column label="货位" align="center" prop="locationCode" >
+        <template slot-scope="scope">
+          {{ formatLocation(scope.row.locationCode) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="品牌" align="center" prop="brand" />
       <el-table-column label="入库操作者" align="center" prop="updateBy" />
       <el-table-column label="入库时间" align="center" prop="updateTime" />
 
@@ -103,6 +111,7 @@
 
 <script>
 import { listStatsStockIn } from "@/api/stats/stockIn";
+import { listAllLocation } from "@/api/base/location";
 
 export default {
   name: "StatsStockIn",
@@ -119,17 +128,35 @@ export default {
         matCode: null,
         matName: null,
       },
+      // 非多个禁用
+
       //展示数据
       statsStockInList: [],
       // 日期范围
       dateRange: [],
+      locationList: [],
+      locationDict: {},
 
     };
   },
   created() {
     this.getList();
+    this.getBaselocationList();
   },
   methods: {
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
+    },
     /** 查询生产订单列表 */
     getList() {
       this.loading = true;

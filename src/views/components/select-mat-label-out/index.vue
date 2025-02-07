@@ -61,10 +61,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="供应商" prop="supplierName">
+      <el-form-item label="品牌" prop="brand">
         <el-input
-          v-model="queryParams.supplierName"
-          placeholder="请输入供应商"
+          v-model="queryParams.brand"
+          placeholder="请输入品牌"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -97,18 +97,22 @@
 
     <el-table ref="selectMatLabelTable" v-loading="loading" :data="matLabelList" style="width: 100%">
       <el-table-column type="selection" :selectable="checkSelectable" width="55" align="center" />
-      <el-table-column label="id" fixed align="center" prop="labelId" width="100" />
+      <el-table-column v-if="false" label="id" fixed align="center" prop="labelId" width="100" />
       <el-table-column label="物料编码" fixed align="center" prop="matCode" width="100" />
       <el-table-column label="物料描述" fixed align="center" prop="matName" width="120" />
       <el-table-column label="规格" align="center" prop="figNum" width="120" />
-      <el-table-column label="供应商" align="center" prop="supplierName" width="100" />
+      <el-table-column label="品牌" align="center" prop="brand" width="100" />
       <el-table-column label="批次" align="center" prop="batch" width="120" />
       <el-table-column v-if="true" label="可用数量" align="center" prop="remainQuantity" width="80" >
         <template slot-scope="scope">
           {{ scope.row.usableQuantity - scope.row.receivedQuantity }}
         </template>
       </el-table-column>
-      <el-table-column label="货位码" align="center" prop="locationCode" width="100" />
+      <el-table-column label="货位" align="center" prop="locationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.locationCode) }}
+          </template>
+        </el-table-column>
       <el-table-column label="火眼单位" align="center" prop="unitCode" width="80">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
@@ -168,7 +172,11 @@
         <el-table-column label="物料名称" align="center" prop="matName"/>
         <el-table-column label="规格" align="center" prop="figNum"/>
         <el-table-column label="数量" align="center" prop="quantity"/>
-        <el-table-column label="货位码" align="center" prop="locationCode"/>
+        <el-table-column label="货位" align="center" prop="locationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.locationCode) }}
+          </template>
+        </el-table-column>
         <el-table-column label="单位" align="center" prop="unitCode">
           <template slot-scope="scope">
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
@@ -191,6 +199,7 @@
 import { listMatLabelDialogOut,checkBatchMat } from "@/api/stock/matLabel";
 import { listAllGroup } from "@/api/base/group";
 import { listAllClass } from "@/api/base/class";
+import { listAllLocation } from "@/api/base/location";
 
 export default {
   name: "MatLabel",
@@ -230,8 +239,7 @@ export default {
         matClass: null,
         unitCode: null,
         batch: null,
-        supplierCode: null,
-        supplierName: null,
+        brand: null,
         prodTime: null,
         quantity: null,
         unitPrice: null,
@@ -249,17 +257,33 @@ export default {
       selectRow: null,
       checkMatLabelList : [],
       confirmRecLableids: [],
+      locationList: [],
+      locationDict: {},
     };
   },
   created() {
     // this.getList();
     this.getGroupList();
     this.getClassList();
+    this.getBaselocationList();
   },
   methods: {
     init(val) {
       this.queryParams.locationCode = val   //接收父组件传递的id值
       this.getList()
+    },
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+     //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
     },
     /** 查询物料标签列表 */
     getList() {
