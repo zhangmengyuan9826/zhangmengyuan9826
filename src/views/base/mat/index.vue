@@ -81,6 +81,22 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="物品标签" prop="matTag">
+        <el-select
+          v-model="queryParams.matTag"
+          placeholder="请输入物品标签检索内容"
+          filterable
+          clearable
+          @blur="getCurVal"
+        >
+          <el-option
+            v-for="item in tagList"
+            :key="item.tagCode"
+            :label="item.tagName"
+            :value="item.tagCode"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button
           type="primary"
@@ -188,11 +204,7 @@
       <el-table-column label="三级编码" align="center" prop="subcode" />
       <el-table-column label="品牌" align="center" prop="brand" />
       <el-table-column label="物料组" align="center" prop="matGroupName" />
-      <el-table-column 
-        label="分类" 
-        align="center" 
-        prop="matClassName"        
-      />
+      <el-table-column label="分类" align="center" prop="matClassName" />
       <el-table-column label="集团单位" align="center" prop="fdunitCode">
         <template slot-scope="scope">
           <dict-tag
@@ -210,13 +222,13 @@
         </template>
       </el-table-column>
       <el-table-column label="安全库存" align="center" prop="safetyStock" />
-      <el-table-column 
+      <el-table-column
         label="负责人"
         align="center"
-          prop="manageBy" 
-          width="100"
+        prop="manageBy"
+        width="100"
         :sort-orders="['descending', 'ascending']"
-          sortable="custom"
+        sortable="custom"
       />
       <el-table-column
         label="操作"
@@ -272,160 +284,222 @@
         <el-form-item label="物料描述" prop="matName">
           <el-input v-model="form.matName" placeholder="请输入物料描述" />
         </el-form-item>
-        <el-form-item label="集团编码" prop="fdCode">
-          <el-input v-model="form.fdCode" placeholder="请输入集团编码" />
-        </el-form-item>
+
         <el-form-item label="规格" prop="figNum">
           <el-input v-model="form.figNum" placeholder="请输入规格" />
         </el-form-item>
-        <el-form-item label="货号" prop="artNum">
-          <el-input v-model="form.artNum" placeholder="请输入货号" />
-        </el-form-item>
-        <el-form-item label="物料组" prop="matGroup">
-          <el-select v-model="form.matGroup" placeholder="请选择物料组">
-            <el-option
-              v-for="item in groupList"
-              :key="item.groupCode"
-              :label="item.groupName"
-              :value="item.groupCode"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="三级编码" prop="subcode">
-          <el-select
-            v-model="form.subcode"
-            placeholder="请输入检索内容"
-            filterable
-            clearable
-            @blur="getCurVal"
-          >
-            <el-option
-              v-for="item in subcodeList"
-              :key="item.subcodeCode"
-              :label="item.subcodeName"
-              :value="item.subcodeName"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="品牌" prop="brand">
-          <el-select
-            v-model="form.brand"
-            placeholder="请输入检索内容"
-            filterable
-            clearable
-            @blur="getCurVal"
-          >
-            <el-option
-              v-for="item in brandList"
-              :key="item.brandCode"
-              :label="item.brandName"
-              :value="item.brandName"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="分类" prop="matClass">
-          <span slot="label">
-            <el-tooltip placement="top">
-              <template #content>
-                <div>
-                  <b>非CMC使用的物料：</b>
-                  <br />
-                  1.化学试剂：用于化学反应的各类化学药品。
-                  2.生物试剂：用于生物实验的酶、抗体、核酸等。
-                  <br />
-                  <b>CMC使用的物料：</b>
-                  <br />
-                  ·
-                  如生物制品生产使用的原辅料；标准品；用于生物制品提取、纯化、灭活的化学试剂；直接接触药品的包装材料；药品包装材料等。
-                  <br />
-                  <b>非CMC使用耗材：</b>
-                  <br />
-                  ·
-                  辅助实验用物料。如枪头、培养皿、棉球、载玻片、一次性注射器、96孔板、滤芯/膜、离心管、洁净服、手套、口罩、鞋套、垃圾袋、三角瓶、试管架等。
-                  <br />
-                  <b>CMC使用的耗材：</b>
-                  <br />
-                  · 检验用试剂、培养基
-                </div>
-              </template>
-              <i class="el-icon-question"><b>分类</b></i>
-            </el-tooltip>
-          </span>
-          <el-select v-model="form.matClass" placeholder="请选择物料分类">
-            <el-option
-              v-for="item in classList"
-              :key="item.classCode"
-              :label="item.className"
-              :value="item.classCode"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="集团单位" prop="fdunitCode">
-          <el-select
-            v-model="form.fdunitCode"
-            placeholder="请输入集团单位"
-            filterable
-            clearable
-            @blur="getCurVal_unit"
-          >
-            <el-option
-              v-for="dict in dict.type.base_mat_unit"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="火眼单位" prop="unitCode">
-          <el-select
-            v-model="form.unitCode"
-            placeholder="请输入火眼单位"
-            filterable
-            clearable
-            @blur="getCurVal_unit"
-          >
-            <el-option
-              v-for="dict in dict.type.base_mat_unit"
-              :key="dict.value"
-              :label="dict.label"
-              :value="dict.value"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="安全库存" prop="safetyStock">
-          <el-input-number
-            v-model="form.safetyStock"
-            controls-position="right"
-            :min="0"
-            integer
-            placeholder="请输入安全库存"
-          />
-        </el-form-item>
-        <el-form-item
-          label="是否需安全库存提醒"
-          prop="stockNotice"
-          label-width="150px"
-        >
-          <el-radio-group v-model="form.stockNotice" @change="valueChange">
-            <el-radio label="1">是</el-radio>
-            <el-radio label="0">否</el-radio>
-          </el-radio-group>
-        </el-form-item>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="集团编码" prop="fdCode">
+              <el-input v-model="form.fdCode" placeholder="请输入集团编码" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="三级编码" prop="subcode">
+              <el-select
+                v-model="form.subcode"
+                placeholder="请输入检索内容"
+                filterable
+                clearable
+                @blur="getCurVal"
+              >
+                <el-option
+                  v-for="item in subcodeList"
+                  :key="item.subcodeCode"
+                  :label="item.subcodeName"
+                  :value="item.subcodeName"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-        <el-form-item label="物料负责人" prop="manageBy" label-width="100px">
-          <el-select v-model="form.manageBy" placeholder="请选择物料负责人">
-            <el-option
-              v-for="item in userList"
-              :key="item.userName"
-              :label="item.nickName"
-              :value="item.userName"
-            ></el-option>
-          </el-select>
-        </el-form-item>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="品牌" prop="brand">
+              <el-select
+                v-model="form.brand"
+                placeholder="请输入检索内容"
+                filterable
+                clearable
+                @blur="getCurVal"
+              >
+                <el-option
+                  v-for="item in brandList"
+                  :key="item.brandCode"
+                  :label="item.brandName"
+                  :value="item.brandName"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="货号" prop="artNum">
+              <el-input v-model="form.artNum" placeholder="请输入货号" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="集团单位" prop="fdunitCode">
+              <el-select
+                v-model="form.fdunitCode"
+                placeholder="请输入集团单位"
+                filterable
+                clearable
+                @blur="getCurVal_unit"
+              >
+                <el-option
+                  v-for="dict in dict.type.base_mat_unit"
+                  :key="dict.value"
+                  :label="dict.label"
+                  :value="dict.value"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="火眼单位" prop="unitCode">
+              <el-select
+                v-model="form.unitCode"
+                placeholder="请输入火眼单位"
+                filterable
+                clearable
+                @blur="getCurVal_unit"
+              >
+                <el-option
+                  v-for="dict in dict.type.base_mat_unit"
+                  :key="dict.value"
+                  :label="dict.label"
+                  :value="dict.value"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="物料组" prop="matGroup">
+              <el-select v-model="form.matGroup" placeholder="请选择物料组">
+                <el-option
+                  v-for="item in groupList"
+                  :key="item.groupCode"
+                  :label="item.groupName"
+                  :value="item.groupCode"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="分类" prop="matClass">
+              <span slot="label">
+                <el-tooltip placement="top">
+                  <template #content>
+                    <div>
+                      <b>非CMC使用的物料：</b>
+                      <br />
+                      1.化学试剂：用于化学反应的各类化学药品。
+                      2.生物试剂：用于生物实验的酶、抗体、核酸等。
+                      <br />
+                      <b>CMC使用的物料：</b>
+                      <br />
+                      ·
+                      如生物制品生产使用的原辅料；标准品；用于生物制品提取、纯化、灭活的化学试剂；直接接触药品的包装材料；药品包装材料等。
+                      <br />
+                      <b>非CMC使用耗材：</b>
+                      <br />
+                      ·
+                      辅助实验用物料。如枪头、培养皿、棉球、载玻片、一次性注射器、96孔板、滤芯/膜、离心管、洁净服、手套、口罩、鞋套、垃圾袋、三角瓶、试管架等。
+                      <br />
+                      <b>CMC使用的耗材：</b>
+                      <br />
+                      · 检验用试剂、培养基
+                    </div>
+                  </template>
+                  <i class="el-icon-question"><b>分类</b></i>
+                </el-tooltip>
+              </span>
+              <el-select v-model="form.matClass" placeholder="请选择物料分类">
+                <el-option
+                  v-for="item in classList"
+                  :key="item.classCode"
+                  :label="item.className"
+                  :value="item.classCode"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="安全库存" prop="safetyStock">
+              <el-input-number
+                v-model="form.safetyStock"
+                controls-position="right"
+                :min="0"
+                integer
+                placeholder="请输入安全库存"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item
+              label="物料负责人"
+              prop="manageBy"
+              label-width="110px"
+            >
+              <el-select v-model="form.manageBy" placeholder="请选择物料负责人">
+                <el-option
+                  v-for="item in userList"
+                  :key="item.userName"
+                  :label="item.nickName"
+                  :value="item.userName"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="物品标签" prop="matTag">
+              <el-select
+                v-model="form.matTag"
+                placeholder="请输入物品标签检索内容"
+                filterable
+                clearable
+                @blur="getCurVal"
+              >
+                <el-option
+                  v-for="item in tagList"
+                  :key="item.tagCode"
+                  :label="item.tagName"
+                  :value="item.tagCode"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item
+              label="最大出库数量"
+              prop="maxOutQuantity"
+              label-width="110px"
+            >
+              <el-input-number
+                v-model="form.maxOutQuantity"
+                controls-position="right"
+                :min="1"
+                :precision="0"
+                placeholder="请输入单次最大出库数量"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
 
       <div slot="footer" class="dialog-footer">
@@ -483,6 +557,7 @@
 import { listMat, getMat, delMat, addMat, updateMat } from "@/api/base/mat";
 import { listAllGroup } from "@/api/base/group";
 import { listAllClass } from "@/api/base/class";
+import { listAllTag } from "@/api/base/tag";
 import { listAllSubcode } from "@/api/base/subcode";
 import { listAllBrand } from "@/api/base/brand";
 import { getToken } from "@/utils/auth";
@@ -525,16 +600,17 @@ export default {
         subcode: null,
         unitCode: null,
         grossWeight: null,
-        safetyStock: null,        
+        safetyStock: null,
         manageBy: null,
+        matTag: null,
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        // matCode: [
-        //   { required: true, message: "物料编码不能为空", trigger: "blur" },
-        // ],
+        matTag: [
+          { required: true, message: "物品标签不能为空", trigger: "blur" },
+        ],
         matName: [
           { required: true, message: "物料名称不能为空", trigger: "blur" },
         ],
@@ -556,6 +632,13 @@ export default {
         manageBy: [
           { required: true, message: "请选择负责人", trigger: "blur" },
         ],
+        maxOutQuantity: [
+          {
+            required: true,
+            message: "请输入单次最大出库数量",
+            trigger: "blur",
+          },
+        ],
       },
       // 物料导入参数
       upload: {
@@ -576,6 +659,7 @@ export default {
       //组、分类
       groupList: [],
       classList: [],
+      tagList: [],
       subcodeList: [],
       userList: [],
       brandList: [],
@@ -591,6 +675,7 @@ export default {
     this.getList();
     this.getGroupList();
     this.getClassList();
+    this.getTagList();
     this.getSubcodeList();
     this.getBrandList();
     this.getUserList();
@@ -717,12 +802,12 @@ export default {
         .catch(() => {});
     },
     /** 导出按钮操作 */
-    handleExport() {      
+    handleExport() {
       this.download(
-        "base/mat/export",        
+        "base/mat/export",
         {
-          ids: this.ids.join(',')
-          },
+          ids: this.ids.join(","),
+        },
         `mat_${new Date().getTime()}.xlsx`
       );
     },
@@ -770,6 +855,11 @@ export default {
     getClassList() {
       listAllClass().then((response) => {
         this.classList = response;
+      });
+    },
+    getTagList() {
+      listAllTag().then((response) => {
+        this.tagList = response;
       });
     },
     getSubcodeList() {
