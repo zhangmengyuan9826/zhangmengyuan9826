@@ -390,7 +390,7 @@
             <el-table-column
               label="历史采购数量"
               align="center"
-              prop="purchaseTime"
+              prop="purchaseCount"
               width="60"
             />
             <el-table-column
@@ -879,12 +879,12 @@
         label-width="100px"
       >
         <el-row>
-          <el-col :span="12">
-            <el-form-item label="库存数量" prop="warehouseQuantity" width="200">
+          <el-col :span="9">
+            <el-form-item label="库存数量" prop="warehouseQuantity" width="170">
               <el-input v-model="matForm.warehouseQuantity" disabled />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="3">
             <el-button
               v-if="isSelect"
               type="primary"
@@ -904,9 +904,25 @@
               >转查询</el-button
             >
           </el-col>
+          <el-col :span="9">
+            <el-form-item v-if="isSelect" label="相同标签物料数量" prop="sameTagQuantity" label-width="160px">
+              
+              <el-input v-model="matForm.sameTagQuantity" disabled />
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-button
+              type="primary"
+              icon="el-icon-search"
+              size="mini"
+              style="margin-left:10px"
+              @click="showTagQueryDialog"
+              >标签查询</el-button
+            >
+          </el-col>
         </el-row>
         <el-row>
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="物料编码" prop="matCode">
               <el-input
                 v-model="matForm.matCode"
@@ -923,7 +939,39 @@
               </el-input>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :span="8">
+            <el-form-item label="物料名称" prop="matName" >
+              <el-input
+                v-model="matForm.matName"
+                placeholder="请输入物料名称"
+                :disabled="isSelect"
+              />
+            </el-form-item>
+            
+          </el-col>
+          <el-col :span="8">
+            <el-form-item v-if="isSelect" label="物品标签" prop="subcode">
+              <el-select
+                v-model="matForm.matTag"
+                placeholder=""
+                filterable
+                clearable
+                @blur="getCurVal"
+                disabled
+              >
+                <el-option
+                  v-for="item in tagList"
+                  :key="item.tagCode"
+                  :label="item.tagName"
+                  :value="item.tagCode"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
             <el-form-item label="三级编码" prop="subcode">
               <el-select
                 v-model="matForm.subcode"
@@ -945,18 +993,34 @@
               </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="物料名称" prop="matName">
-              <el-input
-                v-model="matForm.matName"
-                placeholder="请输入物料名称"
+          <el-col :span="8">
+          <el-form-item label="集团编码" prop="fdCode">
+            <el-input v-model="matForm.fdCode" placeholder="请输入集团编码" />
+          </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item
+              label="物料负责人"
+              prop="manageBy"
+              label-width="100px"
+            >
+              <el-select
+                v-model="matForm.manageBy"
+                placeholder="请选择物料负责人"
                 :disabled="isSelect"
-              />
+              >
+                <el-option
+                  v-for="item in userList"
+                  :key="item.userName"
+                  :label="item.nickName"
+                  :value="item.userName"
+                ></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+        </el-row>
+        <el-row>
+          <el-col :span="8">
             <el-form-item label="品牌" prop="brand">
               <el-select
                 v-model="matForm.brand"
@@ -976,18 +1040,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item label="规格" prop="figNum">
-              <el-input
-                v-model="matForm.figNum"
-                placeholder="请输入规格"
-                :disabled="isSelect"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="货号" prop="artNum">
               <el-input
                 v-model="matForm.artNum"
@@ -998,6 +1051,18 @@
               />
             </el-form-item>
           </el-col>
+        
+          <el-col :span="8">
+            <el-form-item label="规格" prop="figNum">
+              <el-input
+                v-model="matForm.figNum"
+                placeholder="请输入规格"
+                :disabled="isSelect"
+              />
+            </el-form-item>
+          </el-col>
+          
+          
         </el-row>
         <el-row>
           <el-col :span="8">
@@ -1107,9 +1172,7 @@
           </el-col>
         </el-row>
         <el-row>
-          <el-form-item label="集团编码" prop="fdCode">
-            <el-input v-model="matForm.fdCode" placeholder="请输入集团编码" />
-          </el-form-item>
+          
         </el-row>
         <el-row>
           <el-col :span="12">
@@ -1164,7 +1227,7 @@
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span="10">
+          <el-col :span="8">
             <el-form-item
               label="是否直接出库至实验室"
               prop="isWorkshop"
@@ -1221,26 +1284,7 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item
-              label="物料负责人"
-              prop="manageBy"
-              label-width="100px"
-            >
-              <el-select
-                v-model="matForm.manageBy"
-                placeholder="请选择物料负责人"
-                :disabled="isSelect"
-              >
-                <el-option
-                  v-for="item in userList"
-                  :key="item.userName"
-                  :label="item.nickName"
-                  :value="item.userName"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
+          
           <el-col :span="8">
             <p style="margin-left: -3%; color: red; font-size: 10">
               *安全库存大于0 默认触发提醒！
@@ -1777,7 +1821,7 @@
         <el-table-column
           label="历史采购数量"
           align="center"
-          prop="purchaseTime"
+          prop="purchaseCount"
           width="60"
         />
         <el-table-column label="用途" align="center" prop="purpose" width="120">
@@ -1976,6 +2020,132 @@
          
         </div>
     </el-dialog>
+    <el-dialog
+      :title="'检测到相同物料标签的物料库存'"
+      :visible.sync="showTagQuery"
+      width="1000px"
+      height="90%"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+    <el-form :model="tagQueryParams" ref="tagQueryParams" size="small" :inline="true" label-width="68px">
+      <el-form-item label="标签名称" prop="matTag">
+        <el-select
+          v-model="tagQueryParams.matTag"
+          placeholder="请输入物品标签检索内容"
+          filterable
+          clearable
+          @blur="getCurVal"
+        >
+          <el-option
+            v-for="(item, index) in tagList"
+            :key="item.tagCode"
+            :label="item.tagName"
+            :value="item.tagCode"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      
+      
+      <el-form-item>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="tagHandleQuery">搜索</el-button>
+      </el-form-item>
+    </el-form>
+      <el-table
+        v-loading="loading"
+        :data="sameTagStockList"
+        style="width: 100%"
+        max-height="700"
+      >
+      <el-table-column label="行号" align="center" type="index" />
+      <el-table-column
+          label="物料编码"
+          align="center"
+          prop="matCode"
+          width="150"
+        />
+        <el-table-column
+          label="物料名称"
+          fixed
+          align="center"
+          prop="matName"
+          width="190"
+        />
+
+        <el-table-column
+          label="规格"
+          align="center"
+          prop="figNum"
+          width="120"
+        />       
+        <el-table-column
+          label="单位"
+          align="center"
+          prop="unitCode"
+          width="55"
+        >
+          <template slot-scope="scope">
+            <dict-tag
+              :options="dict.type.base_mat_unit"
+              :value="scope.row.unitCode"
+            />
+          </template>
+        </el-table-column>        
+
+       
+        <el-table-column
+          label="物料分类"
+          align="center"
+          prop="matClass"
+          width="80"
+        />
+        <el-table-column
+          label="物料组"
+          align="center"
+          prop="matGroup"
+          width="80"
+        />       
+        <el-table-column label="有效时间" align="center" prop="expiredTime" width="120">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.expiredTime, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+        <el-table-column
+          label="货位"
+          align="center"
+          prop="locationCode"
+          width="80"
+        />
+        <el-table-column
+          label="数量"
+          align="center"
+          prop="quantity"
+          width="80"
+        />     
+      </el-table>
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="tagQueryParams.pageNum"
+        :limit.sync="tagQueryParams.pageSize"
+        @pagination="tagHandleQuery"
+      />
+      <div slot="footer" class="dialog-footer">
+        <!-- <el-button
+          type="primary"
+          v-if="actionType !== 'view'"
+          @click="confirmAddExistMat"
+          >保持我的输入</el-button
+        > -->
+        <el-button 
+        @click="cancelShowTagQuery">
+        关闭</el-button>
+      </div>
+      
+        <div slot="footer" class="dialog-footer">
+         
+        </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -1995,10 +2165,12 @@ import { Message } from "element-ui";
 import { listMat } from "@/api/base/mat";
 import { listAllGroup } from "@/api/base/group";
 import { listAllClass } from "@/api/base/class";
+import { listAllTag } from "@/api/base/tag";
 import { listAllSubcode } from "@/api/base/subcode";
 import { listAllBrand } from "@/api/base/brand";
 import { listAllWorkshop } from "@/api/base/workshop";
-import { listMatLabel } from "@/api/stock/matLabel";
+import { listMatLabelAll } from "@/api/stock/matLabel";
+import { listInfo} from "@/api/stock/info";
 import { getCurrentUser, listUserAll } from "@/api/system/user";
 import selectMat from "../../components/select-mat/index";
 import selectSupplier from "../../components/select-supplier/index";
@@ -2070,6 +2242,9 @@ export default {
         requireDate: [
           { required: true, message: "要求到货时间不能为空", trigger: "blur" },
         ],
+        pmProject: [
+          { required: true, message: "PM项目不能为空", trigger: "blur" },
+        ]
       },
       approvedRules: {
         remark: [{ required: false, message: "备注不能为空", trigger: "blur" }],
@@ -2130,6 +2305,7 @@ export default {
       //组、分类
       groupList: [],
       classList: [],
+      tagList: [],
       subcodeList: [],
       brandList: [],
 
@@ -2240,11 +2416,19 @@ export default {
       multiDoneDetailList: [],
       viewMultiDoneMatDetail: false,
       doneDetailIds: [],
+      showTagQuery: false,
+      sameTagStockList: [],
+      tagQueryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        matTag: null,
+        }
     };
   },
   created() {
     this.getGroupList();
     this.getClassList();
+    this.getTagList();
     this.getSubcodeList();
     this.getBrandList();
     this.getUser();
@@ -2286,6 +2470,9 @@ export default {
     },
   },
   methods: {
+    getCurVal(val) {
+      this.value = val.target.value;
+    },
     submitDoneDetails() {
       console.log(this.doneDetailIds)
       if(!this.doneDetailIds || this.doneDetailIds.length == 0){
@@ -2370,6 +2557,27 @@ export default {
       this.$set(this.matForm, "isSingle", 0);
       this.$set(this.matForm, "isImport", 0);
       this.$set(this.matForm, "stockNotice", "0");
+    },
+    showTagQueryDialog() {
+      this.showTagQuery = true
+      if(this.matForm.matTag){
+        this.tagQueryParams['matTag'] = this.matForm.matTag
+      }
+      this.tagHandleQuery()
+    },
+    tagHandleQuery(){      
+      listInfo(this.tagQueryParams).then(response => {
+        this.sameTagStockList = response.rows;
+        this.total = response.total;
+        this.loading = false;        
+      });
+    },
+    cancelShowTagQuery(){
+      this.showTagQuery = false
+      this.tagQueryParams = {
+        matCode: null,
+      }
+      this.resetForm("tagQueryParams")
     },
     formatStatusStyle(requireId) {
       this.openStatusLogs = true;
@@ -2666,6 +2874,7 @@ export default {
         labelType: null,
         matCode: null,
         warehouseQuantity: null,
+        sameTagQuantity :null,
         matName: null,
         subcode: null,
         fdCode: null,
@@ -2673,6 +2882,7 @@ export default {
         artNum: null,
         matGroup: null,
         matClass: null,
+        matTag: null,
         unitCode: null,
         batch: null,
         brandCode: null,
@@ -2848,6 +3058,11 @@ export default {
         this.classList = response;
       });
     },
+    getTagList() {
+      listAllTag().then((response) => {
+        this.tagList = response;
+      });
+    },
     getSubcodeList() {
       listAllSubcode().then((response) => {
         this.subcodeList = response;
@@ -2946,6 +3161,9 @@ export default {
       }
       this.matForm.matGroup = this.item.matGroup;
       this.matForm.matClass = this.item.matClass;
+      if (this.item.matTag) {
+        this.matForm.matTag = this.item.matTag;
+      }
       if (this.item.brand) {
         this.matForm.brand = this.item.brand;
       }
@@ -2971,15 +3189,31 @@ export default {
       console.log(this.item);
       // 获取库存
       var matlabel_quantity = 0;
-      var label_query_param = { matCode: this.item.matCode };
-      listMatLabel(label_query_param).then((response) => {
-        var matLabelList = response.rows;
+      var label_query_param_1 = { matCode: this.item.matCode, matTag: this.item.matTag };
+      listMatLabelAll(label_query_param_1).then((rows) => {
+        var matLabelList = rows;
         matlabel_quantity = matLabelList
           .map((item) => item.usableQuantity - item.receivedQuantity)
           .reduce((acc, num) => acc + num, 0);
         this.matForm.warehouseQuantity = matlabel_quantity;
       });
       this.$set(this.matForm, "warehouseQuantity", matlabel_quantity);
+
+      var sameTagQuantity = 0;
+      var label_query_param_2 = { matTag: this.item.matTag };
+      if(this.item.matTag){
+        listMatLabelAll(label_query_param_2).then((rows) => {
+        var matLabelList = rows;
+        sameTagQuantity = matLabelList
+          .map((item) => item.usableQuantity - item.receivedQuantity)
+          .reduce((acc, num) => acc + num, 0);
+        this.matForm.sameTagQuantity = sameTagQuantity;
+      });
+      this.$set(this.matForm, "sameTagQuantity", sameTagQuantity);
+      } else {
+        this.$set(this.matForm, "sameTagQuantity", 0)
+      }
+      
 
       this.selectMatOpen = false;
     },

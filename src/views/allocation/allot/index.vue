@@ -24,9 +24,9 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="发起货位" prop="srclocationCode">
+      <el-form-item label="发起货位" prop="srcLocationCode">
         <el-select
-          v-model="queryParams.srclocationCode"
+          v-model="queryParams.srcLocationCode"
           placeholder="请选择发起货位"
         >
           <el-option
@@ -122,16 +122,27 @@
     >
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="调拨单号" align="center" prop="allotNo" />
-      <el-table-column
+      <!-- <el-table-column
         label="发起货位"
         align="center"
         prop="srcLocationCode"
-      />
-      <el-table-column
+      /> -->
+      <el-table-column label="发起货位" align="center" prop="srcLocationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.srcLocationCode) }}
+          </template>
+        </el-table-column>
+      <el-table-column label="目标货位" align="center" prop="destLocationCode" >
+          <template slot-scope="scope">
+            {{ formatLocation(scope.row.destLocationCode) }}
+          </template>
+        </el-table-column>
+
+      <!-- <el-table-column
         label="目标货位"
         align="center"
         prop="destLocationCode"
-      />
+      /> -->
       <el-table-column
         label="调拨单状态"
         align="center"
@@ -192,16 +203,16 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
           <el-col :span="8">
-            <el-form-item label="发起货位" prop="srclocationCode">
+            <el-form-item label="发起货位" prop="srcLocationCode">
               <el-select
-                v-model="form.srclocationCode"
+                v-model="form.srcLocationCode"
                 placeholder="请选择发起货位"
                 @change="syncLocationCode"
               >
                 <el-option
                   v-for="(item, index) in locationList"
                   :key="item.locationCode"
-                  :label="item.locationCode"
+                  :label="formatLocation(item.locationCode)"
                   :value="index"
                 ></el-option>
               </el-select>
@@ -216,7 +227,7 @@
                 <el-option
                   v-for="(item, index) in locationList"
                   :key="item.locationCode"
-                  :label="item.locationCode"
+                  :label="formatLocation(item.locationCode)"
                   :value="index"
                 ></el-option>
               </el-select>
@@ -231,7 +242,7 @@
         <el-row>
           <el-col :span="8">
             <el-form-item label="选择物料标签">
-              <el-button size="small" type="success" icon="el-icon-search" @click="openSelectMatLabelDialog" :disabled="form.srclocationCode === null">物料标签清单</el-button>
+              <el-button size="small" type="success" icon="el-icon-search" @click="openSelectMatLabelDialog" :disabled="form.srcLocationCode === null">物料标签清单</el-button>
             </el-form-item>
           </el-col>
         </el-row>
@@ -296,12 +307,12 @@
           </el-col>
           <el-col :span="6">
             <el-form-item label="发起货位：">
-              <span>{{ form.srcLocationName }}</span>
+              <span>{{ form.srcLocationCode }}-{{ form.srcLocationName }}</span>
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label="目标货位：">
-              <span>{{ form.destLocationName }}</span>
+              <span>{{ form.destLocationCode }}-{{ form.destLocationName }}</span>
             </el-form-item>
           </el-col>
           <el-col :span="5">
@@ -432,7 +443,7 @@ export default {
         pageSize: 10,
         allotNo: null,
         allotReason: null,
-        srclocationCode: null,
+        srcLocationCode: null,
         destlocationCode: null,
         allotStatus: null,
         allotProgress: null,
@@ -441,7 +452,7 @@ export default {
       form: {},
       // 表单校验
       rules: {
-        srclocationCode: [
+        srcLocationCode: [
           { required: true, message: "请选发起货位", trigger: "blur" },
         ],
         destlocationCode: [
@@ -507,7 +518,7 @@ export default {
         allotId: null,
         allotNo: null,
         allotReason: null,
-        srclocationCode: null,
+        srcLocationCode: null,
         destlocationCode: null,
         allotStatus: "0",
         allotProgress: null,
@@ -522,7 +533,7 @@ export default {
     openSelectMatLabelDialog(){
       this.selectMatLabelOpen = true;
       this.$nextTick(function(){ 
-        let _locationCode = this.locationList[this.form.srclocationCode].locationCode
+        let _locationCode = this.locationList[this.form.srcLocationCode].locationCode
         var queryParamsOut= {locationCode:_locationCode};
         this.$refs.matLabelPage.init(_locationCode);
       })
@@ -533,12 +544,12 @@ export default {
     },
 
     confirmSelectMatLabel(item){
-      if(this.currentLocationCode !== '' & this.form.srclocationCode !== this.currentLocationCode){
+      if(this.currentLocationCode !== '' & this.form.srcLocationCode !== this.currentLocationCode){
         this.matLabelList=[];
         this.labelIdArr=[];
-        this.currentLocationCode = this.form.srclocationCode;
+        this.currentLocationCode = this.form.srcLocationCode;
       } else if (this.currentLocationCode === ''){
-        this.currentLocationCode = this.form.srclocationCode;
+        this.currentLocationCode = this.form.srcLocationCode;
       }
       item['quantity'] = item['usableQuantity'] -item['receivedQuantity'] 
       this.matLabelList.unshift(item);
@@ -548,6 +559,13 @@ export default {
     },
 
     confirmSelectMatLabelArr(arr){
+      if(this.currentLocationCode !== '' & this.form.srcLocationCode !== this.currentLocationCode){
+        this.matLabelList=[];
+        this.labelIdArr=[];
+        this.currentLocationCode = this.form.srcLocationCode;
+      } else if (this.currentLocationCode === ''){
+        this.currentLocationCode = this.form.srcLocationCode;
+      }
       let that = this;
       arr && arr.length > 0 && arr.forEach(item => {
         that.labelIdArr.push(item.labelId);
@@ -622,21 +640,20 @@ export default {
         console.log(this.matLabelList)
         // return;
           let that = this;
-          if(that.form.destlocationCode === that.form.srclocationCode){
+
+          if(that.form.destlocationCode === that.form.srcLocationCode){
             Message.warning("目标货位不能与发起货位一致！")
             return
           }
           if(!that.matLabelList || that.matLabelList.length === 0){
             that.$modal.msgError("请选择物料标签");
             return;
-          }
-          console.log(that.form.srclocationCode)
-          console.log(that.currentLocationCode)
-          if(that.form.srclocationCode !== that.currentLocationCode){
+          }          
+          if(that.form.srcLocationCode !== that.currentLocationCode){
             that.$modal.msgError("货位与物料不一致！");
             return;
           }         
-          that.form.srcLocationCode = that.locationList[that.form.srclocationCode].locationCode
+          that.form.srcLocationCode = that.locationList[that.form.srcLocationCode].locationCode
           that.form.destLocationCode = that.locationList[that.form.destlocationCode].locationCode
           console.log(that.form)
           that.$modal.confirm("是否确认创建调拨单？").then(function () {            

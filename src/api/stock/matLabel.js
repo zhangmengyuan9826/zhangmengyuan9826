@@ -9,6 +9,15 @@ export function listMatLabel(query) {
   })
 }
 
+// 查询物料标签列表-所有，统计需要
+export function listMatLabelAll(query) {
+  return request({
+    url: '/stock/matLabel/listAll',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询物料标签列表（弹窗）
 export function listMatLabelDialog(query) {
   return request({
