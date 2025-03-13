@@ -20,7 +20,7 @@
         </div>
         <div class="card-panel-description">
           <div @click="jumpPage('/stock/info?isExpired=1')">
-            <div class="card-panel-text panel-return"><b>过期物料数量</b></div>
+            <div class="card-panel-text panel-return"><b>过期物料种类</b></div>
             <count-to :start-val="0" :end-val="panelGroupData.matExpired" :duration="2800" class="card-panel-num panel-return" />
           </div>
         </div>
