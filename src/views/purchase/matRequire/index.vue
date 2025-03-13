@@ -1237,19 +1237,31 @@
                 v-model="matForm.isWorkshop"
                 @change="valueChange4"
               >
-                <el-radio label="1">是</el-radio>
-                <el-radio label="0">否</el-radio>
+                <el-radio :label="1">是</el-radio>
+                <el-radio :label="0">否</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="实验室" prop="workshopCode">
-              <el-select v-model="matForm.workshopCode" placeholder="请选择实验室">
+              <el-select v-model="matForm.workshopCode" placeholder="请选择实验室" :rules="dynamicRules">
                 <el-option
                   v-for="item in workshopList"
                   :key="item.workshopCode"
                   :label="item.workshopName"
                   :value="item.workshopCode"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="货位" prop="locationCode">
+              <el-select v-model="matForm.locationCode" placeholder="请选择货位" :rules="dynamicRules">
+                <el-option
+                  v-for="(item, index) in locationList"
+                  :key="item.locationCode"
+                  :label="formatLocation(item.locationCode)"
+                  :value="item.locationCode"
                 ></el-option>
               </el-select>
             </el-form-item>
@@ -2169,6 +2181,7 @@ import { listAllTag } from "@/api/base/tag";
 import { listAllSubcode } from "@/api/base/subcode";
 import { listAllBrand } from "@/api/base/brand";
 import { listAllWorkshop } from "@/api/base/workshop";
+import { listAllLocation } from "@/api/base/location";
 import { listMatLabelAll } from "@/api/stock/matLabel";
 import { listInfo} from "@/api/stock/info";
 import { getCurrentUser, listUserAll } from "@/api/system/user";
@@ -2299,6 +2312,12 @@ export default {
         isWorkshop: [
           { required: true, message: "请选择是否直接出库至实验室", trigger: "blur" },
         ],
+        workshopCode: [
+          { required: false, message: "请选择实验室", trigger: "blur" },
+        ],
+        locationCode: [
+          { required: false, message: "请选择货位", trigger: "blur" },
+        ],
       },
       requireDetailList: [],
 
@@ -2422,7 +2441,9 @@ export default {
         pageNum: 1,
         pageSize: 10,
         matTag: null,
-        }
+        },
+      locationList: [],
+      locationDict: {},
     };
   },
   created() {
@@ -2435,6 +2456,7 @@ export default {
     this.getList();
     this.getUserList();
     this.getWorkshopList();
+    this.getBaselocationList();
   },
   change: {},
   computed: {
@@ -2467,6 +2489,21 @@ export default {
         _ruleImport[0].required = false;
       }
       this.matRules.importReason = _ruleImport;
+
+      // 实验室 or 货位
+      const _ruleWorkshop = cloneDeep(this.matRules.workshopCode);
+      const _ruleLocation = cloneDeep(this.matRules.locationCode);
+      if (this.matForm.isWorkshop === 1) {
+        _ruleWorkshop[0].required = true;
+        _ruleLocation[0].required = false;
+      } else if (this.matForm.isWorkshop === 0) {
+        _ruleLocation[0].required = true;
+        _ruleWorkshop[0].required = false;
+      }
+      this.matRules.workshopCode = _ruleWorkshop;
+      this.matRules.locationCode = _ruleLocation;
+      return
+
     },
   },
   methods: {
@@ -2556,6 +2593,7 @@ export default {
       }
       this.$set(this.matForm, "isSingle", 0);
       this.$set(this.matForm, "isImport", 0);
+      this.$set(this.matForm, "isWorkshop", 0);
       this.$set(this.matForm, "stockNotice", "0");
     },
     showTagQueryDialog() {
@@ -3212,9 +3250,7 @@ export default {
       this.$set(this.matForm, "sameTagQuantity", sameTagQuantity);
       } else {
         this.$set(this.matForm, "sameTagQuantity", 0)
-      }
-      
-
+      }    
       this.selectMatOpen = false;
     },
     cancelSelectMat() {
@@ -3257,7 +3293,6 @@ export default {
     formatStatusStyle(statusCode) {
       return { color: this.statusColor[statusCode] };
     },
-
     formatBoolType(boolType) {
       if (boolType === "1" || boolType === 1) {
         return "是";
@@ -3265,6 +3300,19 @@ export default {
         return "否";
       }
       return boolType;
+    },
+    formatLocation(locationCode){
+      return locationCode+"-"+this.locationDict[locationCode]
+    },
+    //查询货位
+    getBaselocationList() {
+      listAllLocation().then((response) => {
+        this.locationList = response;
+        this.locationDict = this.locationList.reduce((dict, obj) => {
+          dict[obj.locationCode] = obj.locationName;
+          return dict;
+        }, {});
+      });
     },
     
   },

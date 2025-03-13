@@ -107,7 +107,12 @@
         <template slot-scope="scope">
           {{ scope.row.usableQuantity - scope.row.receivedQuantity }}
         </template>
-      </el-table-column>
+      </el-table-column>     
+      <el-table-column v-if="true" label="本次可出库数量" align="center" prop="maxQuantity" width="80" >
+        <template slot-scope="scope">
+          {{ getMaxQuantity(scope.row.usableQuantity , scope.row.receivedQuantity, scope.row.maxOutQuantity) }}
+        </template>
+      </el-table-column> 
       <el-table-column label="货位" align="center" prop="locationCode" >
           <template slot-scope="scope">
             {{ formatLocation(scope.row.locationCode) }}
@@ -316,8 +321,7 @@ export default {
     handleSelect(row){
       this.selectRow=row
       checkBatchMat(row).then(response => {
-        console.log("response");
-        console.log(response);  
+ 
         var data = [] 
         for(let i=0;i<response.data.length;i++){
           if(this.labelIdArr.indexOf(response.data[i]['labelId']) >= 0){
@@ -327,13 +331,12 @@ export default {
           }
         }
         if(data.length >0){
+
           this.checkMatLabelList = data;
           this.openCheckMat = true
         } else {
-          row['remainQuantity'] = row['usableQuantity'] -row['receivedQuantity'] 
+          row['maxQuantity'] = this.getMaxQuantity(row['usableQuantity'] ,row['receivedQuantity'],row['maxOutQuantity'])
           this.$refs.selectMatLabelTable.clearSelection();
-          console.log("row")
-          console.log(row)
           this.$emit('confirmSelect', row);
         }
       })
@@ -342,6 +345,9 @@ export default {
     //多选物料
     handleSelectArr(){
       let arr = this.$refs.selectMatLabelTable.selection;
+      for(let i=0;i<arr.length;i++){
+        arr[i]['maxQuantity'] = this.getMaxQuantity(arr[i]['usableQuantity'] ,arr[i]['receivedQuantity'],arr[i]['maxOutQuantity'])
+      }
       this.$refs.selectMatLabelTable.clearSelection();
       this.$emit('confirmSelectArr', arr);
     },
@@ -356,7 +362,7 @@ export default {
       let arr = this.$refs.selectMatLabelTableRec.selection;
       this.confirmRecLableids = arr.map(item => item.labelId)
       for(let i=0;i<arr.length;i++){
-        arr[i]['remainQuantity'] = arr[i]['usableQuantity'] - arr[i]['receivedQuantity'] 
+        arr[i]['maxQuantity'] = this.getMaxQuantity(arr[i]['usableQuantity'] ,arr[i]['receivedQuantity'],arr[i]['maxOutQuantity'])
       }
       // row['remainQuantity'] = row['usableQuantity'] -row['receivedQuantity'] 
       this.$refs.selectMatLabelTable.clearSelection();
@@ -378,6 +384,14 @@ export default {
       listAllClass().then(response => {
         this.classList = response;
       });
+    },
+    getMaxQuantity(a,b,c){
+      if(c && c>0){
+        return Math.min(...[a-b,c])
+      } else {
+        return a-b
+      }
+      
     },
   }
 };

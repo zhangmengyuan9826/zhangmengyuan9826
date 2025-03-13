@@ -632,6 +632,7 @@ export default {
         updateTime: null,
         storageCondition: null,
         remark: null,
+        maxOutQuantity: null,
       };
       this.resetForm("form");
     },
@@ -679,6 +680,7 @@ export default {
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
+        console.log(this.form)
         if (valid) {
           this.form.labelType = 'purchase';
           if (this.form.labelId != null) {
@@ -763,7 +765,9 @@ export default {
       this.form.matClass = item.matClass;
       this.form.fdunitCode = item.fdunitCode;
       this.form.unitCode = item.unitCode;
-      this.form.unitCode = item.unitCode;
+      // if(item.maxOutQuantity){
+      //   this.form.maxOutQuantity = item.maxOutQuantity;
+      // }
       // this.form.batch = 'CG'+ this.$moment().format('YYYYMMDDHHmmss');
       if(item.matClass==='YY'){
         this.form.supplierName='非小试物料供应商'

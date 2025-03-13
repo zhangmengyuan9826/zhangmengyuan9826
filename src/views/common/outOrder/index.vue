@@ -188,7 +188,9 @@
         <el-table-column label="规格" align="center" prop="figNum"/>
         <el-table-column label="数量" align="center" prop="quantity">
           <template slot-scope="scope">
-            <el-input-number style="width: 100px" size="small" v-model="scope.row.quantity" controls-position="right" :min="1" :max="scope.row.max_quantity" integer/>
+            <el-input-number style="width: 100px" size="small" 
+            v-model="scope.row.quantity" controls-position="right" 
+            :min="1" :max="scope.row.max_quantity" :precision="0"/>
           </template>
         </el-table-column>
         <el-table-column label="单位" align="center" prop="unitCode">
@@ -554,7 +556,6 @@ export default {
       })
     },
     confirmSelectMatLabel(item){
-      console.log(item)
       let detail = {
         labelId: item.labelId,
         matCode: item.matCode,
@@ -562,7 +563,7 @@ export default {
         fdCode: item.fdCode,
         figNum: item.figNum,
         quantity: 0,
-        max_quantity: item.remainQuantity,
+        max_quantity: item.maxQuantity,
         unitCode: item.unitCode,
         batch: item.batch,
         brand: item.brand,
@@ -585,7 +586,7 @@ export default {
           matGroup: item.matGroup,
           matClass: item.matClass,
           quantity: 0,
-          max_quantity:item.quantity,
+          max_quantity:item.maxQuantity,
           unitCode: item.unitCode,
           locationCode: item.locationCode
         };
