@@ -17,6 +17,22 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="物品标签" prop="matTag">
+        <el-select
+          v-model="queryParams.matTag"
+          placeholder="请输入物品标签检索内容"
+          filterable
+          clearable
+          @blur="getCurVal"
+        >
+          <el-option
+            v-for="item in tagList"
+            :key="item.tagCode"
+            :label="item.tagName"
+            :value="item.tagCode"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="批次号" prop="batch">
         <el-input
           v-model="queryParams.batch"
@@ -86,6 +102,11 @@
       <el-table-column label="规格" align="center" prop="figNum" />
       <el-table-column label="批次" align="center" prop="batch" />
       <el-table-column label="供应商" align="center" prop="supplierName" />
+      <el-table-column label="火眼单位" align="center" prop="unitCode" width="80">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
+        </template>
+      </el-table-column>
       <el-table-column label="采购入库" align="center" prop="inPurchase" />
       <el-table-column label="采购入库退货" align="center" prop="inPurchasePeturn" />
       <!-- <el-table-column label="生产出库" align="center" prop="outProduction" />
@@ -112,9 +133,12 @@
 
 <script>
 import { listStatsStockRecord } from "@/api/stats/stockRecord";
+import { listAllTag } from "@/api/base/tag";
+
 
 export default {
   name: "StatsStockIn",
+  dicts: ['base_mat_unit'],
   data() {
     return {
       // 显示搜索条件
@@ -132,13 +156,20 @@ export default {
       },
       //展示数据
       statsStockRecordList: [],
+      tagList: [],
 
     };
   },
   created() {
     this.getList();
+    this.getTagList();
   },
   methods: {
+    getTagList() {
+      listAllTag().then((response) => {
+        this.tagList = response;
+      });
+    },
     /** 查询生产订单列表 */
     getList() {
       this.loading = true;

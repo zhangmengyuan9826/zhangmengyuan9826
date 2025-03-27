@@ -3210,7 +3210,6 @@ export default {
       }
       this.matForm.batch = "CG" + this.$moment().format("YYYYMMDDHHmmss");
       if (
-        !this.item.stockNotice ||
         !this.item.safetyStock ||
         !this.item.manageBy
       ) {

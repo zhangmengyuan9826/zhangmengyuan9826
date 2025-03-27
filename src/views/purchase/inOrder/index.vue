@@ -132,7 +132,7 @@
     />
 
     <!-- 添加入库单对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="1200px" append-to-body :close-on-click-modal="false">
+    <el-dialog :title="title" :visible.sync="open" width="90%" append-to-body :close-on-click-modal="false">
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="8">
@@ -157,6 +157,16 @@
         </el-table-column>
         <el-table-column label="批次" align="center" prop="batch" width="160" />
         <el-table-column label="品牌" align="center" prop="brand" width="180" />
+        <!-- <el-table-column label="是否有发货单" align="center" prop="isBill">
+            <template slot-scope="scope">
+              <el-switch
+                v-model="scope.row.isBill"
+                active-value="0"
+                inactive-value="1"
+                @change="handleIsBillChange(scope.row)"
+              ></el-switch>
+            </template>
+          </el-table-column> -->
         <el-table-column label="操作" align="center" width="80" class-name="small-padding fixed-width">
           <template slot-scope="scope">
             <el-button

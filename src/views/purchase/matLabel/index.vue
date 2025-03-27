@@ -231,7 +231,7 @@
         <el-row>
           <el-form-item v-if="addSelect" label="物料来源" prop="matCode">
             <el-radio-group v-model="form.matSource" @change="valueChange">
-                <el-radio :label="1">主数据</el-radio>
+                <el-radio v-hasPermi="['base:mat:label']" :label="1">主数据</el-radio>
                 <el-radio :label="0">物料需求单</el-radio>
               </el-radio-group>
           </el-form-item>
@@ -339,14 +339,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="火眼单位" prop="unitCode">
-              <!-- <el-select v-model="form.unitCode" placeholder="请选择火眼单位">
-                <el-option
-                  v-for="dict in dict.type.base_mat_unit"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="dict.value"
-                ></el-option>
-              </el-select> -->
+
               <el-select
                 v-model="form.unitCode"
                 placeholder="请输入火眼单位"
@@ -390,17 +383,9 @@
               </el-date-picker>
             </el-form-item>
           </el-col>  
-          <el-col :span="12"> 
-          
+          <el-col :span="12">           
           <el-form-item label="存储条件" prop="storageCondition">
-            
-        <!-- <span slot="label">
-          <el-tooltip content="存储条件说明存储条件说明存储条件说明存储条件说明存储条件说明存储条件说明" placement="top">
-          <i class="el-icon-question"><b>存储条件</b></i>
-          </el-tooltip>
-        </span> -->
-        
-        <el-select v-model="form.storageCondition" placeholder="请选择存储条件">
+          <el-select v-model="form.storageCondition" placeholder="请选择存储条件">
             <el-option
               v-for="dict in dict.type.storage_conditions"
               :key="dict.value"
@@ -633,6 +618,7 @@ export default {
         storageCondition: null,
         remark: null,
         maxOutQuantity: null,
+        requireDetailId: null,
       };
       this.resetForm("form");
     },
@@ -656,6 +642,7 @@ export default {
     handleAdd() {
       this.form = {};
       this.reset();
+      this.$set(this.form, "matSource", 0);
       this.open = true;
       this.addSelect = true;
       this.title = "添加物料标签";
@@ -773,6 +760,7 @@ export default {
         this.form.supplierName='非小试物料供应商'
         this.form.supplierCode='YY_SUPPLIER'
       }
+      this.form.matSource = 1;
       console.log(this.form)
       this.selectMatOpen = false;
     },
@@ -787,6 +775,8 @@ export default {
       this.form.matClass = item.matClass;
       this.form.fdunitCode = item.unitCode;
       this.form.unitCode = item.unitCode;
+      this.form.requireDetailId = item.detailId;
+      this.form.matSource = 0;
       // this.form.batch = 'CG'+ this.$moment().format('YYYYMMDDHHmmss');
       if(item.matClass==='YY'){
         this.form.supplierName='非小试物料供应商'

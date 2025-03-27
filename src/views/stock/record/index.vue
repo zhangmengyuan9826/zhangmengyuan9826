@@ -53,6 +53,22 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="物品标签" prop="matTag">
+        <el-select
+          v-model="queryParams.matTag"
+          placeholder="请输入物品标签检索内容"
+          filterable
+          clearable
+          @blur="getCurVal"
+        >
+          <el-option
+            v-for="item in tagList"
+            :key="item.tagCode"
+            :label="item.tagName"
+            :value="item.tagCode"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -117,6 +133,8 @@ import { statsList } from "@/api/stock/info";
 import { listRecord } from "@/api/stock/record";
 import { listAllGroup } from "@/api/base/group";
 import { listAllClass } from "@/api/base/class";
+import { listAllTag } from "@/api/base/tag";
+
 
 export default {
   name: "Record",
@@ -166,14 +184,21 @@ export default {
       //组、分类
       groupList: [],
       classList: [],
+      tagList: [],
     };
   },
   created() {
     this.getList();
     this.getGroupList();
     this.getClassList();
+    this.getTagList();
   },
   methods: {
+    getTagList() {
+      listAllTag().then((response) => {
+        this.tagList = response;
+      });
+    },
     /** 查询库存汇总列表 */
     getList() {
       this.loading = true;

@@ -221,6 +221,7 @@
           />
         </template>
       </el-table-column>
+      <el-table-column label="最大出库数量" align="center" prop="maxOutQuantity" />
       <el-table-column label="安全库存" align="center" prop="safetyStock" />
       <el-table-column
         label="负责人"
@@ -493,7 +494,7 @@
               <el-input-number
                 v-model="form.maxOutQuantity"
                 controls-position="right"
-                :min="1"
+                :min="0"
                 :precision="0"
                 placeholder="请输入单次最大出库数量"
               />

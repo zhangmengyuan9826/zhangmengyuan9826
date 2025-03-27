@@ -1,17 +1,4 @@
 <template>
-      <!--错误信息-->
- 
-      <!-- <p class="decode-result">
-          扫描结果:
-          <b>{{ result }}</b>
-      </p>
-      <扫描结果-->
-      <!-- <p @click="openCamera">打开相机</p>
-      <div v-show="show" class="cameraMessage">
-          <p @click="closeCamera">关闭相机</p>
-          <p @click="openFlash">打开手电筒</p>
-          <p @click="switchCamera">相机反转</p>
-      </div> -->
  <div class="app-container">
   <p class="error">{{ error }}</p> 
       <!--错误信息-->
