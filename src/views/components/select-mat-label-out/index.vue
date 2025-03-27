@@ -274,7 +274,7 @@ export default {
   },
   methods: {
     init(val) {
-      this.queryParams.locationCode = val   //接收父组件传递的id值
+      this.queryParams['locationCode'] = val   //接收父组件传递的id值
       this.getList()
     },
     formatLocation(locationCode){

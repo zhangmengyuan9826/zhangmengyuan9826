@@ -41,6 +41,22 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="物品标签" prop="matTag">
+        <el-select
+          v-model="queryParams.matTag"
+          placeholder="请输入物品标签检索内容"
+          filterable
+          clearable
+          @blur="getCurVal"
+        >
+          <el-option
+            v-for="item in tagList"
+            :key="item.tagCode"
+            :label="item.tagName"
+            :value="item.tagCode"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="批次" prop="batch">
         <el-input
           v-model="queryParams.batch"
@@ -101,12 +117,12 @@
       <el-table-column label="批次" align="center" prop="batch" />
       <el-table-column label="规格" align="center" prop="figNum" />
       <el-table-column label="数量" align="center" prop="quantity" />
-      <el-table-column label="集团单位" align="center" prop="unitCode">
+      <el-table-column label="火眼单位" align="center" prop="unitCode">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
         </template>
       </el-table-column>
-      <el-table-column label="供应商" align="center" prop="supplierName" />
+      <el-table-column label="品牌" align="center" prop="brand" />
       <el-table-column label="有效期" width="100">        
         <template slot-scope="scope">
           <span :style="getExpiringStyle(scope.row.expiredTime)">
@@ -256,6 +272,7 @@
 import { listInfo, getStockInfoDetail, handleUpdate } from "@/api/stock/info";
 import { listAllWarehouse } from "@/api/base/warehouse";
 import { listAllLocation } from "@/api/base/location";
+import { listAllTag } from "@/api/base/tag";
 
 export default {
   name: "Info",
@@ -306,6 +323,7 @@ export default {
         },
       locationList: [],
       locationDict: {},
+      tagList: [],
     };
   },
   created() {   
@@ -319,6 +337,7 @@ export default {
     this.getList();
     this.getWarehouseList();
     this.getBaselocationList();
+    this.getTagList();
   },
   methods: {
     formatLocation(locationCode){
@@ -373,6 +392,9 @@ export default {
         console.log(this.form)
         this.open = true
       })
+    },
+    getCurVal(val) {
+      this.value = val.target.value;
     },
     getCurVal_unit(val) {
       this.value = val.target.value
@@ -443,7 +465,12 @@ export default {
         return { color: 'orange' };
       }
       return {};
-    }
+    },
+    getTagList() {
+      listAllTag().then((response) => {
+        this.tagList = response;
+      });
+    },
   }
 };
 </script>

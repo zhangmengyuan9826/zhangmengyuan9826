@@ -563,7 +563,8 @@ export default {
         fdCode: item.fdCode,
         figNum: item.figNum,
         quantity: 0,
-        max_quantity: item.maxQuantity,
+        maxQuantity: item.maxQuantity,
+        matTag: item.matTag,
         unitCode: item.unitCode,
         batch: item.batch,
         brand: item.brand,
@@ -586,8 +587,12 @@ export default {
           matGroup: item.matGroup,
           matClass: item.matClass,
           quantity: 0,
-          max_quantity:item.maxQuantity,
+          maxQuantity: item.maxQuantity,
+          matTag: item.matTag,
           unitCode: item.unitCode,
+          batch: item.batch,
+          brand: item.brand,
+          supplierCode: item.supplierCode,
           locationCode: item.locationCode
         };
         that.matLabelList.unshift(detail);

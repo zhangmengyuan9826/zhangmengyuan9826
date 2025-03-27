@@ -90,7 +90,7 @@
       <el-table-column label="需求单号" align="center" prop="requireNo" width="100" />
       <el-table-column label="物料编码" align="center" prop="matCode" width="100" />
       <el-table-column label="物料描述" align="center" prop="matName" width="120" />
-      <el-table-column label="集团编码" align="center" prop="fdCode" width="100" />
+      <!-- <el-table-column label="集团编码" align="center" prop="fdCode" width="100" /> -->
       <el-table-column label="规格" align="center" prop="figNum" width="100" />
       <el-table-column label="货号" align="center" prop="artNum" width="100" />
       <el-table-column label="物料组" align="center" prop="matGroup" width="80" >
@@ -99,7 +99,7 @@
       <el-table-column label="分类" align="center" prop="matClass" width="80" >
         
       </el-table-column>
-      <el-table-column label="三级编码" align="center" prop="subcode" width="80" />
+      <!-- <el-table-column label="三级编码" align="center" prop="subcode" width="80" /> -->
       <el-table-column label="品牌" align="center" prop="brand" width="80" />
       <el-table-column label="火眼单位" align="center" prop="unitCode" width="80">
         <template slot-scope="scope">
@@ -107,7 +107,8 @@
         </template>
       </el-table-column>
       <!-- <el-table-column label="安全库存" align="center" prop="safetyStock" width="80" /> -->
-      <!-- <el-table-column label="标准价" align="center" prop="standardPrice" width="100" /> -->
+      <el-table-column label="申请人" align="center" prop="createBy" width="100" />
+      <el-table-column label="创建时间" align="center" prop="createTime" width="100" />
       <el-table-column label="操作" align="center" width="80" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button

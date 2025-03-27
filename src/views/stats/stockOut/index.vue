@@ -17,6 +17,22 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="物品标签" prop="matTag">
+        <el-select
+          v-model="queryParams.matTag"
+          placeholder="请输入物品标签检索内容"
+          filterable
+          clearable
+          @blur="getCurVal"
+        >
+          <el-option
+            v-for="item in tagList"
+            :key="item.tagCode"
+            :label="item.tagName"
+            :value="item.tagCode"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="批次号" prop="batch">
         <el-input
           v-model="queryParams.batch"
@@ -108,6 +124,11 @@
       <el-table-column label="品牌" align="center" prop="brand" />
       <el-table-column label="出库操作者" align="center" prop="updateBy" />
       <el-table-column label="出库时间" align="center" prop="updateTime" />
+      <el-table-column label="火眼单位" align="center" prop="unitCode" width="80">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
+        </template>
+      </el-table-column>
 
       <el-table-column label="出库单物料数" align="center" prop="quantity" />
       <el-table-column label="已领取数" align="center" prop="receivedQuantity" />
@@ -133,9 +154,12 @@
 import { listStatsStockOut } from "@/api/stats/stockOut";
 import { listAllWorkshop } from "@/api/base/workshop";
 import { listAllLocation } from "@/api/base/location";
+import { listAllTag } from "@/api/base/tag";
+
 
 export default {
   name: "StatsStockOut",
+  dicts: ['base_mat_unit'],
   data() {
     return {
       // 显示搜索条件
@@ -157,14 +181,21 @@ export default {
       locationDict: {},
       workshopList: [],
       workshopDict: {},
+      tagList: [],
     };
   },
   created() {
     this.getList();
     this.getWorkshopList();
     this.getBaselocationList();
+    this.getTagList();
   },
   methods: {
+    getTagList() {
+      listAllTag().then((response) => {
+        this.tagList = response;
+      });
+    },
     formatLocation(locationCode){
       return   locationCode ? locationCode.concat("-", this.locationDict[locationCode]) : ''
     },
