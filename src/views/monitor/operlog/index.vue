@@ -73,7 +73,7 @@
           plain
           icon="el-icon-delete"
           size="mini"
-          :disabled="multiple"
+          disabled
           @click="handleDelete"
           v-hasPermi="['monitor:operlog:remove']"
         >删除</el-button>
@@ -85,6 +85,7 @@
           icon="el-icon-delete"
           size="mini"
           @click="handleClean"
+          disabled
           v-hasPermi="['monitor:operlog:remove']"
         >清空</el-button>
       </el-col>

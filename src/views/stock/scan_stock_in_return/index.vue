@@ -315,10 +315,7 @@ export default {
             Message.warning("非目标物料");
             return;
           }
-          if (
-            this.selectItem.warehouseCode !==
-            this.scanMatLabelItem.warehouseCode
-          ) {
+          if (this.selectItem.warehouseCode !== this.scanMatLabelItem.warehouseCode) {
             Message.warning("非目标仓库物料");
             return;
           }
@@ -333,18 +330,12 @@ export default {
             return;
           }
           //还需退数
-          this.scanMatLabelItem.needQuantity =
-            this.selectItem.quantity - this.selectItem.returnQuantity;
+          this.scanMatLabelItem.needQuantity = this.selectItem.quantity - this.selectItem.returnQuantity;
           //现退回数
-          if (
-            this.scanMatLabelItem.remainingQuantity >=
-            this.scanMatLabelItem.needQuantity
-          ) {
-            this.scanMatLabelItem.inputQuantity =
-              this.scanMatLabelItem.needQuantity;
+          if (this.scanMatLabelItem.remainingQuantity >= this.scanMatLabelItem.needQuantity) {
+            this.scanMatLabelItem.inputQuantity = this.scanMatLabelItem.needQuantity;
           } else {
-            this.scanMatLabelItem.inputQuantity =
-              this.scanMatLabelItem.remainingQuantity;
+            this.scanMatLabelItem.inputQuantity = this.scanMatLabelItem.remainingQuantity;
           }
         } else {
           Message.error(res.msg);
@@ -352,7 +343,6 @@ export default {
         this.showModal = true;
       });
     },
-
     confirmSelectMatLabel() {
       let matCode = this.selectItem.matCode;
       //记录扫码 标签id-数量
@@ -360,10 +350,10 @@ export default {
       if (this.returnMap.hasOwnProperty(labelId)) {
         this.returnMap[labelId] += this.inputQuantity;
       } else {
-        this.returnMap[labelId] = this.inputQuantity;
+        this.returnMap[labelId] = this.scanMatLabelItem.inputQuantity;
       }
       //修改已领数
-      this.selectItem.returnQuantity += this.inputQuantity;
+      this.selectItem.returnQuantity += this.scanMatLabelItem.inputQuantity;
       this.showModal = false;
     },
     cancelSelectMatLabel() {
