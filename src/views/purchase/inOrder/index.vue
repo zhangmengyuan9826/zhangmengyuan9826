@@ -2,6 +2,7 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="单据号" prop="orderNo">
+        <!-- <el-label for="emailList">queryParams.orderNo</el-label> -->
         <el-input
           v-model="queryParams.orderNo"
           placeholder="请输入单据号"
@@ -163,10 +164,11 @@
                 v-model="scope.row.isBill"
                 active-value="0"
                 inactive-value="1"
-                @change="handleIsBillChange(scope.row)"
               ></el-switch>
             </template>
-          </el-table-column> -->
+          </el-table-column>
+        <el-table-column label="发货单文件" width="200"> -->
+        
         <el-table-column label="操作" align="center" width="80" class-name="small-padding fixed-width">
           <template slot-scope="scope">
             <el-button
@@ -191,6 +193,16 @@
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelSelectMatLabel">取 消</el-button>
       </div>
+    </el-dialog>
+    <!-- PDF预览对话框 -->
+    <el-dialog :visible.sync="pdfDialogVisible" title="PDF预览" width="80%">
+      <iframe :src="`https://docs.google.com/gview?url=${currentPdfUrl}&embedded=true`" 
+              frameborder="0" 
+              style="width: 100%; height: 70vh;"></iframe>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="pdfDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="downloadFile(currentPdfUrl)">下载</el-button>
+      </span>
     </el-dialog>
 
     <!-- 入库单详情对话框 -->
@@ -313,12 +325,80 @@ export default {
       //入库单详情
       inOrderDetailOpen: false,
       inOrderDetailList: [],
+      uploadUrl: process.env.VUE_APP_BASE_API + "/stock/inOrder/checkPdf/", // 替换为你的上传API
+      
+      pdfDialogVisible: false,
+      currentPdfUrl: '',
+      emailList: ['ee','123','444']
     };
   },
   created() {
     this.getList();
   },
   methods: {
+    // 判断是否是图片
+    isImage(url) {
+      if (!url) return false;
+      return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+    },
+    
+    // 判断是否是PDF
+    isPdf(url) {
+      if (!url) return false;
+      return /\.pdf$/i.test(url);
+    },
+    
+    // 获取文件名
+    getFileName(url) {
+      if (!url) return '';
+      return url.split('/').pop();
+    },
+    
+    // 上传前校验
+    beforeUpload(file) {
+      const isImage = this.isImage(file.name);
+      const isPdf = this.isPdf(file.name);
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      
+      if (!isImage && !isPdf) {
+        this.$message.error('只能上传图片或PDF文件!');
+        return false;
+      }
+      if (!isLt10M) {
+        this.$message.error('文件大小不能超过10MB!');
+        return false;
+      }
+      return true;
+    },
+    // 上传成功处理
+    handleUploadSuccess(response, file, fileList) {
+      this.$message.success('上传成功');
+      // const rowId = file.rowId;
+      // const fileUrl = response.url; // 根据你的API返回结构调整
+      
+      // const row = this.tableData.find(item => item.id === rowId);
+      // if (row) {
+      //   row.fileUrl = fileUrl;
+      //   this.$message.success('上传成功');
+      // }
+    },
+    
+    // 预览PDF
+    previewPdf(url) {
+      this.currentPdfUrl = url;
+      this.pdfDialogVisible = true;
+    },
+    
+    // 下载文件
+    downloadFile(url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.download = this.getFileName(url);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
     /** 查询入库单列表 */
     getList() {
       this.loading = true;

@@ -190,7 +190,7 @@
           <template slot-scope="scope">
             <el-input-number style="width: 100px" size="small" 
             v-model="scope.row.quantity" controls-position="right" 
-            :min="1" :max="scope.row.max_quantity" :precision="0"/>
+            :min="1" :max="scope.row.maxQuantity" :precision="0"/>
           </template>
         </el-table-column>
         <el-table-column label="单位" align="center" prop="unitCode">

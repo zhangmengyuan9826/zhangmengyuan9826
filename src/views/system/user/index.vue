@@ -379,7 +379,7 @@ export default {
       // 弹出层标题
       title: "",
       // 部门树选项
-      deptOptions: undefined,
+      deptOptions: undefined,      
       // 是否显示弹出层
       open: false,
       // 部门名称
@@ -492,7 +492,18 @@ export default {
     /** 查询部门下拉树结构 */
     getTreeselect() {
       treeselect().then(response => {
-        this.deptOptions = response.data;
+        var deptTree = response.data
+        this.addNewProperty(deptTree)
+        this.deptOptions = deptTree
+        console.log(this.deptOptions)
+      });
+    },
+    addNewProperty(tree) {
+      tree.forEach(node => {
+        node['isDisabled'] = node['status']=='0'? false:true; // 添加新属性或修改现有属性
+        if (node.children && node.children.length > 0) {
+          this.addNewProperty(node.children); // 递归处理子节点
+        }
       });
     },
     // 筛选节点
@@ -505,6 +516,17 @@ export default {
       this.queryParams.deptId = data.id;
       this.handleQuery();
     },
+  traverseTree(nodes, callback) {
+    nodes.forEach(node => {
+      callback(node); // 对每个节点执行操作
+      if (node.children) {
+        traverseTree(node.children, callback); // 递归遍历子节点
+      } else {
+        node['disabled'] = node['status']==='0'? true:false;
+      }
+    });
+    return nodes;
+  },
     // 用户状态修改
     handleStatusChange(row) {
       let text = row.status === "0" ? "启用" : "停用";

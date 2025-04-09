@@ -331,7 +331,6 @@ export default {
           }
         }
         if(data.length >0){
-
           this.checkMatLabelList = data;
           this.openCheckMat = true
         } else {
@@ -371,6 +370,7 @@ export default {
     confirmOldChoose(){
       this.openCheckMat = false
       this.selectRow['remainQuantity'] = this.selectRow['usableQuantity'] -this.selectRow['receivedQuantity'] 
+      this.selectRow['maxQuantity'] = this.getMaxQuantity(this.selectRow['usableQuantity'] ,this.selectRow['receivedQuantity'],this.selectRow['maxOutQuantity'])
       this.$refs.selectMatLabelTable.clearSelection();
       this.$emit('confirmSelect', this.selectRow);      
     },
