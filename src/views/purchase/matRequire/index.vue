@@ -2511,7 +2511,6 @@ export default {
       this.value = val.target.value;
     },
     submitDoneDetails() {
-      console.log(this.doneDetailIds)
       if(!this.doneDetailIds || this.doneDetailIds.length == 0){
         Message.warning("请先选择物料！")
         return
@@ -2980,7 +2979,6 @@ export default {
     // 多选框选中数据
     handleSelectionChange2(selection) {
       this.doneDetailIds = selection.map((item) => item.detailId);
-      console.log(this.doneDetailIds);
     },
     // 未完成
     handleDetail(row) {
@@ -3114,7 +3112,6 @@ export default {
     getUserList() {
       listUserAll().then((response) => {
         this.userList = response;
-        console.log(this.userList);
       });
     },
     getWorkshopList(){
@@ -3223,7 +3220,6 @@ export default {
       this.matForm.safetyStock = this.item.safetyStock;
 
       this.matForm.manageBy = this.item.manageBy;
-      console.log(this.item);
       // 获取库存
       var matlabel_quantity = 0;
       var label_query_param_1 = { matCode: this.item.matCode, matTag: this.item.matTag };
@@ -3264,7 +3260,6 @@ export default {
       this.matIndex = index;
       this.matForm = this.requireDetailList[index];
       this.isSelect = this.matForm['matSource']=="1" ? true :false
-      console.log(this.isSelect)
     },
     handleDetailMat(index, row) {
       this.addMatDetailOpen = true;

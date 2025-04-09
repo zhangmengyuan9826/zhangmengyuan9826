@@ -4,7 +4,7 @@
 
 <script>
 // import echarts from 'echarts'
-import echarts from 'echarts/lib/echarts';
+import * as echarts from 'echarts/lib/echarts';
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
 
