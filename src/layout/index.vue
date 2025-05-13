@@ -37,6 +37,7 @@ export default {
     ...mapState({
       theme: state => state.settings.theme,
       sideTheme: state => state.settings.sideTheme,
+      skinName: 'skin-red',
       sidebar: state => state.app.sidebar,
       device: state => state.app.device,
       needTagsView: state => state.settings.tagsView,

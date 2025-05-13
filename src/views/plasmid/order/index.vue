@@ -8,10 +8,10 @@
       v-show="showSearch"
       label-width="68px"
     >
-      <el-form-item label="订单号" prop="orderNo">
+      <el-form-item label="订单编码" prop="orderNo">
         <el-input
           v-model="queryParams.orderNo"
-          placeholder="请输入订单号"
+          placeholder="请输入订单编码"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -25,36 +25,44 @@
         />
       </el-form-item>
       <el-form-item label="服务商" prop="serviceProvider">
-        <el-input
-          v-model="queryParams.serviceProvider"
-          placeholder="请输入服务商"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+        <el-select v-model="queryParams.serviceProvider" filterable allow-create placeholder="请选择服务商">
+          <el-option
+            v-for="item in fieldDataDict['serviceProvider']"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
       </el-form-item>
-      <el-form-item label="是否常规合成" prop="isSynthesis">
-        <el-input
-          v-model="queryParams.isSynthesis"
-          placeholder="请输入是否常规合成"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+      <el-form-item label="常规合成" prop="isSynthesis">
+        <el-radio-group v-model="queryParams.isSynthesis">
+          <el-radio
+            v-for="item in fieldDataDict['isSynthesis']"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >{{item.label}}</el-radio>
+        </el-radio-group>
       </el-form-item>
       <el-form-item label="管线" prop="pipeline">
-        <el-input
-          v-model="queryParams.pipeline"
-          placeholder="请输入管线"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+         <el-select v-model="queryParams.pipeline" placeholder="请选择管线">
+          <el-option
+            v-for="item in fieldDataDict['pipeline']"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="管线编号" prop="pipelineNo">
-        <el-input
-          v-model="queryParams.pipelineNo"
-          placeholder="请输入管线编号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
+       <el-select v-model="queryParams.pipelineNo" placeholder="请选择管线编号">
+          <el-option
+            v-for="item in fieldDataDict['pipelineNo']"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="下单日期" prop="orderDate">
         <el-date-picker
@@ -156,7 +164,7 @@
           </el-button>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item
-              v-for="button in statusDictButtonsCheck"
+              v-for="button in statusDictButtons"
               :key="button.value"
               icon="el-icon-plus"
               size="mini"
@@ -179,18 +187,17 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="编号" align="center" prop="orderId" />
-      <el-table-column label="订单号" align="center" prop="orderNo" />
-      <el-table-column label="客户" align="center" prop="client" />
-      <el-table-column label="服务商" align="center" prop="serviceProvider" />
-      <el-table-column label="是否常规合成" align="center" prop="isSynthesis" />
-      <el-table-column label="管线" align="center" prop="pipeline" />
-      <el-table-column label="管线编号" align="center" prop="pipelineNo" />
+      <el-table-column label="订单编码" width="100" align="center" prop="orderNo" />
+      <el-table-column label="客户" width="100" align="center" prop="client" />
+      <el-table-column label="服务商" width="100" align="center" prop="serviceProvider" />
+      <el-table-column label="常规合成" width="80" align="center" prop="isSynthesis" />
+      <el-table-column label="管线" width="80" align="center" prop="pipeline" />
+      <el-table-column label="管线编号" width="80" align="center" prop="pipelineNo" />
       <el-table-column
         label="下单日期"
         align="center"
         prop="orderDate"
-        width="180"
+        width="140"
       >
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.orderDate, "{y}-{m}-{d}") }}</span>
@@ -200,7 +207,7 @@
         label="到货日期"
         align="center"
         prop="arrivalDate"
-        width="180"
+        width="140"
       >
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.arrivalDate, "{y}-{m}-{d}") }}</span>
@@ -211,7 +218,7 @@
           label="订单状态"
           align="center"
           prop="orderStatus"
-          width="100"
+          width="80"
         >
           <template slot-scope="scope">
             <span :style="formatStatusStyle(scope.row.orderStatus)">
@@ -258,50 +265,84 @@
     <el-dialog :title="title" :visible.sync="open" width="90%" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
-          <el-col span="8">
-            <el-form-item label="订单号" prop="orderNo">
-              <el-input v-model="form.orderNo" placeholder="请输入订单号" />
+          <el-col :span="8">
+            <el-form-item label="订单编码" prop="orderNo">
+              <el-input v-model="form.orderNo" disabled placeholder="由系统生成编码" />
             </el-form-item>
           </el-col>
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="客户" prop="client">
               <el-input v-model="form.client" placeholder="请输入客户" />
             </el-form-item>
           </el-col>
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="服务商" prop="serviceProvider">
-              <el-input
+              <el-select
                 v-model="form.serviceProvider"
-                placeholder="请输入服务商"
-              />
+                default-first-option
+                placeholder="请选择或输入"
+              >
+                <el-option
+                  v-for="item in fieldDataDict['serviceProvider']"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                >
+                </el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
-          <el-col span="8">
-            <el-form-item label="是否常规合成" prop="isSynthesis">
-              <el-input
-                v-model="form.isSynthesis"
-                placeholder="请输入是否常规合成"
-              />
+          <el-col :span="8">
+            <el-form-item label="是否常规合成" prop="isSynthesis" label-width="100">
+              <el-radio-group v-model="form.isSynthesis">
+          <el-radio
+            v-for="item in fieldDataDict['isSynthesis']"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >{{item.label}}</el-radio>
+        </el-radio-group>
             </el-form-item>
           </el-col>
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="管线" prop="pipeline">
-              <el-input v-model="form.pipeline" placeholder="请输入管线" />
+              <el-select
+                v-model="form.pipeline"
+                default-first-option
+                placeholder="请选择或输入"
+              >
+                <el-option
+                  v-for="item in fieldDataDict['pipeline']"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                >
+                </el-option>
+              </el-select>
             </el-form-item>
           </el-col>
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="管线编号" prop="pipelineNo">
-              <el-input
+              <el-select
                 v-model="form.pipelineNo"
-                placeholder="请输入管线编号"
-              />
+                default-first-option
+                placeholder="请选择或输入"
+              >
+                <el-option
+                  v-for="item in fieldDataDict['pipelineNo']"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                >
+                </el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="下单日期" prop="orderDate">
               <el-date-picker
                 clearable
@@ -313,7 +354,7 @@
               </el-date-picker>
             </el-form-item>
           </el-col>
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="到货日期" prop="arrivalDate">
               <el-date-picker
                 clearable
@@ -326,7 +367,7 @@
             </el-form-item>
           </el-col>
         
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="周期" prop="period">
               <el-input v-model="form.period" placeholder="请输入周期" />
             </el-form-item>
@@ -337,84 +378,78 @@
           <el-input v-model="form.remark" placeholder="请输入备注" />
         </el-form-item>
         <el-row>
-          <el-col span="8">
+          <el-col :span="8">
             <el-form-item label="选择质粒">
               <el-button
                 size="small"
                 type="success"
                 icon="el-icon-search"
                 @click="openSelectPlasmidGeneDialog"
-                >物料标签清单</el-button
+                >质粒清单</el-button
               >
             </el-form-item>
           </el-col>
         </el-row>
       </el-form>
       <el-table :data="plasmidGeneList" style="width: 100%">
-        <el-table-column label="基因名" align="center" prop="geneName" />
-        <el-table-column label="质粒载体" align="center" prop="plasmidVector" />
-        <el-table-column
-          label="质粒全称"
-          align="center"
-          prop="plasmidFullName"
-        />
-        <el-table-column
-          label="线性酶切"
-          align="center"
-          prop="linearDigestion"
-        />
-        <el-table-column
-          label="抗性基因"
-          align="center"
-          prop="resistanceGene"
-        />
+        <el-table-column type="selection" :selectable="checkSelectable" width="55" align="center" />
+        <el-table-column label="订单号" align="center" prop="geneNo" resizable/>
+        <el-table-column label="基因名" align="center" prop="geneName" width="130" resizable>
+          <template slot-scope="scope">
+          <el-tooltip v-if="scope.row.geneName!=null" effect="light" placement="top">
+            <div class="content" slot="content" v-html="scope.row.geneName"></div>
+            <div class="oneLine"> {{scope.row.geneName}}</div>
+          </el-tooltip>
+        </template>
+        </el-table-column>
+        <el-table-column label="质粒载体" align="center" prop="plasmidVector" resizable/>
+        <el-table-column label="质粒全称" align="center" prop="plasmidFullName" width="130" resizable>
+          <template slot-scope="scope">
+          <el-tooltip v-if="scope.row.plasmidFullName!=null" effect="light" placement="top">
+            <div class="content" slot="content" v-html="scope.row.plasmidFullName"></div>
+            <div class="oneLine"> {{scope.row.plasmidFullName}}</div>
+          </el-tooltip>
+        </template>
+        </el-table-column>
+        <el-table-column label="线性酶切" align="center" prop="linearDigestion" />
+        <el-table-column label="抗性基因" align="center" prop="resistanceGene" />
         <el-table-column label="cds长度(bp)" align="center" prop="cdsLength" />
-        <el-table-column
-          label="质粒全长(bp)"
-          align="center"
-          prop="plasmidFullLength"
-        />
+        <el-table-column label="质粒全长(bp)" align="center" prop="plasmidFullLength" />
         <el-table-column label="3'UTR" align="center" prop="utr3" />
         <el-table-column label="5'UTR" align="center" prop="utr5" />
-        <el-table-column label="polyA" align="center" prop="polyA" />
-        <el-table-column label="CDS序列" align="center" prop="cdsSeq" />
-        <el-table-column label="启动子" align="center" prop="promoter" />
-        <el-table-column label="载体类型 I" align="center" prop="vectorType1" />
-        <el-table-column
-          label="载体类型 II"
-          align="center"
-          prop="vectorType2"
-        />
-        <el-table-column label="标签信息" align="center" prop="tagInfo" />
-        <el-table-column label="接头" align="center" prop="linker" />
-        <el-table-column
-          label="CDS表达蛋白数量"
-          align="center"
-          prop="cdsProteinNum"
-        />
+        <el-table-column label="polyA" align="center" prop="polyA" />      
+        <el-table-column label="启动子" align="center" prop="promoter" />      
         <el-table-column label="信号肽" align="center" prop="signalPeptide" />
-        <el-table-column label="蛋白类型" align="center" prop="proteinType" />
+        <el-table-column label="预测蛋白类型" align="center" prop="proteinType" />
         <el-table-column label="增强子" align="center" prop="enhancer" />
         <el-table-column label="批次" align="center" prop="batch" />
-        <el-table-column
-          label="操作"
-          align="center"
-          width="80"
-          class-name="small-padding fixed-width"
-        >
+        <el-table-column label="备注" align="center" prop="remark" resizable>
           <template slot-scope="scope">
-            <el-button
-              size="mini"
-              type="text"
-              icon="el-icon-scissors"
-              @click="handleRemove(scope.$index, scope.row)"
-              >去除</el-button
-            >
-          </template>
+          <el-tooltip v-if="scope.row.remark!=null" effect="light" placement="top">
+            <div class="content" slot="content" v-html="scope.row.remark"></div>
+            <div class="oneLine"> {{scope.row.remark}}</div>
+          </el-tooltip>
+        </template>
         </el-table-column>
+          <el-table-column
+            label="操作"
+            align="center"
+            width="80"
+            class-name="small-padding fixed-width"
+          >
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-scissors"
+                @click="handleRemove(scope.$index, scope.row)"
+                >去除</el-button
+              >
+            </template>
+          </el-table-column>
       </el-table>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" v-if="form.orderStatus=='temporary' | form.orderStatus=='created' | operType=='add' | operType=='update'" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
@@ -437,6 +472,262 @@
         <el-button @click="cancelSelectPlasmidGene">取 消</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      :title="'质粒详情 —— 下单确认'"
+      :visible.sync="openOrderIng"
+      width="90%"
+      height="90%"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+    
+      <el-form ref="orderIngForm" :model="orderIngForm" :rules="orderIngRules" label-width="80px">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="订单编码" prop="orderNo">
+              <el-input v-model="orderIngForm.orderNo" disabled />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="客户" prop="client">
+              <el-input v-model="orderIngForm.client" disabled />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="下单日期" prop="orderDate">
+              <el-date-picker
+                clearable
+                v-model="orderIngForm.orderDate"
+                type="date"
+                value-format="yyyy-MM-dd"
+                placeholder="请选择下单日期"
+              >
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+    </el-form>
+    <el-table 
+      :data="orderIngForm.geneList" 
+      style="width: 100%" max-height="700"
+    >
+      <el-table-column label="订单编号" align="center" prop="geneNo" width="140" resizable>
+        <template #header >
+          <div>
+            <span>订单编号 &nbsp;</span>
+            <el-button
+              v-if="true"
+              size="mini"
+              type="primary"
+              @click="generateGeneNos()"
+            >生成</el-button>
+          </div>
+        </template>
+        <template slot-scope="scope">
+          <el-input 
+            v-model="scope.row.geneNo" 
+            @blur="validateEmpty(row, 'geneNo')"
+          ></el-input>
+        </template>
+      </el-table-column>
+      <el-table-column label="基因名" align="center" prop="geneName" width="130" resizable>
+         <template slot-scope="scope">
+        <el-tooltip v-if="scope.row.geneName!=null" effect="light" placement="top">
+          <div class="content" slot="content" v-html="scope.row.geneName"></div>
+          <div class="oneLine"> {{scope.row.geneName}}</div>
+        </el-tooltip>
+      </template>
+      </el-table-column>
+      <el-table-column label="质粒载体" align="center" prop="plasmidVector" resizable/>
+      <el-table-column label="质粒全称" align="center" prop="plasmidFullName" width="130" resizable>
+        <template slot-scope="scope">
+        <el-tooltip v-if="scope.row.plasmidFullName!=null" effect="light" placement="top">
+          <div class="content" slot="content" v-html="scope.row.plasmidFullName"></div>
+          <div class="oneLine"> {{scope.row.plasmidFullName}}</div>
+        </el-tooltip>
+      </template>
+      </el-table-column>
+      <el-table-column label="线性酶切" align="center" prop="linearDigestion" />
+      <el-table-column label="抗性基因" align="center" prop="resistanceGene" />
+      <el-table-column label="cds长度(bp)" align="center" prop="cdsLength" />
+      <el-table-column label="质粒全长(bp)" align="center" prop="plasmidFullLength" />
+      <el-table-column label="3'UTR" align="center" prop="utr3" />
+      <el-table-column label="5'UTR" align="center" prop="utr5" />
+      <el-table-column label="polyA" align="center" prop="polyA" />
+      <el-table-column label="CDS序列" align="center" prop="cdsSeq" >
+        <template slot-scope="scope">
+        <el-tooltip v-if="scope.row.cdsSeq!=null" effect="light" placement="top">
+          <div class="content" slot="content" v-html="scope.row.cdsSeq"></div>
+          <div class="oneLine"> {{scope.row.cdsSeq}}</div>
+        </el-tooltip>
+      </template>
+      </el-table-column>
+    </el-table>
+    <div slot="footer" class="dialog-footer">
+        <el-button  type="primary" @click="submitFormOrderIng">确 定</el-button>
+        <el-button @click="cancelOrderIng">取 消</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog
+      :title="'质粒详情 —— 到货确认'"
+      :visible.sync="openOrderDone"
+      width="90%"
+      height="90%"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+    <div>
+      <el-button type="primary" @click="submitDoneGenes">确 定 到 货</el-button>
+      <el-button @click="cancelDoneDialog">取 消</el-button>
+    </div>
+    <el-table
+        :data="multiDoneGeneList"
+        style="width: 100%"
+        max-height="700"
+        @selection-change="handleSelectionChange2"
+      >
+        <el-table-column type="selection" width="50" align="center" :selectable="checkSelectableDone"/>
+        <el-table-column label='订单号' prop="geneNo" align="center" />
+          <el-table-column
+        label="基因名"
+        align="center"
+        prop="geneName"
+        width="130"
+        resizable
+      >
+        <template slot-scope="scope">
+          <el-tooltip
+            v-if="scope.row.geneName != null"
+            effect="light"
+            placement="top"
+          >
+            <div
+              class="content"
+              slot="content"
+              v-html="scope.row.geneName"
+            ></div>
+            <div class="oneLine">{{ scope.row.geneName }}</div>
+          </el-tooltip>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="质粒载体"
+        align="center"
+        prop="plasmidVector"
+        resizable
+      />
+      <el-table-column
+        label="质粒全称"
+        align="center"
+        prop="plasmidFullName"
+        width="130"
+        resizable
+      >
+        <template slot-scope="scope">
+          <el-tooltip
+            v-if="
+              (scope.row.plasmidFullName != null) &
+              (scope.row.plasmidFullName.length > 1)
+            "
+            effect="light"
+            placement="top"
+          >
+            <div
+              class="content"
+              slot="content"
+              v-html="scope.row.plasmidFullName"
+            ></div>
+            <div class="oneLine">{{ scope.row.plasmidFullName }}</div>
+          </el-tooltip>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="线性酶切"
+        align="center"
+        prop="linearDigestion"
+        resizable
+      />
+      <el-table-column
+        label="抗性基因"
+        align="center"
+        prop="resistanceGene"
+        resizable
+      />
+      <el-table-column
+        label="cds长度(bp)"
+        align="center"
+        prop="cdsLength"
+        resizable
+      />
+      <el-table-column
+        label="质粒全长(bp)"
+        align="center"
+        prop="plasmidFullLength"
+      />
+      <el-table-column label="3'UTR" align="center" prop="utr3" resizable />
+      <el-table-column label="5'UTR" align="center" prop="utr5" resizable />
+      <el-table-column label="polyA" align="center" prop="polyA" resizable />
+      <!-- <el-table-column label="CDS序列" align="center" prop="cdsSeq" /> -->
+      <el-table-column
+        label="启动子"
+        align="center"
+        prop="promoter"
+        resizable
+      />
+      <el-table-column label="加帽" align="center" prop="cap" resizable />
+      <el-table-column label="批次" align="center" prop="batch" resizable />
+      <el-table-column label="状态" align="center" prop="status" resizable />
+        </el-table>
+
+    </el-dialog>
+    <el-dialog
+      :title="'状态回退'"
+      :visible.sync="openReset"
+      width="80%"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+    <el-form
+      ref="resetStatusForm"
+      :model="resetStatusForm"
+      label-width="120px"
+      >
+      <el-col>
+        <el-form-item  label="状态回退" prop="orderStatus" required>
+          <el-select
+          v-model="resetStatusForm.orderStatus"
+          placeholder="请选择回退的状态"
+          filterable
+          clearable
+          
+        >
+          <el-option
+            v-for="button in resetStatusDicts"
+              :key="button.value"
+              :label="button.name"
+              :value="button.value"
+          ></el-option>
+        </el-select>
+        </el-form-item>
+      </el-col>
+      <el-col :span="24">
+        <el-form-item label="备注" prop="remark" required>
+          <el-input
+            type="textarea"
+            v-model="resetStatusForm.remark"
+            :autosize="{ minRows: 1, maxRows: 6 }"
+            resize="none"
+            placeholder="请输入备注">
+          </el-input>
+        </el-form-item>
+      </el-col>
+    </el-form>
+    <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitResetStatus">确 定</el-button>
+        <el-button @click="cancelResetStatus">取 消</el-button>
+      </div>
+
+    </el-dialog>
   </div>
 </template>
 
@@ -448,16 +739,26 @@ import {
   addOrder,
   updateOrder,
   updateOrderStatus,
+  updateOrderOrdeIng,
+  listGenesByIds
 } from "@/api/plasmid/order";
+import { 
+  listGene,
+  submitDoneGeneByGeneIds
+ } from "@/api/plasmid/gene";
+import  { getDictDataListByDictType } from "@/api/plasmid/dictData"
 import selectPlasmidGene from "../../components/select-plasmid-gene/index";
-
+import { getDicts } from "@/api/system/dict/data";
+import { Message } from 'element-ui';
 export default {
   name: "Order",
   components: { selectPlasmidGene },
+  dicts: ['plasmid_field'],
   data() {
     return {
       // 遮罩层
       loading: true,
+      loading2:true,
       // 选中数组
       ids: [],
       // 非单个禁用
@@ -493,18 +794,52 @@ export default {
       form: {},
       // 表单校验
       rules: {
-        orderNo: [
-          { required: true, message: "订单号不能为空", trigger: "blur" },
+        client: [
+          { required: true, message: "客户不能为空", trigger: "blur" },
+        ],
+        serviceProvider: [
+          { required: true, message: "服务商不能为空", trigger: "blur" },
+        ],
+        pipeline: [
+          { required: true, message: "管线不能为空", trigger: "blur" },
         ],
       },
+      orderIngRules:{
+        // orderNo: [{required: true, message: "订单号不能为空", trigger: "blur"},
+        // ],
+        orderDate: [{required: true, message: "下单日期不能为空", trigger: "blur"},
+        ],
+        },
       selectPlasmidGeneOpen: false,
       plasmidGeneList: [],
       geneIdArr: [],
       statusDictButtons: [
-        { name: "已下单", value: "created", type: "PRIMARY" },
-        { name: "中间过程-1", value: "approved", type: "DANGER" },
-        { name: "中间过程-2", value: "un_approved", type: "danger" },
-        { name: "已到货", value: "done", type: "PRIMARY" },
+        // { name: "草稿", value: "temporary"},
+        // { name: "已创建", value: "created", type: "info" },
+        { name: "已下单", value: "order_ing", type: "PRIMARY" },
+        { name: "已到货", value: "order_done", type: "success" },
+        { name: "实验中", value: "exp_ing", type: "warning" },
+        { name: "实验完成", value: "exp_done", type: "success" },
+        { name: "状态异常", value: "status_error", type: "danger" },
+        { name: "状态回退", value: "status_reset", type: "warning" },
+      ],
+      allStatusDicts:[
+        // { name: "草稿", value: "temporary"},
+        { name: "已创建", value: "created", type: "info" },
+        { name: "已下单", value: "order_ing", type: "PRIMARY" },
+        { name: "已到货", value: "order_done", type: "success" },
+        { name: "实验中", value: "exp_ing", type: "warning" },
+        { name: "实验完成", value: "exp_done", type: "success" },
+        { name: "状态异常", value: "status_error", type: "danger" },
+        { name: "状态回退", value: "status_reset", type: "warning" },
+      ],
+      resetStatusDicts:[
+        { name: "已创建", value: "created", index: 1 },
+        { name: "已下单", value: "order_ing", index: 2 },
+        { name: "已到货", value: "order_done", index: 3 },
+        { name: "实验中", value: "exp_ing", index: 4 },
+        { name: "实验完成", value: "exp_done", index: 5 },
+        { name: "状态异常", value: "status_error", index: 6 },
       ],
       statusDictButtonsCheck: [
         { name: "中间过程-1", value: "approved", type: "warning" },
@@ -513,27 +848,43 @@ export default {
         { name: "实验中", value: "done2", type: "PRIMARY" },
       ],
       statusDict: {
-        created: "已下单",
-        approved: "中间过程-1",
-        un_approved: "中间过程-2",
-        done: "已到货",
-        done2: "实验中",
+        temporary: "草稿",
+        created: "已创建",
+        order_ing: "已下单",
+        order_done: "已到货",
+        exp_ing: "实验中",
+        exp_done: "实验完成",
+        status_error: "状态异常",
+        status_reset:"状态回退",
       },
       statusColor: {
-        created: "orange",
-        approved: "green",
-        un_approved: "red",
-        processing: "blue",
-        un_purchase: "red",
-        done: "grey",
-        done2: "blue",
-        finished: "grey",
+        temporary: "grey",
+        created: "black",
+        order_ing: "blue",
+        order_done: "green",
+        exp_ing: "orange",
+        exp_done: "green",
+        status_error: "red"
       },
+      fieldList: [],
+      _dicts:{},
+      fieldDataDict: {},
+      openOrderIng: false,
+      orderIngForm: {},
+      operType: '',
+      selectItems: [],
+      multiDoneGeneList :[],
+      openOrderDone: false,
+      doneGeneIds: [],
+      openReset: false,
+      resetStatusForm: {},
     };
   },
-  created() {
-    this.getList();
+  created() {   
+    this.showSearch = false;     
+    this.initData();
   },
+  
   methods: {
     /** 查询质粒订单列表 */
     getList() {
@@ -543,6 +894,29 @@ export default {
         this.total = response.total;
         this.loading = false;
       });
+    },
+    initData() {
+        getDicts('plasmid_field').then((response) => {
+          this.fieldList = response.data.map(item => item.dictValue)
+          this.getField();
+          this.getList();
+        })
+    },
+    getField() {
+      this.loading = true;      
+      if(this.fieldList.length === 0){
+        this.loading = false;
+        this.showSearch = true;
+        return
+      }
+      this.fieldList.forEach(field => {
+        getDictDataListByDictType((field)).then((response) => {          
+          this.fieldDataDict[field] = response.data.map(item => ({'label':item['dictLabel'],'value':item['dictValue']}))
+        })        
+      });      
+      this.loading = false;
+      this.showSearch = true;
+      
     },
     // 取消按钮
     cancel() {
@@ -571,6 +945,9 @@ export default {
         delFlag: null,
       };
       this.resetForm("form");
+      this.geneIdArr=[];
+      this.geneIdList=[];
+      this.geneList=[];
     },
     openSelectPlasmidGeneDialog() {
       this.selectPlasmidGeneOpen = true;
@@ -614,12 +991,14 @@ export default {
     // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map((item) => item.orderId);
+      this.selectItems = selection;
       this.single = selection.length !== 1;
       this.multiple = !selection.length;
     },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
+      this.operType = 'add';
       this.open = true;
       this.plasmidGeneList = [];
       this.title = "添加质粒订单";
@@ -627,10 +1006,12 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
+      this.operType = 'update';
       const orderId = row.orderId || this.ids;
       getOrder(orderId).then((response) => {
         this.form = response.data;
         this.plasmidGeneList = response.data.geneList;
+        this.geneIdArr = this.plasmidGeneList.map(item => item['geneId']);
         this.open = true;
         this.title = "修改质粒订单";
       });
@@ -676,8 +1057,6 @@ export default {
             });
           } else {
             that.$modal.confirm('是否确认创建订单？').then(function() {            
-            // this.form.orderType = 'purchase';
-            console.log(that.form)
             addOrder(that.form).then(response => {
             that.$modal.msgSuccess("新增成功");
             that.open = false;
@@ -721,19 +1100,257 @@ export default {
     formatStatusStyle(statusCode) {
       return { color: this.statusColor[statusCode] };
     },
+    handleChangeStatusOrderIng(){
+      if(this.ids.length>1){
+          Message.warning("单次只可下单一条订单！")
+          return
+        }
+        getOrder(this.ids[0]).then((response) => {
+          this.orderIngForm = response.data;          
+          this.orderIngForm['geneList'] = response.data.geneList;
+          console.log(this.orderIngForm)
+          if(this.orderIngForm.orderStatus !=='created'){
+            console.log(this.orderIngForm.orderStatus)
+            Message.warning("不可重复下单！")
+            return
+          }  
+          this.openOrderIng = true;
+        });  
+        
+    },
+
+    submitFormOrderIng(){
+      this.$refs["orderIngForm"].validate((valid) => {
+        if (valid) {
+          for(let i =0;i<this.orderIngForm.geneList.length;i++){
+            if(!this.orderIngForm.geneList[i]['geneNo'] | this.orderIngForm.geneList[i]['geneNo']==""){
+              Message.warning("基因订单号不可为空")
+              return
+            }
+            // listGene({'geneNo':this.orderIngForm.geneList[i]['geneNo']}).then((response) => {
+            //   if(response.rows){
+            //     Message.warning("基因订单号不可重复！重复订单号："+this.orderIngForm.geneList[i]['geneNo'])
+            //     return
+            //   } else{
+            //     var geneOrder = {};
+            //     geneOrder['orderId'] =this.orderIngForm.orderId;
+            //     geneOrder['orderNo'] = this.orderIngForm.orderNo;
+            //     geneOrder['orderDate'] = this.orderIngForm.orderDate;
+            //     geneOrder['geneId'] = this.orderIngForm.geneList[i].geneId;
+            //     geneOrder['geneNo'] = this.orderIngForm.geneList[i].geneNo;
+            //     geneOrder['status'] = 'order_ing';
+            //     updateOrderOrdeIng(geneOrder).then((response) => {
+            //       Message.success("已成功更新！")
+            //       this.openOrderIng = false;
+            //       this.getList();
+            //     })   
+            //   }
+            // })
+          }
+          this.orderIngForm['orderStatus'] = 'order_ing';
+          updateOrderOrdeIng(this.orderIngForm).then((response) => {
+            Message.success("已成功更新！")
+            this.openOrderIng = false;
+            this.getList();
+          })   
+          
+        }})
+    },
+    cancelOrderIng(){
+      this.openOrderIng = false;
+    },
     handleChangeStatus(status){
       this.newStatus = status;
-      var request = {
-        orderIds: this.ids,
-        orderStatus: this.newStatus,
-        // remarkString: this.checkform.remark,
-      };
-      updateOrderStatus(request).then(() => {
-        this.getList();
-        // this.checkform = {};
-        this.$modal.msgSuccess("更改成功");
-      });
+      console.log(status)
+      var selectStatus = this.selectItems.map((item) => item.orderStatus);    
+      if(status == "status_reset" &&
+        selectStatus.indexOf("created")>=0){
+          Message.warning("‘已创建’状态的订单无法回退");
+     }  
+      else if(
+        status == "order_ing" && (
+        selectStatus.indexOf("order_ing")>=0 ||
+        selectStatus.indexOf("order_done")>=0 ||
+        selectStatus.indexOf("exp_ing")>=0 ||
+        selectStatus.indexOf("exp_done")>=0 )
+      ){
+        Message.warning("已下单或实验的订单不可重复下单！");
+        return;
+      }
+      else if(
+        status == "order_ing" &&
+        selectStatus.indexOf("temporary")>=0 ||
+        selectStatus.indexOf("status_error")>=0
+      ){
+        Message.warning("请完善信息后再下单！");
+        return;
+      }      
+      else if(
+        status == "order_done" && (
+        selectStatus.indexOf("temporary")>=0 ||
+        selectStatus.indexOf("status_error")>=0 ||
+        selectStatus.indexOf("order_done")>=0 ||
+        selectStatus.indexOf("exp_ing")>=0 ||
+        selectStatus.indexOf("exp_done")>=0)
+      ){
+        Message.warning("状态错误！非已下单的订单不可到货处理");
+        return;
+      }
+      
+      // 下单需要补充订单号
+      else if(this.newStatus == "order_ing"){
+        this.handleChangeStatusOrderIng()
+      } 
+      else if(this.newStatus == "order_done"){
+        const orderIds = this.ids;
+        listGenesByIds(orderIds).then((response) => {
+          this.multiDoneGeneList = response;
+          this.openOrderDone = true;
+        })
+      } 
+      else if(this.newStatus == "status_reset"){
+        this.openReset = true;
+      } else {
+        var request = {
+          orderIds: this.ids,
+          orderStatus: this.newStatus,
+        };
+        updateOrderStatus(request).then(() => {
+          this.getList();
+          // this.checkform = {};
+          this.$modal.msgSuccess("更改成功");
+        });
+      }      
+    },
+    getMultiGenesByOrderNos(ids){
+      
+    },
+    submitResetStatus(){
+      this.$refs["resetStatusForm"].validate((valid) => {
+        if(valid){
+          var newStatus = this.resetStatusForm.orderStatus
+          console.log(newStatus)
+          var newIndex = this.resetStatusDicts
+            .map(item => item.value === newStatus ? item.index : undefined)
+            .filter(val => val !== undefined)[0];
+          for(let i=0; i<this.selectItems.length; i++){
+            var selectItem = this.selectItems[i]
+
+            var oldIndex = this.resetStatusDicts
+            .map(item => item.value === selectItem.orderStatus ? item.index : undefined)
+            .filter(val => val !== undefined)[0];
+            console.log(newIndex)
+            console.log(oldIndex)
+            if(oldIndex < newIndex){
+              Message.warning("订单状态只可回退！")
+              return
+            }
+          }
+          for(let i=0; i<this.selectItems.length; i++){            
+            this.resetStatusForm['orderId'] = this.selectItems[i].orderId;
+              console.log(this.resetStatusForm)
+              updateOrder(this.resetStatusForm).then(() => {
+                Message.success("已成功更新！")                
+              }) 
+              
+          }
+          this.openReset = false;
+          this.getList();
+        }
+      })
+    },
+    cancelResetStatus(){
+      this.openReset = false
+    },
+     //是否可选
+    checkSelectable(row, index){
+      if(this.geneIdArr.indexOf(row.geneId) >= 0){
+        return false;
+      }else{
+        return true;
+      }
+    },
+    validateEmpty(row, prop) {
+    if (!row[prop] || row[prop].trim() === '') {
+      this.$message.error('此项不能为空');
+      // 可以在这里添加其他逻辑，比如自动聚焦等
+    }
+  },
+  handleSelectionChange2(selection) {
+      this.doneGeneIds = selection.map((item) => item.geneId);
+    },
+  checkSelectableDone(row){
+    if(row.status != "order_ing"){
+      return false;
+    }else{
+      return true;
+    }
+  },
+  submitDoneGenes() {
+      if(!this.doneGeneIds || this.doneGeneIds.length == 0){
+        Message.warning("请先选择质粒！")
+        return
+      }
+      submitDoneGeneByGeneIds(this.doneGeneIds).then((response) => {
+        Message.success("提交成功！")
+      }).catch(() => {});
+      this.openOrderDone = false;
+      this.getList();
+    },
+    cancelDoneDialog() {
+      this.openOrderDone = false
+    },
+    handleAutoFill(index, value) {
+      if (!value || !value.match(/\d+/i)) return;
+
+      // 提取数字部分并递增
+      const prefix = value.replace(/\d+$/, '');
+      const numStr = value.match(/\d+$/)?.[0] || '0';
+      const currentNum = parseInt(numStr, 10);
+      // 填充后续行
+      for (let i = index + 1; i < this.orderIngForm.geneList.length; i++) {
+        this.orderIngForm.geneList[i]['geneNo'] = `${prefix}${String(currentNum + i - index).padStart(numStr.length, '0')}`;
+      }
+      console.log(this.orderIngForm.geneList)
+      return
+    },
+    generateGeneNos() {
+      // Message.success("click")
+      var startIndex = 0;
+      for(let i=0;i<this.orderIngForm.geneList.length;i++){
+        var geneInfo = this.orderIngForm.geneList[i];
+        console.log(geneInfo['geneNo'])
+        if(! geneInfo['geneNo']){
+          continue;
+        }
+        startIndex =i;
+        break;        
+      }
+      return this.handleAutoFill(startIndex, this.orderIngForm.geneList[startIndex]['geneNo'])
+      // return true
     }
   },
 };
 </script>
+
+<style type="text/css">
+::v-deep(.el-table__body td) {
+	border: none !important;
+}
+::v-deep(.el-table--border),
+::v-deep(.el-table--group) {
+	border: none !important;
+}
+.el-table--border .el-table__cell{
+  border-right: white;
+}
+.content {
+  max-width: 300px
+}
+.oneLine {
+  overflow: hidden;
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+
+</style>

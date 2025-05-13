@@ -9,6 +9,15 @@ export function listOrder(query) {
   })
 }
 
+// 查询质粒订单列表
+export function listGenesByIds(ids) {
+  return request({
+    url: '/plasmid/order/listGenesByIds/'+ids,
+    method: 'get',
+  })
+}
+
+
 // 查询质粒订单详细
 export function getOrder(orderId) {
   return request({
@@ -39,6 +48,15 @@ export function updateOrder(data) {
 export function updateOrderStatus(data) {
   return request({
     url: '/plasmid/order/changeStatus',
+    method: 'put',
+    data: data
+  })
+}
+
+// 修改质粒订单状态
+export function updateOrderOrdeIng(data) {
+  return request({
+    url: '/plasmid/order/submitOrderIng',
     method: 'post',
     data: data
   })

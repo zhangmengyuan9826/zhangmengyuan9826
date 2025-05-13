@@ -158,17 +158,31 @@
         </el-table-column>
         <el-table-column label="批次" align="center" prop="batch" width="160" />
         <el-table-column label="品牌" align="center" prop="brand" width="180" />
-        <!-- <el-table-column label="是否有发货单" align="center" prop="isBill">
+        <el-table-column label="是否有发货单" align="center" prop="isBill" width="100">
             <template slot-scope="scope">
-              <el-switch
-                v-model="scope.row.isBill"
-                active-value="0"
-                inactive-value="1"
-              ></el-switch>
+              <el-switch v-model="scope.row.isBill" active-color="#13ce66" inactive-color="#9d9d9d" 
+                active-value="1" inactive-value="0" @change="handleSelectChange(scope.row)">
+              </el-switch>
             </template>
           </el-table-column>
-        <el-table-column label="发货单文件" width="200"> -->
-        
+        <el-table-column label="发货单图片" width="100" prop="billPic">
+          <template slot-scope="scope">
+            <el-button
+              @click="uploadBillPic(scope.row.labelId)"
+            >
+              上传
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="发货单文件" width="100" prop="billPdf">
+          <template slot-scope="scope">
+            <el-button
+              @click="uploadBillPdf(scope.row.labelId)"
+            >
+              上传
+            </el-button>
+          </template>
+        </el-table-column>        
         <el-table-column label="操作" align="center" width="80" class-name="small-padding fixed-width">
           <template slot-scope="scope">
             <el-button
@@ -262,6 +276,7 @@
 <script>
 import { listInOrder, getInOrder, delInOrder, addInOrder, printInOrder } from "@/api/stock/inOrder";
 import selectMatLabel from "../../components/select-mat-label/index";
+import { Message } from 'element-ui';
 
 export default {
   name: "InOrder",
@@ -336,58 +351,7 @@ export default {
     this.getList();
   },
   methods: {
-    // 判断是否是图片
-    isImage(url) {
-      if (!url) return false;
-      return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
-    },
     
-    // 判断是否是PDF
-    isPdf(url) {
-      if (!url) return false;
-      return /\.pdf$/i.test(url);
-    },
-    
-    // 获取文件名
-    getFileName(url) {
-      if (!url) return '';
-      return url.split('/').pop();
-    },
-    
-    // 上传前校验
-    beforeUpload(file) {
-      const isImage = this.isImage(file.name);
-      const isPdf = this.isPdf(file.name);
-      const isLt10M = file.size / 1024 / 1024 < 10;
-      
-      if (!isImage && !isPdf) {
-        this.$message.error('只能上传图片或PDF文件!');
-        return false;
-      }
-      if (!isLt10M) {
-        this.$message.error('文件大小不能超过10MB!');
-        return false;
-      }
-      return true;
-    },
-    // 上传成功处理
-    handleUploadSuccess(response, file, fileList) {
-      this.$message.success('上传成功');
-      // const rowId = file.rowId;
-      // const fileUrl = response.url; // 根据你的API返回结构调整
-      
-      // const row = this.tableData.find(item => item.id === rowId);
-      // if (row) {
-      //   row.fileUrl = fileUrl;
-      //   this.$message.success('上传成功');
-      // }
-    },
-    
-    // 预览PDF
-    previewPdf(url) {
-      this.currentPdfUrl = url;
-      this.pdfDialogVisible = true;
-    },
     
     // 下载文件
     downloadFile(url) {
@@ -428,7 +392,7 @@ export default {
         createBy: null,
         createTime: null,
         updateBy: null,
-        updateTime: null
+        updateTime: null,
       };
       this.resetForm("form");
     },
@@ -486,6 +450,14 @@ export default {
         that.$modal.msgError("请选择物料标签");
         return;
       }
+      // 发货单校验
+      for(let i=0;i<that.matLabelList.length;i++){
+        if(that.matLabelList[i].isBill=='1'){
+          if((that.matLabelList[i]['billPic'] == null | that.matLabelList[i]['billPic'] == '') & (that.matLabelList[i]['billPdf'] == null | that.matLabelList[i]['billPdf'] == '')){
+            Message.warning("请上传入库单图片或者文件！物料名称："+that.matLabelList[i].matName)
+          }        
+        }
+      }
       that.$modal.confirm('是否确认创建入库单？').then(function() {
         that.form.detailList = that.matLabelList;
         that.form.orderType = 'purchase';
@@ -527,6 +499,7 @@ export default {
       this.selectMatLabelOpen = false;
     },
     confirmSelectMatLabel(item){
+      item['isBill']='0';
       this.matLabelList.unshift(item);
       this.labelIdArr.push(item.labelId);
       this.selectMatLabelOpen = false;
@@ -534,6 +507,7 @@ export default {
     confirmSelectMatLabelArr(arr){
       let that = this;
       arr && arr.length > 0 && arr.forEach(item => {
+        item['isBill']='0';
         that.labelIdArr.push(item.labelId);
         that.matLabelList.unshift(item);
       });
@@ -543,6 +517,15 @@ export default {
     handleRemove(index, row){
       this.labelIdArr.splice(this.labelIdArr.indexOf(row.labelId), 1);
       this.matLabelList.splice(index, 1);
+    },
+    handleSelectChange(row){
+      row.isBill = row.isBill === "0" ? "1" : "0";
+    },
+    uploadBillPic(labelId){
+      return true;
+    },
+    uploadBillPdf(labelId){
+      return true;
     },
   }
 };

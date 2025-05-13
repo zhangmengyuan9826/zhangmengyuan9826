@@ -654,19 +654,15 @@
           </el-col>
         </el-row>
         <el-row>
-          <!-- <el-form-item label="状态" prop="isSingle">
-            <el-radio-group
-              v-model="form.requireStatus"
-              v-hasPermi="['stock:matRequire:editStatus']"
-            >
-              <el-radio label="created">已创建</el-radio>
-              <el-radio label="dealed">处理中</el-radio>
-              <el-radio label="finished">已完成</el-radio>
-              <el-radio label="done">已入库</el-radio>
-            </el-radio-group>
-          </el-form-item> -->
           <el-form-item label="审批评语" prop="remark">
-            <el-input v-model="form.remark" :disabled="true" />
+            <el-input
+                type="textarea"
+                v-model="form.remark"
+                :autosize="{ minRows: 1, maxRows: 6 }"
+                resize="none"
+                :disabled="true" 
+                >
+              </el-input>
           </el-form-item>
         </el-row>
         <div class="dialog-inner">
@@ -1187,7 +1183,15 @@
         <el-row>
           <el-col :span="20">
             <el-form-item label="单一原因" prop="singleReason">
-              <el-input v-model="matForm.singleReason" placeholder="单一原因" />
+              <el-input
+                type="textarea"
+                v-model="matForm.singleReason"
+                :autosize="{ minRows: 1, maxRows: 6 }"
+                resize="none"
+                placeholder="请输入单一原因"
+                :rules="dynamicRules"
+                >
+              </el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -1204,11 +1208,20 @@
         <el-row>
           <el-col :span="20">
             <el-form-item label="进口原因" prop="importReason">
-              <el-input
+              <!-- <el-input
                 v-model="matForm.importReason"
                 placeholder="进口原因"
                 :rules="dynamicRules"
-              />
+              /> -->
+              <el-input
+                type="textarea"
+                v-model="matForm.importReason"
+                :autosize="{ minRows: 1, maxRows: 6 }"
+                resize="none"
+                placeholder="请输入进口原因"
+                :rules="dynamicRules"
+                >
+              </el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -1222,7 +1235,14 @@
         <el-row>
           <el-col :span="20">
             <el-form-item label="用途" prop="purpose">
-              <el-input v-model="matForm.purpose" placeholder="请输入用途" />
+              <el-input
+                type="textarea"
+                v-model="matForm.purpose"
+                :autosize="{ minRows: 1, maxRows: 6 }"
+                resize="none"
+                placeholder="请输入用途"
+                >
+              </el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -1330,7 +1350,7 @@
     <el-dialog
       :title="'审核评语'"
       :visible.sync="openUnapprovedReason"
-      width="1200px"
+      width="80%"
       append-to-body
       :close-on-click-modal="false"
     >
@@ -1342,7 +1362,13 @@
       >
         <el-col :span="24">
           <el-form-item label="备注" prop="remark">
-            <el-input v-model="checkform.remark" placeholder="请输入备注" />
+            <el-input
+              type="textarea"
+              v-model="checkform.remark"
+              :autosize="{ minRows: 1, maxRows: 6 }"
+              resize="none"
+              placeholder="请输入备注">
+            </el-input>
           </el-form-item>
         </el-col>
       </el-form>
@@ -2394,7 +2420,7 @@ export default {
         un_approved: "审核不通过",
         processing: "采购中",
         un_purchase: "采购不通过",
-        done: "已入库",
+        done: "已到货",
       },
       statusColor: {
         created: "orange",
@@ -2519,7 +2545,7 @@ export default {
         Message.success("提交成功！")
       }).catch(() => {});
       this.viewMultiDoneMatDetail = false;
-      this.getList();
+      // this.getList();
     },
     cancelDoneDialog() {
       this.viewMultiDoneMatDetail = false
@@ -3312,3 +3338,4 @@ export default {
   },
 };
 </script>
+
