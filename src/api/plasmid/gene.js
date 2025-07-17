@@ -8,11 +8,34 @@ export function listGene(query) {
     params: query
   })
 }
+// 查询质粒基因管理列表
+export function listGeneAll(query) {
+  return request({
+    url: '/plasmid/gene/listAll',
+    method: 'get',
+    params: query
+  })
+}
+// 查询质粒基因管理列表
+export function listGeneDialog(query) {
+  return request({
+    url: '/plasmid/gene/listDialog',
+    method: 'get',
+    params: query
+  })
+}
 
 // 查询质粒基因管理详细
 export function getGene(geneId) {
   return request({
     url: '/plasmid/gene/' + geneId,
+    method: 'get'
+  })
+}
+// 查询质粒基因管理详细
+export function getGeneFullSeq(geneId) {
+  return request({
+    url: '/plasmid/gene/show/' + geneId,
     method: 'get'
   })
 }
@@ -35,6 +58,7 @@ export function updateGene(data) {
   })
 }
 
+
 // 删除质粒基因管理
 export function delGene(geneId) {
   return request({
@@ -42,3 +66,12 @@ export function delGene(geneId) {
     method: 'delete'
   })
 }
+
+// 修改质粒状态_质粒到货
+export function submitDoneGeneByGeneIds(geneIds) {
+  return request({
+    url: '/plasmid/gene/changeStatusDone/' + geneIds,
+    method: 'get'
+  })
+}
+

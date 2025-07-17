@@ -16,7 +16,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="验收状态" prop="checkStatus">
+      <el-form-item label="检验状态" prop="checkStatus">
         <el-select v-model="queryParams.checkStatus" placeholder="请选择">
           <el-option
             v-for="item in checkStatusOptions"
@@ -27,7 +27,7 @@
           </el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="验收员" prop="checkBy">
+      <el-form-item label="检验员" prop="checkBy">
         <el-input
           v-model="queryParams.checkBy"
           placeholder="请输入检验员"
@@ -76,11 +76,11 @@
         </template>
       </el-table-column>
       <el-table-column
-        label="验收状态"
+        label="检验状态"
         align="center"
         prop="checkStatusLabel"
       />
-      <el-table-column label="验收员" align="center" prop="checkBy" />
+      <el-table-column label="检验员" align="center" prop="checkBy" />
       <el-table-column
         label="操作"
         align="center"
@@ -419,10 +419,10 @@ export default {
       dateRange: [],
       picList:[],
       hoverIndex: null,
-      //验收状态
+      //检验状态
       checkStatusOptions: [
         { value: "un_checkout", label: "未检验" },
-        { value: "checkout", label: "已验收" },
+        { value: "checkout", label: "已检验" },
       ],
 
       //入库单详情

@@ -261,13 +261,11 @@ export default {
         let codeArr = result.match(/:(\S*)/)[1].split(":");
         if (codeArr && codeArr.length === 2) {
           if (this.order.warehouseCode !== codeArr[1]) {
-            Message.warning("非目标仓库货位");
-            // this.$refs.loadinToast.hide();
+            Message.warning("非目标仓库");
             return;
           }
           this.selectLocation = codeArr[0];
           Message.success("扫码成功：货位码：" + result);
-          // this.$refs.loadinToast.hide();
         }
       } else if (result.indexOf("LABEL") === 0) {
         //扫码物料标签
@@ -309,6 +307,10 @@ export default {
       this.selected = true;
     },
     selectMatLabel(labelId) {
+      if (Number(this.selectItem.labelId) !== Number(labelId)) {
+        Message.warning("非目标物料标签");
+        return;
+      }
       if (this.selectItem.quantity - this.selectItem.receivedQuantity === 0) {
         Message.warning("物料已达需求量");
         return;
