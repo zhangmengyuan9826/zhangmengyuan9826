@@ -99,3 +99,37 @@ export function getCoaPdfInfo(orderId) {
     },
   })
 }
+
+// 预览发货单 pdf
+export function getInBillPdf(labelId) {
+  return request({
+    url: '/stock/inOrder/getInBillPdf/' + labelId,
+    method: 'get',
+    responseType: 'arraybuffer',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  })
+}
+// 预览发货单 pic
+export function getInBillPic(detailId) {
+  return request({
+    url: '/stock/inOrder/getInBillPic/' + detailId,
+    method: 'get',
+  })
+}
+
+
+// 用户头像上传
+export function addInOrderBillPics(data) {
+  return request({
+    url: '/stock/inOrder/uploadInBillPic',
+    method: 'post',
+    data: data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+  })
+}
+
+

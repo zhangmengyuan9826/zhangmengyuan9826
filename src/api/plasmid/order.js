@@ -32,6 +32,7 @@ export function addOrder(data) {
     url: '/plasmid/order',
     method: 'post',
     data: data
+    
   })
 }
 
@@ -48,7 +49,7 @@ export function updateOrder(data) {
 export function updateOrderStatus(data) {
   return request({
     url: '/plasmid/order/changeStatus',
-    method: 'put',
+    method: 'post',
     data: data
   })
 }

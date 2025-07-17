@@ -118,18 +118,7 @@
           >新增</el-button
         >
       </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['plasmid:order:edit']"
-          >修改</el-button
-        >
-      </el-col>
+      
       <el-col :span="1.5">
         <el-button
           type="danger"
@@ -237,6 +226,7 @@
             size="mini"
             type="text"
             icon="el-icon-edit"
+            :disabled="scope.row.orderStatus!='created'"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['plasmid:order:edit']"
             >修改</el-button
@@ -246,6 +236,7 @@
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
+            :disabled="scope.row.orderStatus!='created'"
             v-hasPermi="['plasmid:order:remove']"
             >删除</el-button
           >
@@ -449,7 +440,7 @@
           </el-table-column>
       </el-table>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" v-if="form.orderStatus=='temporary' | form.orderStatus=='created' | operType=='add' | operType=='update'" @click="submitForm">确 定</el-button>
+        <el-button type="primary" v-if="form.orderStatus=='temporary' | form.orderStatus=='created' | operType=='add'" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
@@ -1127,25 +1118,7 @@ export default {
               Message.warning("基因订单号不可为空")
               return
             }
-            // listGene({'geneNo':this.orderIngForm.geneList[i]['geneNo']}).then((response) => {
-            //   if(response.rows){
-            //     Message.warning("基因订单号不可重复！重复订单号："+this.orderIngForm.geneList[i]['geneNo'])
-            //     return
-            //   } else{
-            //     var geneOrder = {};
-            //     geneOrder['orderId'] =this.orderIngForm.orderId;
-            //     geneOrder['orderNo'] = this.orderIngForm.orderNo;
-            //     geneOrder['orderDate'] = this.orderIngForm.orderDate;
-            //     geneOrder['geneId'] = this.orderIngForm.geneList[i].geneId;
-            //     geneOrder['geneNo'] = this.orderIngForm.geneList[i].geneNo;
-            //     geneOrder['status'] = 'order_ing';
-            //     updateOrderOrdeIng(geneOrder).then((response) => {
-            //       Message.success("已成功更新！")
-            //       this.openOrderIng = false;
-            //       this.getList();
-            //     })   
-            //   }
-            // })
+            
           }
           this.orderIngForm['orderStatus'] = 'order_ing';
           updateOrderOrdeIng(this.orderIngForm).then((response) => {
@@ -1246,12 +1219,26 @@ export default {
               return
             }
           }
+            // var request = {
+            //   orderIds: this.ids,
+            //   orderStatus: this.newStatus,
+            // };
+            //   console.log(this.resetStatusForm)
+            // updateOrderStatus(request).then(() => {
+            //     Message.success("已成功更新！")                
+            //  }) 
           for(let i=0; i<this.selectItems.length; i++){            
+            this.resetStatusForm['orderNo'] = this.selectItems[i].orderNo;
             this.resetStatusForm['orderId'] = this.selectItems[i].orderId;
+            // var request = {
+            //   orderId: this.selectItems[i].orderId,
+            //   orderNo: this.selectItems[i].orderNo,
+            //   orderStatus: this.newStatus,
+            // };
               console.log(this.resetStatusForm)
-              updateOrder(this.resetStatusForm).then(() => {
+            updateOrderStatus(this.resetStatusForm).then(() => {
                 Message.success("已成功更新！")                
-              }) 
+             }) 
               
           }
           this.openReset = false;

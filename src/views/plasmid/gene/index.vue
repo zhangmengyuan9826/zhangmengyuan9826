@@ -114,6 +114,17 @@
           >导出</el-button
         >
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="el-icon-download"
+          size="mini"
+          @click="handleDownload"
+          v-hasPermi="['plasmid:gene:download']"
+          >下载质粒</el-button
+        >
+      </el-col>
     </el-row>
     <right-toolbar
       :showSearch.sync="showSearch"
@@ -127,6 +138,7 @@
       border
       :row-style="{ height: '20px' }"
       :cell-style="{ padding: '0px' }"
+      :header-cell-style="{ color: '#606266' }"
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
@@ -241,7 +253,7 @@
         label="操作"
         align="center"
         class-name="small-padding fixed-width"
-        width="110"
+        width="120"
         resizable
       >
         <template slot-scope="scope">
@@ -255,8 +267,15 @@
           <el-button
             size="mini"
             type="text"
+            icon="el-icon-view"
+            @click="handleFullSeq(scope.row.geneId)"
+            >序列</el-button
+          >
+          <el-button
+            size="mini"
+            type="text"
             icon="el-icon-edit"
-            :disabled="scope.row.orderNo != '' & scope.row.orderNo != null"
+            :disabled="scope.row.orderNo != '' && scope.row.orderNo != null"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['plasmid:gene:edit']"
             >修改</el-button
@@ -323,7 +342,7 @@
         </el-col>
         <el-col :span="8">
             <el-form-item label="订单编码" prop="orderNo">
-              <el-input v-model="form.orderNo" :disabled='true' placeholder="由系统生成编码" />
+              <el-input v-model="form.orderNo" disabled placeholder="由系统生成编码" />
             </el-form-item>
           </el-col>
         <el-col :span="12">
@@ -449,7 +468,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="linker" prop="linker" label-width="60px">
+          <el-form-item label="linker" prop="linker" label-width="110px">
             <el-input
               v-model="form.linker"
               placeholder="请与CDS表达蛋白数量保持一致。用‘;’分割。"
@@ -556,7 +575,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="polyA" prop="polyA" label-width="100px">
+          <el-form-item label="polyA" prop="polyA" label-width="110px">
             <template>
               <el-popover
                 placement="top"
@@ -620,7 +639,7 @@
         </el-col> -->
 
         <el-col :span="8">
-          <el-form-item label="载体类型 I" prop="vectorType1" label-width="100px">
+          <el-form-item label="原核/真核载体" prop="vectorType1" label-width="110px">
             <el-select
               v-model="form.vectorType1"
               default-first-option
@@ -638,7 +657,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="载体类型 II" prop="vectorType2" label-width="100px">
+          <el-form-item label="载体类型" prop="vectorType2" label-width="100px">
             <el-select
               v-model="form.vectorType2"
               default-first-option
@@ -674,7 +693,7 @@
         </el-col>
 
         <el-col :span="8">
-          <el-form-item label="信号肽" prop="signalPeptide" label-width="100px">
+          <el-form-item label="信号肽" prop="signalPeptide" label-width="110px">
             <el-select
               v-model="form.signalPeptide"
               default-first-option
@@ -757,10 +776,6 @@
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <div class="el-upload__tip text-center" slot="tip">
-          <!-- <div class="el-upload__tip" slot="tip">
-            <el-checkbox v-model="upload.updateSupport" />
-            是否更新已经存在的物料数据
-          </div> -->
           <span>仅允许导入xls、xlsx格式文件。</span>
           <el-link
             type="primary"
@@ -776,6 +791,17 @@
         <el-button @click="upload.open = false">取 消</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      title="完整序列"
+      :visible.sync="showFullSeq"
+      width="800px"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+    <div class="dna-container">
+      <pre v-html="fullSeqHtml"></pre>
+    </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -783,11 +809,13 @@
 import {
   listGene,
   getGene,
+  getGeneFullSeq,
   delGene,
   addGene,
   updateGene,
 } from "@/api/plasmid/gene";
-import { getDictDataListByDictType } from "@/api/plasmid/dictData";
+import { getDictDataListByDictType, getDictDataSeqListByDictType} from "@/api/plasmid/dictData";
+import { getPlasmidVentorByName } from "@/api/plasmid/meta"
 import { getDicts } from "@/api/system/dict/data";
 import { getToken } from "@/utils/auth";
 import { Message } from 'element-ui';
@@ -856,9 +884,9 @@ export default {
         linearDigestion: [
           { required: true, message: "线性酶切不能为空", trigger: "change" },
         ],
-        resistanceGene: [
-          { required: true, message: "抗性基因不能为空", trigger: "blur" },
-        ],
+        // resistanceGene: [
+        //   { required: true, message: "抗性基因不能为空", trigger: "blur" },
+        // ],
         cdsLength: [
           { required: true, message: "cds长度不能为空", trigger: "change" },
         ],
@@ -881,10 +909,10 @@ export default {
           { required: true, message: "加帽不能为空", trigger: "change" },
         ],
         vectorType1: [
-          { required: true, message: "载体类型 I不能为空", trigger: "blur" },
+          { required: true, message: "原核/真核 载体不能为空", trigger: "blur" },
         ],
         vectorType2: [
-          { required: true, message: "载体类型 II不能为空", trigger: "change" },
+          { required: true, message: "载体类型不能为空", trigger: "change" },
         ],
         linker: [
           { required: true, message: "linker不能为空", trigger: "blur" },
@@ -927,11 +955,29 @@ export default {
       },
       selectedValue: "",
       viewType: "View",
+      pVectorFormElements :['resistanceGene','utr3','utr5','polyA','promoter','vectorType1'],
+      linkerInfos: {},
+      resistanceGeneInfos: {},
+      fieldSeqList: ["linker"],
+      signalPeptideInfos: {},
+      loadFullSeq: false,
+      showFullSeq: false,
+      fullSeq: "atcg...",
+      fullSeqHtml: "",
     };
+  },
+  computed: {
+    
   },
   watch: {
     "form.cdsSeq"(newVal) {
-      this.form.cdsLength = newVal.length;
+      if(newVal && newVal!=''){
+        this.form.cdsLength =  newVal.length;
+        this.getLinkerInfo(newVal);    
+        this.getSignalPeptideInfo(newVal);    
+      } else{
+        this.form.cdsLength =  0;
+      }      
     },
     "form.geneName"(newVal) {
       var _geneName = newVal != null & newVal != '' ? newVal : ""
@@ -942,6 +988,7 @@ export default {
       var _pVector = newVal != null & newVal != '' ? newVal : ""
       var _geneName = this.form.geneName != null & this.form.geneName != '' ? this.form.geneName : ""
       this.form.plasmidFullName = _geneName+"_"+_pVector;
+      this.generateFormByPlasmidVector(newVal)
     },
   },
   created() {
@@ -949,6 +996,69 @@ export default {
     this.initData();
   },
   methods: {
+    formattedDna(fullSeq) {
+      const chunkSize = 60
+      let html = ''
+      for (let i = 0; i < fullSeq.length; i += chunkSize) {
+        const lineNumber = (i + 1).toString().padStart(6, ' ')
+        const chunk = fullSeq.substr(i, chunkSize)
+        const spacedChunk = chunk.match(/.{1,10}/g).join(' ')
+        html += `<span class="line-number">${lineNumber}</span> ${spacedChunk}\n`
+      }
+      return html
+    },
+    getLinkerInfo(cdsSeq){
+      var cdsProteinSeq = this.translateSequence(cdsSeq);
+      var linkerList=[];
+      console.log(cdsProteinSeq);
+      console.log(this.linkerInfos);
+      var proteinNum=1;
+      if(this.linkerInfos && this.linkerInfos.length >0){
+        for(let i=0;i<this.linkerInfos.length;i++){
+          var linkerProteinSeq = this.linkerInfos[i]['proteinSeq']
+          console.log(linkerProteinSeq)
+          var match = cdsProteinSeq.match(new RegExp(linkerProteinSeq, "gi")) || [];
+          proteinNum = proteinNum+match.length
+          if(match.length){
+            linkerList = [...linkerList,...Array(match.length).fill(this.linkerInfos[i]['dictValue'])];
+          }
+        }
+      }
+      this.$set(this.form, "cdsProteinNum", proteinNum);    
+      console.log(linkerList.join(';'))
+      this.$set(this.form, "linker", linkerList.join(';'));    
+   },
+   getSignalPeptideInfo(cdsSeq){
+    var cdsProteinSeq = this.translateSequence(cdsSeq);
+    if(this.signalPeptideInfos && this.signalPeptideInfos.length >0){
+      for(let i=0;i<this.signalPeptideInfos.length;i++){
+        var signalPeptideProteinSeq = this.signalPeptideInfos[i]['proteinSeq']
+        if(signalPeptideProteinSeq){
+          console.log(signalPeptideProteinSeq)
+          console.log(cdsProteinSeq.slice(0, signalPeptideProteinSeq.length))
+          if(signalPeptideProteinSeq == cdsProteinSeq.slice(0, signalPeptideProteinSeq.length)){
+            this.$set(this.form, "signalPeptide", this.signalPeptideInfos[i]['dictValue']);
+            break;
+          }
+        }
+        }
+        
+    }
+   },
+    generateFormByPlasmidVector(pVector){
+      if(pVector && pVector !=''){
+        getPlasmidVentorByName(pVector).then((response) => {
+        if(response.data && response.data != ''){
+          var pVector = response.data
+          for(let i=0;i<this.pVectorFormElements.length;i++){
+            this.$set(this.form, this.pVectorFormElements[i], pVector[this.pVectorFormElements[i]]);
+          }
+          console.log(this.form)
+        } 
+      })
+      }
+      
+    },
     selectedOptionLabel(value, options) {
       if (options) {
         const option = options.find((item) => item.value === value);
@@ -969,7 +1079,9 @@ export default {
       getDicts("plasmid_field").then((response) => {
         this.fieldList = response.data.map((item) => item.dictValue);
         this.getField();
+        this.getFieldSeqs();
         this.getList();
+        
       });
     },
     getField() {
@@ -985,11 +1097,22 @@ export default {
             label: item["dictLabel"],
             value: item["dictValue"],
             content: item["content"],
-          }));
-        });
+          }));          
+        });        
       });
       this.loading = false;
       this.showSearch = true;
+    },
+    getFieldSeqs(){
+      getDictDataSeqListByDictType("linker").then((response) => {
+        this.linkerInfos = response.data
+      });
+      getDictDataSeqListByDictType("resistanceGene").then((response) => {
+        this.resistanceGeneInfos = response.data
+      });
+      getDictDataSeqListByDictType("signalPeptide").then((response) => {
+        this.signalPeptideInfos = response.data
+      })
     },
     // 取消按钮
     cancel() {
@@ -1115,15 +1238,34 @@ export default {
       }
       return true;
     },
+    validateForm(formInfo){
+      if(!this.validateCdsProandLinker(formInfo.cdsProteinNum, formInfo.linker)){
+        Message.warning("CDS表达蛋白数量 和 linker 填写校验不通过！")
+        return false;
+      }
+      if(formInfo.cdsSeq){
+        const stopCodons = ["UAA", "UAG", "UGA","TAA","TAG","TGA"];
+        const seq = formInfo.cdsSeq.toUpperCase();
+        const lastCodon = seq.slice(-3); 
+        if(!stopCodons.includes(lastCodon)){
+          Message.error("cds序列结尾无终止密码子！")
+          return false;
+        }
+      }
+      return true
+      // if(!this.validateCdsProandLinker(formInfo.plasmidVector, formInfo.resistanceGene)){        
+      //   Message.warning("不存在该线性酶切序列！")
+      //   return false;
+      // }
+    },
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           //规则校验
-          if(!this.validateCdsProandLinker(this.form.cdsProteinNum,this.form.linker)){
-            Message.warning("CDS表达蛋白数量 和 linker 填写校验不通过！")
+          if(! this.validateForm(this.form)){
             return
-          }
+          }      
           this.form.status = "created";
           if (this.form.geneId != null) {
             if(this.viewType == "Copy"){
@@ -1135,6 +1277,9 @@ export default {
                 this.$modal.msgSuccess("新增成功");
                 this.open = false;
                 this.getList();
+              }).catch(err => {
+                Message.error(err);
+                return;
               });
             } else {
               updateGene(this.form).then((response) => {
@@ -1176,6 +1321,15 @@ export default {
           ...this.queryParams,
         },
         `plasmid_${new Date().getTime()}.xlsx`
+      );
+    },
+    handleDownload() {
+      this.download(
+        "plasmid/gene/download",
+        {
+          ...this.queryParams,
+        },
+        `plasmidVector_${new Date().getTime()}.xlsx`
       );
     },
     handleImport() {
@@ -1232,6 +1386,76 @@ export default {
         this.title = "质粒基因详情";
       });
     },
+    handleFullSeq(geneId){
+      this.loadFullSeq = true;
+      getGeneFullSeq(geneId).then((response)=> {
+        this.fullSeq = response.msg;
+        
+        this.fullSeqHtml = this.formattedDna(this.fullSeq);
+        this.showFullSeq = true;
+      })
+    },
+    /**
+ * 将核酸序列翻译为蛋白质序列
+ * @param {string} sequence - 核酸序列(DNA或RNA)
+ * @param {boolean} isRNA - 是否为RNA序列(默认为false，即DNA)
+ * @returns {string} 蛋白质序列(氨基酸单字母代码)
+ */
+translateSequence(sequence, isRNA = false) {
+  // 遗传密码子表 (标准)
+  const codonTable = {
+    'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
+    'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
+    'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
+    'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
+    'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
+    'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
+    'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
+    'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
+    'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
+    'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
+    'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
+    'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
+    'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
+    'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
+    'TAC':'Y', 'TAT':'Y', 'TAA':'*', 'TAG':'*',
+    'TGC':'C', 'TGT':'C', 'TGA':'*', 'TGG':'W',
+    // RNA密码子
+    'AUA':'I', 'AUC':'I', 'AUU':'I', 'AUG':'M',
+    'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACU':'T',
+    'AAC':'N', 'AAU':'N', 'AAA':'K', 'AAG':'K',
+    'AGC':'S', 'AGU':'S', 'AGA':'R', 'AGG':'R',
+    'CUA':'L', 'CUC':'L', 'CUG':'L', 'CUU':'L',
+    'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCU':'P',
+    'CAC':'H', 'CAU':'H', 'CAA':'Q', 'CAG':'Q',
+    'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGU':'R',
+    'GUA':'V', 'GUC':'V', 'GUG':'V', 'GUU':'V',
+    'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCU':'A',
+    'GAC':'D', 'GAU':'D', 'GAA':'E', 'GAG':'E',
+    'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGU':'G',
+    'UCA':'S', 'UCC':'S', 'UCG':'S', 'UCU':'S',
+    'UUC':'F', 'UUU':'F', 'UUA':'L', 'UUG':'L',
+    'UAC':'Y', 'UAU':'Y', 'UAA':'*', 'UAG':'*',
+    'UGC':'C', 'UGU':'C', 'UGA':'*', 'UGG':'W'
+  };
+
+  // 处理输入序列
+  sequence = sequence.toUpperCase().replace(/\s+/g, '');
+  
+  // 如果是DNA，将T转换为U(模拟RNA)
+  if (!isRNA) {
+    sequence = sequence.replace(/T/g, 'U');
+  }
+  let protein = '';  
+  // 按3个碱基一组进行翻译
+  for (let i = 0; i < sequence.length - 2; i += 3) {
+    const codon = sequence.substr(i, 3);
+    const aminoAcid = codonTable[codon] || '?'; // 未知密码子用?表示
+    protein += aminoAcid;
+  }
+  return protein;
+}
+
   }
 };
 </script>
@@ -1254,4 +1478,28 @@ export default {
   white-space: pre;
   text-overflow: ellipsis;
 }
+.dna-container {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+  background: #f8f8f8;
+  padding: 15px;
+  border-radius: 4px;
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.line-number {
+  color: #999;
+  user-select: none;
+  margin-right: 10px;
+  display: inline-block;
+  width: 60px;
+}
+
+/* 可选：添加字母颜色高亮 */
+.dna-container span[data-char="a"] { color: #e74c3c; }
+.dna-container span[data-char="t"] { color: #3498db; }
+.dna-container span[data-char="c"] { color: #2ecc71; }
+.dna-container span[data-char="g"] { color: #f39c12; }
 </style>

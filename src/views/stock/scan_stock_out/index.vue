@@ -307,6 +307,10 @@ export default {
       this.selected = true;
     },
     selectMatLabel(labelId) {
+      if (Number(this.selectItem.labelId) !== Number(labelId)) {
+        Message.warning("非目标物料标签");
+        return;
+      }
       if (this.selectItem.quantity - this.selectItem.receivedQuantity === 0) {
         Message.warning("物料已达需求量");
         return;

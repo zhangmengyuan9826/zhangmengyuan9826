@@ -1,6 +1,13 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form
+      :model="queryParams"
+      ref="queryForm"
+      size="small"
+      :inline="true"
+      v-show="showSearch"
+      label-width="68px"
+    >
       <el-form-item label="字段类型" prop="dictType">
         <el-select
           v-model="queryParams.dictType"
@@ -43,8 +50,16 @@
         />
       </el-form-item> -->
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        <el-button
+          type="primary"
+          icon="el-icon-search"
+          size="mini"
+          @click="handleQuery"
+          >搜索</el-button
+        >
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
+          >重置</el-button
+        >
       </el-form-item>
     </el-form>
 
@@ -57,7 +72,8 @@
           size="mini"
           @click="handleAdd"
           v-hasPermi="['plasmid:dictData:add']"
-        >新增</el-button>
+          >新增</el-button
+        >
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -68,7 +84,8 @@
           :disabled="single"
           @click="handleUpdate"
           v-hasPermi="['plasmid:dictData:edit']"
-        >修改</el-button>
+          >修改</el-button
+        >
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -79,7 +96,8 @@
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['plasmid:dictData:remove']"
-        >删除</el-button>
+          >删除</el-button
+        >
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -100,26 +118,39 @@
           size="mini"
           @click="handleExport"
           v-hasPermi="['plasmid:dictData:export']"
-        >导出</el-button>
+          >导出</el-button
+        >
       </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      <right-toolbar
+        :showSearch.sync="showSearch"
+        @queryTable="getList"
+      ></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="dictDataList" @selection-change="handleSelectionChange">
+    <el-table
+      v-loading="loading"
+      :data="dictDataList"
+      @selection-change="handleSelectionChange"
+    >
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="字段编码" align="center" prop="dictId" />
-      <!-- <el-table-column label="字段排序" align="center" prop="dictSort" /> -->
-      <el-table-column label="字段类型" align="center" prop="dictType" >
+      <el-table-column label="业务类型" align="center" prop="manageType" />
+      <el-table-column label="字段类型" align="center" prop="dictType">
         <template slot-scope="scope">
-            <dict-tag :options="dict.type.plasmid_field" :value="scope.row.dictType"/>
+          <dict-tag
+            :options="dict.type.plasmid_field"
+            :value="scope.row.dictType"
+          />
         </template>
       </el-table-column>
       <el-table-column label="字段标签" align="center" prop="dictLabel" />
-      <el-table-column label="字段键值" align="center" prop="dictValue" />      
-      <!-- <el-table-column label="是否默认" align="center" prop="isDefault" /> -->
+      <el-table-column label="字段键值" align="center" prop="dictValue" />
       <el-table-column label="状态" align="center" prop="status" />
       <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column
+        label="操作"
+        align="center"
+        class-name="small-padding fixed-width"
+      >
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -127,20 +158,22 @@
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['plasmid:dictData:edit']"
-          >修改</el-button>
+            >修改</el-button
+          >
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['plasmid:dictData:remove']"
-          >删除</el-button>
+            >删除</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
-      v-show="total>0"
+      v-show="total > 0"
       :total="total"
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
@@ -148,44 +181,104 @@
     />
 
     <!-- 添加或修改质粒字段数据对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
+    <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <!-- <el-form-item label="字段类型" prop="dictType">
-          <el-input v-model="form.dictType" placeholder="请输入字段类型" />
-        </el-form-item> -->
-        <el-form-item label="字段类型" prop="dictType">
-        <el-select
-          v-model="form.dictType"
-          placeholder="请输入字段类型"
-          filterable
-          clearable
-          @blur="getCurVal"
-        >
-          <el-option
-            v-for="dict in dict.type.plasmid_field"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
+        <el-col :span="12">
+          <el-form-item label="业务类型" prop="manageType">
+            <el-select
+              v-model="form.manageType"
+              placeholder="请输入字段类型"
+              filterable
+              clearable
+              @blur="getCurVal"
+            >
+              <el-option
+                v-for="dict in dict.type.plasmid_manage_type"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="字段类型" prop="dictType">
+            <el-select
+              v-model="form.dictType"
+              placeholder="请输入字段类型"
+              filterable
+              clearable
+              @blur="getCurVal"
+            >
+              <el-option
+                v-for="dict in dict.type.plasmid_field"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="字段标签" prop="dictLabel">
+            <el-input v-model="form.dictLabel" placeholder="请输入字段标签" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="字段键值" prop="dictValue">
+            <el-input v-model="form.dictValue" placeholder="请输入字段键值" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="核酸序列" prop="naSeq">
+            <el-input
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 10 }"
+              resize="none"
+              v-model="form.naSeq"
+              placeholder="请输入完整内容，如序列"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="蛋白序列" prop="proteinSeq">
+            <el-input
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 10 }"
+              resize="none"
+              v-model="form.proteinSeq"
+              placeholder="请输入完整内容，如序列"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item
+            label="具体内容"
+            prop="content"
+            :rules="[
+              { validator: validateJSON, trigger: 'blur' },
+            ]"
           >
-          </el-option>
-        </el-select>
-      </el-form-item>
-        <el-form-item label="字段标签" prop="dictLabel">
-          <el-input v-model="form.dictLabel" placeholder="请输入字段标签" />
-        </el-form-item>
-        <el-form-item label="字段键值" prop="dictValue">
-          <el-input v-model="form.dictValue" placeholder="请输入字段键值" />
-        </el-form-item>
-        <el-form-item label="完整内容" prop="content">
-          <el-input 
-          type="textarea"
-          :autosize="{ minRows: 1, maxRows: 10 }"
-          resize="none"
-          v-model="form.content" placeholder="请输入完整内容，如序列" />
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
+            <el-input
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 10 }"
+              resize="none"
+              v-model="form.content"
+              placeholder='请输入具体内容，json格式, 如{"UniprotID":"P11021","shortName":"BiP","element":"P2A"}'
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="备注" prop="remark">
+            <el-input
+              v-model="form.remark"
+              type="textarea"
+              placeholder="请输入内容"
+            />
+          </el-form-item>
+        </el-col>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -238,11 +331,18 @@
 </template>
 
 <script>
-import { listDictData, getDictData, delDictData, addDictData, updateDictData } from "@/api/plasmid/dictData";
+import {
+  listDictData,
+  getDictData,
+  delDictData,
+  addDictData,
+  updateDictData,
+} from "@/api/plasmid/dictData";
 import { getToken } from "@/utils/auth";
+import { Message } from 'element-ui';
 export default {
   name: "DictData",
-  dicts: ['plasmid_field'],
+  dicts: ["plasmid_field", "plasmid_manage_type"],
   data() {
     return {
       // 遮罩层
@@ -301,17 +401,39 @@ export default {
         headers: { Authorization: "Bearer " + getToken() },
         // 上传的地址
         url: process.env.VUE_APP_BASE_API + "/plasmid/dictData/importData",
-      }
+      },
     };
   },
   created() {
     this.getList();
   },
   methods: {
+    validateJSON(rule, value, callback) {
+    if (!value || value=="") {
+      callback();
+      return
+    }
+    
+    // 简单预校验（不完全准确但性能更好）
+    const trimmed = value.trim();
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      try {
+        JSON.parse(value);
+        callback();
+      } catch (e) {
+        callback(new Error('无效的JSON格式: ' + e.message));
+      }
+    } else {
+      callback(new Error('必须是JSON对象{}或数组[]格式'));
+    }
+  },
     /** 查询质粒字段数据列表 */
     getList() {
       this.loading = true;
-      listDictData(this.queryParams).then(response => {
+      listDictData(this.queryParams).then((response) => {
         this.dictDataList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -336,7 +458,7 @@ export default {
         createTime: null,
         updateBy: null,
         updateTime: null,
-        remark: null
+        remark: null,
       };
       this.resetForm("form");
     },
@@ -352,9 +474,9 @@ export default {
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.dictId)
-      this.single = selection.length!==1
-      this.multiple = !selection.length
+      this.ids = selection.map((item) => item.dictId);
+      this.single = selection.length !== 1;
+      this.multiple = !selection.length;
     },
     /** 新增按钮操作 */
     handleAdd() {
@@ -365,8 +487,8 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const dictId = row.dictId || this.ids
-      getDictData(dictId).then(response => {
+      const dictId = row.dictId || this.ids;
+      getDictData(dictId).then((response) => {
         this.form = response.data;
         this.open = true;
         this.title = "修改质粒字段数据";
@@ -374,16 +496,16 @@ export default {
     },
     /** 提交按钮 */
     submitForm() {
-      this.$refs["form"].validate(valid => {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
           if (this.form.dictId != null) {
-            updateDictData(this.form).then(response => {
+            updateDictData(this.form).then((response) => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
-            addDictData(this.form).then(response => {
+            addDictData(this.form).then((response) => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -395,20 +517,28 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const dictIds = row.dictId || this.ids;
-      this.$modal.confirm('是否确认删除质粒字段数据编号为"' + dictIds + '"的数据项？').then(function() {
-        return delDictData(dictIds);
-      }).then(() => {
-        this.getList();
-        this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
+      this.$modal
+        .confirm('是否确认删除质粒字段数据编号为"' + dictIds + '"的数据项？')
+        .then(function () {
+          return delDictData(dictIds);
+        })
+        .then(() => {
+          this.getList();
+          this.$modal.msgSuccess("删除成功");
+        })
+        .catch(() => {});
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('plasmid/dictData/export', {
-        ...this.queryParams
-      }, `dictData_${new Date().getTime()}.xlsx`)
+      this.download(
+        "plasmid/dictData/export",
+        {
+          ...this.queryParams,
+        },
+        `dictData_${new Date().getTime()}.xlsx`
+      );
     },
-    handleImport(){
+    handleImport() {
       this.upload.title = "质粒基本数据导入";
       this.upload.open = true;
     },
@@ -445,6 +575,6 @@ export default {
     getCurVal(val) {
       this.value = val.target.value;
     },
-  }
+  },
 };
 </script>

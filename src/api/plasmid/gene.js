@@ -32,6 +32,13 @@ export function getGene(geneId) {
     method: 'get'
   })
 }
+// 查询质粒基因管理详细
+export function getGeneFullSeq(geneId) {
+  return request({
+    url: '/plasmid/gene/show/' + geneId,
+    method: 'get'
+  })
+}
 
 // 新增质粒基因管理
 export function addGene(data) {
