@@ -418,52 +418,52 @@ export default {
         plasmidVector: [
           { required: true, message: "质粒载体不能为空", trigger: "blur" }
         ],
-        cloneHost: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
-        ],
+        // cloneHost: [
+        //   { required: true, message: "质粒载体不能为空", trigger: "blur" }
+        // ],
         vectorType: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
+          { required: true, message: "载体类型不能为空", trigger: "blur" }
         ],
         vectorType1: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
+          { required: true, message: "载体类型I(真核 | 原核 |...)不能为空", trigger: "blur" }
         ],
-        expressHost: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
-        ],
+        // expressHost: [
+        //   { required: true, message: "质粒载体不能为空", trigger: "blur" }
+        // ],
         utr3: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
+          { required: true, message: "3’UTR不能为空", trigger: "blur" }
         ],
         utr5: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
+          { required: true, message: "5‘UTR不能为空", trigger: "blur" }
         ],
         polyA: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
+          { required: true, message: "polyA不能为空", trigger: "blur" }
         ],
         promoter: [
-          { required: true, message: "质粒载体不能为空", trigger: "blur" }
+          { required: true, message: "启动子不能为空", trigger: "blur" }
         ],
         cdsSite: [
-          { required: true, message: '请输入范围值' },
+          { required: true, message: '请输入cds范围值' },
           { validator: this.validateRangeFormat, trigger: 'blur' }
         ],
         utr3Site: [
-          { required: true, message: '请输入范围值' },
+          { required: true, message: '请输入utr3范围值' },
           { validator: this.validateRangeFormat, trigger: 'blur' }
         ],
         utr5Site: [
-          { required: true, message: '请输入范围值' },
+          { required: true, message: '请输入utr5范围值' },
           { validator: this.validateRangeFormat, trigger: 'blur' }
         ],
         polyASite: [
-          { required: true, message: '请输入范围值' },
+          { required: true, message: '请输入polyA范围值' },
           { validator: this.validateRangeFormat, trigger: 'blur' }
         ],
         resistanceGeneSite: [
-          { required: true, message: '请输入范围值' },
+          { required: true, message: '请输入resistanceGene范围值' },
           { validator: this.validateRangeFormat, trigger: 'blur' }
         ],
         promoterSite: [
-          { required: true, message: '请输入范围值' },
+          { required: true, message: '请输入promoter范围值' },
           { validator: this.validateRangeFormat, trigger: 'blur' }
         ],
       },
@@ -591,10 +591,26 @@ export default {
         this.title = "修改质粒载体参与构建序列的元数据";
       });
     },
+    validForm(form){
+      const [start1, end1] = form.promoterSite.split('..').map(Number)      
+      const [start2, end2] = form.utr5Site.split('..').map(Number)
+      const [start3, end3] = form.cdsSite.split('..').map(Number)
+      const [start4, end4] = form.utr3Site.split('..').map(Number)
+      const [start5, end5] = form.polyASite.split('..').map(Number)
+      // 元件顺序
+      if(end1 < start2 && end2 < start3 && end3<start4 && end4<start5){
+        return true;
+      } else {
+        return false;
+      }
+    },
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
+          if(! this.validForm(this.form)){
+            return;
+          }
           if (this.form.metaId != null) {
             updateMeta(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");

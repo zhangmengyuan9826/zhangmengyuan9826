@@ -69,7 +69,7 @@
         </el-tooltip>
       </template>
       </el-table-column> -->
-      <el-table-column label="基因名" align="center" prop="geneName" width="130" resizable>
+      <el-table-column label="基因名" align="center" prop="geneName" width="220" resizable>
          <template slot-scope="scope">
           <div @click="handleClick">
             <el-tooltip v-if="scope.row.geneName!=null & !editing" effect="light" placement="top">
@@ -548,7 +548,7 @@
 </template>
 
 <script>
-import { listGeneDialog, getGene} from "@/api/plasmid/gene";
+import { listGeneExpDialog, getGene} from "@/api/plasmid/gene";
 import { getDictDataListByDictType } from "@/api/plasmid/dictData";
 import { getDicts } from "@/api/system/dict/data";
 
@@ -685,7 +685,7 @@ export default {
         /** 查询物料标签列表 */
     getList() {
       this.loading = true;
-      listGeneDialog(this.queryParams).then(response => {
+      listGeneExpDialog(this.queryParams).then(response => {
         this.plasmidGeneList = response.rows;
         this.total = response.total;
         this.loading = false;

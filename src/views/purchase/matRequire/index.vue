@@ -2197,7 +2197,8 @@ import {
   updateMatRequireStatus,
   getMatDetailListbyRequireIds,
   getRequireLogs,
-  submitDoneDetailByDetailIds
+  submitDoneDetailByDetailIds,
+  getRecordPeriods
 } from "@/api/stock/matRequire";
 import { Message } from "element-ui";
 import { listMat } from "@/api/base/mat";
@@ -3066,8 +3067,7 @@ export default {
                 })
                 .catch(() => {});
             });
-          } else {
-            
+          } else {            
             that.$modal
               .confirm("是否提交该需求单信息？")
               .then(function () {
@@ -3165,7 +3165,6 @@ export default {
         return false
       }
       return true
-
     },
     confirmAddExistMat(){
       this.existMatDialog = false
@@ -3256,7 +3255,7 @@ export default {
           .reduce((acc, num) => acc + num, 0);
         this.matForm.warehouseQuantity = matlabel_quantity;
       });
-      this.$set(this.matForm, "warehouseQuantity", matlabel_quantity);
+      this.$set(this.matForm, "warehouseQuantity", matlabel_quantity);      
 
       var sameTagQuantity = 0;
       var label_query_param_2 = { matTag: this.item.matTag };
@@ -3271,7 +3270,30 @@ export default {
       this.$set(this.matForm, "sameTagQuantity", sameTagQuantity);
       } else {
         this.$set(this.matForm, "sameTagQuantity", 0)
-      }    
+      }  
+      // 显示到货和PO转化时间
+      getRecordPeriods({ matName: this.item.matName }).then((response) => {
+        if (response.data) {
+          var infoMsg = "";
+          if(response.data['poDay'])
+          infoMsg += "平均PO转化周期为"+response.data['poDay']+"天; 预计PO转化日期为："+response.data['poDate'];
+        if(response.data['receivedDay']){
+          infoMsg += "<br>平均到货周期为"+response.data['receivedDay']+"天; 预计到货日期为："+response.data['receivedDate']; 
+        }
+          if(infoMsg !=""){
+            const info = "该物料<b>"+this.item.matName+"</b><br>"+infoMsg;
+            this.$alert(info, '物料周期提示', {
+            confirmButtonText: '我已知悉',
+            dangerouslyUseHTMLString: true,
+            customStyle: {
+              width: '300px' // 设置弹窗宽度
+            },
+            callback: () => {}
+          });  
+          }
+               
+      }});
+      
       this.selectMatOpen = false;
     },
     cancelSelectMat() {

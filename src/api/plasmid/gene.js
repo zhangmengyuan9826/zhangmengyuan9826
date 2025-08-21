@@ -25,6 +25,15 @@ export function listGeneDialog(query) {
   })
 }
 
+// 查询质粒基因管理列表
+export function listGeneExpDialog(query) {
+  return request({
+    url: '/plasmid/gene/listExpDialog',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询质粒基因管理详细
 export function getGene(geneId) {
   return request({

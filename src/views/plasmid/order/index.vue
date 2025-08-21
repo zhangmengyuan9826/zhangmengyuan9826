@@ -226,7 +226,14 @@
             size="mini"
             type="text"
             icon="el-icon-edit"
-            :disabled="scope.row.orderStatus!='created'"
+            @click="handleDetail(scope.row)"
+            >详情</el-button
+          >
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-edit"
+            :disabled="scope.row.orderStatus!='status2'"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['plasmid:order:edit']"
             >修改</el-button
@@ -236,7 +243,7 @@
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            :disabled="scope.row.orderStatus!='created'"
+            :disabled="scope.row.orderStatus!='status2'"
             v-hasPermi="['plasmid:order:remove']"
             >删除</el-button
           >
@@ -439,8 +446,8 @@
             </template>
           </el-table-column>
       </el-table>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" v-if="form.orderStatus=='temporary' | form.orderStatus=='created' | operType=='add'" @click="submitForm">确 定</el-button>
+      <div v-if="operType!='view'" slot="footer" class="dialog-footer">
+        <el-button type="primary" v-if="form.orderStatus=='status1' | form.orderStatus=='status2' | operType=='add'" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
@@ -658,7 +665,6 @@
       <el-table-column label="3'UTR" align="center" prop="utr3" resizable />
       <el-table-column label="5'UTR" align="center" prop="utr5" resizable />
       <el-table-column label="polyA" align="center" prop="polyA" resizable />
-      <!-- <el-table-column label="CDS序列" align="center" prop="cdsSeq" /> -->
       <el-table-column
         label="启动子"
         align="center"
@@ -805,32 +811,32 @@ export default {
       plasmidGeneList: [],
       geneIdArr: [],
       statusDictButtons: [
-        // { name: "草稿", value: "temporary"},
+        // { name: "草稿", value: "status1"},
         // { name: "已创建", value: "created", type: "info" },
-        { name: "已下单", value: "order_ing", type: "PRIMARY" },
-        { name: "已到货", value: "order_done", type: "success" },
-        { name: "实验中", value: "exp_ing", type: "warning" },
-        { name: "实验完成", value: "exp_done", type: "success" },
-        { name: "状态异常", value: "status_error", type: "danger" },
-        { name: "状态回退", value: "status_reset", type: "warning" },
+        { name: "已下单", value: "status3", type: "PRIMARY" },
+        { name: "已到货", value: "status4", type: "success" },
+        { name: "实验中", value: "status5", type: "warning" },
+        { name: "实验完成", value: "status6", type: "success" },
+        { name: "状态异常", value: "status7", type: "danger" },
+        { name: "状态回退", value: "status8", type: "warning" },
       ],
       allStatusDicts:[
-        // { name: "草稿", value: "temporary"},
-        { name: "已创建", value: "created", type: "info" },
-        { name: "已下单", value: "order_ing", type: "PRIMARY" },
-        { name: "已到货", value: "order_done", type: "success" },
-        { name: "实验中", value: "exp_ing", type: "warning" },
-        { name: "实验完成", value: "exp_done", type: "success" },
-        { name: "状态异常", value: "status_error", type: "danger" },
-        { name: "状态回退", value: "status_reset", type: "warning" },
+        // { name: "草稿", value: "status1"},
+        { name: "已创建", value: "status2", type: "info" },
+        { name: "已下单", value: "status3", type: "PRIMARY" },
+        { name: "已到货", value: "status4", type: "success" },
+        { name: "实验中", value: "status5", type: "warning" },
+        { name: "实验完成", value: "status6", type: "success" },
+        { name: "状态异常", value: "status7", type: "danger" },
+        { name: "状态回退", value: "status8", type: "warning" },
       ],
       resetStatusDicts:[
-        { name: "已创建", value: "created", index: 1 },
-        { name: "已下单", value: "order_ing", index: 2 },
-        { name: "已到货", value: "order_done", index: 3 },
-        { name: "实验中", value: "exp_ing", index: 4 },
-        { name: "实验完成", value: "exp_done", index: 5 },
-        { name: "状态异常", value: "status_error", index: 6 },
+        { name: "已创建", value: "status2", index: 1 },
+        { name: "已下单", value: "status3", index: 2 },
+        { name: "已到货", value: "status4", index: 3 },
+        { name: "实验中", value: "status5", index: 4 },
+        { name: "实验完成", value: "status6", index: 5 },
+        { name: "状态异常", value: "status7", index: 6 },
       ],
       statusDictButtonsCheck: [
         { name: "中间过程-1", value: "approved", type: "warning" },
@@ -838,24 +844,34 @@ export default {
         { name: "已到货", value: "done", type: "PRIMARY" },
         { name: "实验中", value: "done2", type: "PRIMARY" },
       ],
+      // statusDict: {
+      //   status1: "草稿",
+      //   created: "已创建",
+      //   status3: "已下单",
+      //   status4: "已到货",
+      //   status5: "实验中",
+      //   status6: "实验完成",
+      //   status7: "状态异常",
+      //   status8:"状态回退",
+      // },
       statusDict: {
-        temporary: "草稿",
-        created: "已创建",
-        order_ing: "已下单",
-        order_done: "已到货",
-        exp_ing: "实验中",
-        exp_done: "实验完成",
-        status_error: "状态异常",
-        status_reset:"状态回退",
+        status1: "草稿",
+        status2: "已创建",
+        status3: "已下单",
+        status4: "已到货",
+        status5: "实验中",
+        status6: "实验完成",
+        status7: "状态异常",
+        status8:"状态回退",
       },
       statusColor: {
-        temporary: "grey",
-        created: "black",
-        order_ing: "blue",
-        order_done: "green",
-        exp_ing: "orange",
-        exp_done: "green",
-        status_error: "red"
+        status1: "grey",
+        status2: "black",
+        status3: "blue",
+        status4: "green",
+        status5: "orange",
+        status6: "green",
+        status7: "red"
       },
       fieldList: [],
       _dicts:{},
@@ -906,8 +922,7 @@ export default {
         })        
       });      
       this.loading = false;
-      this.showSearch = true;
-      
+      this.showSearch = true;      
     },
     // 取消按钮
     cancel() {
@@ -993,6 +1008,16 @@ export default {
       this.open = true;
       this.plasmidGeneList = [];
       this.title = "添加质粒订单";
+    },
+    handleDetail(row){
+      getOrder(row.orderId).then((response) => {
+        this.operType = 'view';
+        this.form = response.data;
+        this.plasmidGeneList = response.data.geneList;
+        this.geneIdArr = this.plasmidGeneList.map(item => item['geneId']);
+        this.open = true;
+        this.title = "质粒订单详情";
+      });
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
@@ -1100,7 +1125,7 @@ export default {
           this.orderIngForm = response.data;          
           this.orderIngForm['geneList'] = response.data.geneList;
           console.log(this.orderIngForm)
-          if(this.orderIngForm.orderStatus !=='created'){
+          if(this.orderIngForm.orderStatus !=='status2'){
             console.log(this.orderIngForm.orderStatus)
             Message.warning("不可重复下单！")
             return
@@ -1117,10 +1142,9 @@ export default {
             if(!this.orderIngForm.geneList[i]['geneNo'] | this.orderIngForm.geneList[i]['geneNo']==""){
               Message.warning("基因订单号不可为空")
               return
-            }
-            
+            }            
           }
-          this.orderIngForm['orderStatus'] = 'order_ing';
+          this.orderIngForm['orderStatus'] = 'status3';
           updateOrderOrdeIng(this.orderIngForm).then((response) => {
             Message.success("已成功更新！")
             this.openOrderIng = false;
@@ -1136,52 +1160,51 @@ export default {
       this.newStatus = status;
       console.log(status)
       var selectStatus = this.selectItems.map((item) => item.orderStatus);    
-      if(status == "status_reset" &&
-        selectStatus.indexOf("created")>=0){
+      if(status == "status8" &&
+        selectStatus.indexOf("status2")>=0){
           Message.warning("‘已创建’状态的订单无法回退");
      }  
       else if(
-        status == "order_ing" && (
-        selectStatus.indexOf("order_ing")>=0 ||
-        selectStatus.indexOf("order_done")>=0 ||
-        selectStatus.indexOf("exp_ing")>=0 ||
-        selectStatus.indexOf("exp_done")>=0 )
+        status == "status3" && (
+        selectStatus.indexOf("status3")>=0 ||
+        selectStatus.indexOf("status4")>=0 ||
+        selectStatus.indexOf("status5")>=0 ||
+        selectStatus.indexOf("status6")>=0 )
       ){
         Message.warning("已下单或实验的订单不可重复下单！");
         return;
       }
       else if(
-        status == "order_ing" &&
-        selectStatus.indexOf("temporary")>=0 ||
-        selectStatus.indexOf("status_error")>=0
+        status == "status3" &&
+        selectStatus.indexOf("status1")>=0 ||
+        selectStatus.indexOf("status7")>=0
       ){
         Message.warning("请完善信息后再下单！");
         return;
-      }      
-      else if(
-        status == "order_done" && (
-        selectStatus.indexOf("temporary")>=0 ||
-        selectStatus.indexOf("status_error")>=0 ||
-        selectStatus.indexOf("order_done")>=0 ||
-        selectStatus.indexOf("exp_ing")>=0 ||
-        selectStatus.indexOf("exp_done")>=0)
+      } else if(
+        status == "status4" && (
+        selectStatus.indexOf("status1")>=0 ||
+        selectStatus.indexOf("status7")>=0 ||
+        selectStatus.indexOf("status4")>=0 ||
+        selectStatus.indexOf("status5")>=0 ||
+        selectStatus.indexOf("status6")>=0)
       ){
         Message.warning("状态错误！非已下单的订单不可到货处理");
         return;
       }
       
       // 下单需要补充订单号
-      else if(this.newStatus == "order_ing"){
+      else if(this.newStatus == "status3"){
         this.handleChangeStatusOrderIng()
       } 
-      else if(this.newStatus == "order_done"){
+      else if(this.newStatus == "status4"){
         const orderIds = this.ids;
         listGenesByIds(orderIds).then((response) => {
           this.multiDoneGeneList = response;
           this.openOrderDone = true;
         })
       } 
-      else if(this.newStatus == "status_reset"){
+      else if(this.newStatus == "status8"){
         this.openReset = true;
       } else {
         var request = {
@@ -1267,7 +1290,7 @@ export default {
       this.doneGeneIds = selection.map((item) => item.geneId);
     },
   checkSelectableDone(row){
-    if(row.status != "order_ing"){
+    if(row.status != "status3"){
       return false;
     }else{
       return true;

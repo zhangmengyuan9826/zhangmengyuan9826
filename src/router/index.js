@@ -149,6 +149,20 @@ export const dynamicRoutes = [
     ]
   },
   {
+    path: '/plasmid/experiment/experiment-list',
+    component: Layout,
+    hidden: true,
+    permissions: ['plasmid:experiment:list'],
+    children: [
+      {
+        path: 'index/:projectNo',
+        component: () => import('@/views/plasmid/experiment/experiment_list'),
+        name: 'ExperimentList',
+        meta: { title: '实验进展', activeMenu: '/plasmid/experiment' }
+      }
+    ]
+  },
+  {
     path: '/monitor/job-log',
     component: Layout,
     hidden: true,

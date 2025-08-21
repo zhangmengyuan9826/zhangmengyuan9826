@@ -346,6 +346,7 @@
                 filterable
                 clearable
                 @blur="getCurVal_unit"
+                :disabled="addSelect"
               >
                 <el-option
                   v-for="dict in dict.type.base_mat_unit"

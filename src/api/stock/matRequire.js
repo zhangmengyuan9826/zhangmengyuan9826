@@ -91,3 +91,10 @@ export function getRequireLogs(requireId) {
     method: 'get'
   })
 }
+export function getRecordPeriods(data) {
+  return request({
+    url: '/stock/matRequire/periods/',
+    data: data,
+    method: 'post'
+  })
+}
