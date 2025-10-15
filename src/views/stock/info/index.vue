@@ -226,8 +226,36 @@
               </el-select>
             </el-form-item>
          </el-col>
-
+         <el-col :span="12">
+        <el-form-item label="批次" prop="batch">
+          <el-input v-model="form.batch" :disabled="false" />
+        </el-form-item>
+        </el-col>
         </el-row>
+        <el-row>
+          
+        <el-col :span="12">
+          <el-form-item label="生产日期" prop="prodTime">
+            <el-date-picker
+          clearable
+          v-model="form.prodTime"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择生产日期"
+        >
+        </el-date-picker>
+            </el-form-item></el-col>
+        <el-col :span="12">
+          <el-form-item label="有效期" prop="expiredTime">
+            <el-date-picker
+          clearable
+          v-model="form.expiredTime"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择有效期"
+        >
+        </el-date-picker>
+            </el-form-item></el-col>    </el-row>
         <el-row>
           <el-col :span="12">
         <el-form-item label="采购数量" prop="quantity">
@@ -269,7 +297,8 @@
 </template>
 
 <script>
-import { listInfo, getStockInfoDetail, handleUpdate } from "@/api/stock/info";
+import { listInfo, handleUpdate } from "@/api/stock/info";
+import {getMatLabel} from "@/api/stock/matLabel"
 import { listAllWarehouse } from "@/api/base/warehouse";
 import { listAllLocation } from "@/api/base/location";
 import { listAllTag } from "@/api/base/tag";
@@ -385,7 +414,11 @@ export default {
       }, `info_${new Date().getTime()}.xlsx`)
     },
     handleEdit(row) {
-      getStockInfoDetail(row).then((response) => {
+      if (!row['labelId']) {
+        this.$message.error("找不到物料标签信息！");
+        return;
+      }
+      getMatLabel(row.labelId).then((response) => {
         this.form = response.data
         this.form['remainQuantity'] = row.quantity
         this.form['infoId'] = row.infoId

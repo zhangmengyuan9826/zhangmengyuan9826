@@ -79,7 +79,7 @@
       :visible.sync="open"
       width="80%"
       append-to-body
-      max-height="700"      
+      max-height="700"
     >
       <el-form ref="form" :model="form" label-width="80px" :rules="recordRules">
         <el-form-item label="更新状态" prop="newStatus">
@@ -110,7 +110,15 @@
           </el-date-picker>
         </el-form-item>
       </el-form>
-      <el-table :data="detailList" style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table
+        :data="detailList"
+        style="width: 100%; border-color: white"
+        border
+        :row-style="{ height: '20px' }"
+        :cell-style="{ padding: '0px' }"
+        :header-cell-style="{ color: '#606266' }"
+        @selection-change="handleSelectionChange"
+      >
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column
           label="基因名"
@@ -176,7 +184,7 @@
 </template>
 
 <script>
-import { listProjectRecord,addExpRecord } from "@/api/plasmid/experiment";
+import { listProjectRecord, addExpRecord ,checkPermission} from "@/api/plasmid/experiment";
 import { listDetailAll } from "@/api/plasmid/detail";
 import { listAllLocation } from "@/api/base/location";
 import ExperimentStatusTable from "../../components/experiment-table/index";
@@ -198,209 +206,98 @@ export default {
       total: 0,
       open: false,
       fieldDataDict: {},
-      plasmidData: [
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          linearDigestion: "BspQI",
-          progressStatus: "mRNA制备",
-          orderStatus: "SA",
-          statusDate: "2025/7/25",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY--",
-          resistanceGene: "Amp",
-          linearDigestion: "Basl",
-          progressStatus: "mRNA制备",
-          orderStatus: "SA",
-          statusDate: "2025/7/25",
-          status: "mRNA制备",
-        },
-      ],
-      // 库存流水表格数据
-      backendData: [
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "SA",
-          statusDate: "2025/7/25",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "SA",
-          statusDate: "2025/7/18",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "SA",
-          statusDate: "2025/7/11",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "SA",
-          statusDate: "2025/5/25",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "SA",
-          statusDate: "2025/5/18",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "SA",
-          statusDate: "2025/5/11",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "√",
-          statusDate: "2025/6/04",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "√",
-          statusDate: "2025/6/14",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "√",
-          statusDate: "2025/7/04",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY--",
-          resistanceGene: "Amp",
-          orderStatus: "√",
-          statusDate: "2025/7/25",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY--",
-          resistanceGene: "Amp",
-          orderStatus: "√",
-          statusDate: "2025/7/18",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY",
-          resistanceGene: "Amp",
-          orderStatus: "√",
-          statusDate: "2025/7/11",
-          status: "mRNA制备",
-        },
-        {
-          projectNo: "M.25005",
-          projectName: "自复制优化系列2",
-          geneName: "p30-35-MIUI-T7-VEEV-GFP-G26A-HY--",
-          resistanceGene: "Amp",
-          orderStatus: "√",
-          statusDate: "2025/7/04",
-          status: "mRNA制备",
-        },
-      ],
       // 查询参数
       queryParams: {
-        projectNo:''
+        projectNo: "",
       },
       form: { newStatus: "", newDate: "" },
-      recordRules: {newStatus: [
+      recordRules: {
+        newStatus: [
           { required: true, message: "状态不能为空", trigger: "blur" },
-        ],newDate: [
-          { required: true, message: "日期不能为空", trigger: "blur" },
-        ],},
+        ],
+        newDate: [{ required: true, message: "日期不能为空", trigger: "blur" }],
+      },
       // 日期范围
       dateRange: [],
       locationDict: {},
-      recordList:[],
-      detailIds:[],
-      projectNo:'',
-      detailList:[],
+      recordList: [],
+      detailIds: [],
+      projectNo: "",
+      detailList: [],
       recordListDone: false,
     };
   },
   created() {
     this.initData();
+    this.initDateRange();
   },
   methods: {
+    initDateRange(){
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 30);
+          // 格式化为 yyyy-MM-dd
+      const format = date => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      this.dateRange = [format(start), format(end)];
+    },
     //是否可选
     handleAdd() {
-        listDetailAll({'projectNo': this.projectNo}).then((response)=>{
+      if (!this.recordList || this.recordList.length === 0) {
+        Message.warning("请先选择项目！");
+        return;
+      }
+      listDetailAll({ projectNo: this.projectNo }).then((response) => {
             this.detailList = response.data;
             this.open = true;
-        })      
+          });
+      // checkPermission({ manageBy: this.recordList[0]['manageBy'], createBy: this.recordList[0]['createBy'] }).then(response => {
+      //   if (response == 0) {
+      //     Message.error("无权限！");
+      //     return;
+      //   } else{
+      //     listDetailAll({ projectNo: this.projectNo }).then((response) => {
+      //       this.detailList = response.data;
+      //       this.open = true;
+      //     });
+      //   }
+      // });
+      
     },
     handleSelectionChange(selection) {
       this.detailIds = selection.map((item) => item.detailId);
     },
-    handleCancel(){
-        this.open = false;
+    handleCancel() {
+      this.open = false;
     },
-    handleSubmit(){
-        this.$refs["form"].validate((valid) => {
+    handleSubmit() {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
-            if(!this.detailIds || this.detailIds.length == 0){
-            Message.warning("请先选择质粒！")
-            return
+          if (!this.detailIds || this.detailIds.length == 0) {
+            Message.warning("请先选择质粒！");
+            return;
+          }
+          for (let i = 0; i < this.detailIds.length; i++) {
+            const newData = {
+              detailId: this.detailIds[i],
+              progressStatus: this.form.newStatus,
+              recordDate: this.form.newDate,
+            };
+            addExpRecord(newData).then((response) => {});
+          }
+          this.open = false;
+          this.getList();
         }
-        for(let i=0;i<this.detailIds.length;i++){
-            const newData = {'detailId': this.detailIds[i], 'progressStatus':this.form.newStatus, 'recordDate':this.form.newDate}
-            addExpRecord(newData).then((response)=>{
-                
-            })            
-        }
-        this.open=false;
-        this.getList();
-        }})
-        
+      });
     },
     initData() {
       getDicts("plasmid_field").then((response) => {
         this.fieldList = response.data.map((item) => item.dictValue);
-        this.getField();        
+        this.getField();
         const projectNo = this.$route.params && this.$route.params.projectNo;
         this.queryParams.projectNo = projectNo;
         this.projectNo = projectNo;
@@ -444,7 +341,9 @@ export default {
     },
     getList() {
       this.loading = true;
-      listProjectRecord(this.addDateRange(this.queryParams, this.dateRange)).then((response) => {
+      listProjectRecord(
+        this.addDateRange(this.queryParams, this.dateRange)
+      ).then((response) => {
         this.recordList = response.data;
         this.loading = false;
         this.recordListDone = true;
@@ -466,7 +365,7 @@ export default {
       this.download(
         "plasmid/experiment/record-export",
         {
-          ...{projectNo: this.queryParams.projectNo},
+          ...{ projectNo: this.queryParams.projectNo },
         },
         `expRecord_${new Date().getTime()}.xlsx`
       );

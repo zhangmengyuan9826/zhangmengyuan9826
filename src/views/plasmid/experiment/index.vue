@@ -31,6 +31,18 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="项目日期">
+        <el-date-picker
+          v-model="dateRange"
+          style="width: 240px"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          clearable
+        ></el-date-picker>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -94,12 +106,41 @@
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
-
-    <el-table v-loading="loading" :data="pivotTableData" @selection-change="handleSelectionChange">
+    <el-row :gutter="10" class="mb8">
+  <el-col :span="6">
+    <el-button-group>
+      <el-button
+        size="mini"
+        :type="queryParams.status === '0' ? 'primary' : 'default'"
+        icon="el-icon-time"
+        @click="filterStatus('0')"
+      >未开始</el-button>
+      <el-button
+        size="mini"
+        :type="queryParams.status === '1' ? 'primary' : 'default'"
+        icon="el-icon-refresh"
+        @click="filterStatus('1')"
+      >进行中</el-button>
+      <el-button
+        size="mini"
+        :type="queryParams.status === '2' ? 'primary' : 'default'"
+        icon="el-icon-folder"
+        @click="filterStatus('2')"
+      >已归档</el-button>
+    </el-button-group>
+  </el-col>
+</el-row>
+    <el-table v-loading="loading" :data="pivotTableData" 
+    style="width: 100%; border-color: white"
+      border
+      :row-style="{ height: '20px' }"
+      :cell-style="{ padding: '0px' }"
+      :header-cell-style="{ color: '#606266' }"
+    @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="项目流水号" align="center" prop="projectNo" width="100"/>
       <el-table-column label="项目名称" align="center" prop="projectName" width="200"/>
-      <el-table-column label="项目负责人" align="center" prop="manageBy" width="100"/>
+      <el-table-column label="项目负责人" align="center" prop="manageByNickName" width="100"/>
       <!-- <el-table-column label="项目状态" align="center" prop="projectStatus" width="100"/> -->
       <el-table-column
         v-for="date in recordDateColumns"
@@ -107,7 +148,7 @@
         :label="date"
         :prop="date"
         align="center"
-        min-width="100"
+        min-width="140"
         max-width="200"
       />
       <el-table-column label="操作" align="center" fixed="right" class-name="small-padding fixed-width">
@@ -118,12 +159,14 @@
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['plasmid:experiment:edit']"
+            :disabled="scope.row.status === '2'"
           >修改</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
+            :disabled="scope.row.status === '2'"
             v-hasPermi="['plasmid:experiment:remove']"
           >删除</el-button>
           <el-button
@@ -175,7 +218,15 @@
               </el-select>
             </el-form-item>
         </el-col>
-        <el-col :span="12"></el-col></el-row>
+        <el-col :span="12">
+          <el-form-item label="项目状态" prop="status" label-width="120px">
+      <el-select v-model="form.status" placeholder="请选择项目状态">
+        <el-option label="未开始" value="0"></el-option>
+        <el-option label="进行中" value="1"></el-option>
+        <el-option label="已归档" value="2"></el-option>
+      </el-select>
+    </el-form-item>
+          </el-col></el-row>
         <el-row>
           <el-col :span="8">
             <el-form-item label="选择质粒">
@@ -192,14 +243,15 @@
       </el-form>
       <el-table :data="plasmidGeneList" style="width: 100%">
         <el-table-column type="selection" :selectable="checkSelectable" width="55" align="center" />
-        <el-table-column label="基因名" align="center" prop="geneName" width="130" resizable>
+        <el-table-column label="基因名" align="center" prop="geneName" width="200"/>
+        <!-- <el-table-column label="基因名" align="center" prop="geneName" width="260" resizable>
           <template slot-scope="scope">
           <el-tooltip v-if="scope.row.geneName!=null" effect="light" placement="top">
             <div class="content" slot="content" v-html="scope.row.geneName"></div>
             <div class="oneLine"> {{scope.row.geneName}}</div>
           </el-tooltip>
         </template>
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column label="线性酶切" align="center" prop="linearDigestion" />
         <el-table-column label="抗性基因" align="center" prop="resistanceGene" />
         <el-table-column label="实验进展" align="center" prop="progressStatus" />
@@ -271,12 +323,13 @@
       <el-table :data="newProgressList" style="width: 100%">
         <el-table-column label="项目流水号" align="center" prop="projectNo" />
         <el-table-column label="项目名称" align="center" prop="projectName" />
-        <el-table-column label="项目负责人" align="center" prop="manageBy"  />
+        <el-table-column label="项目负责人" align="center" prop="manageByNickName"  />
         <el-table-column label="项目状态" align="center" prop="projectStatus" />
-        <el-table-column label="更新状态" align="center" prop="newStatus" width="240">
+        <el-table-column label="更新状态" align="center" prop="newStatus" width="260">
           <template slot-scope="scope">
             <el-input
               v-model="scope.row.newStatus"
+              type="textarea"
               placeholder="请输入更新状态"
             />
           </template>
@@ -333,7 +386,7 @@ export default {
         projectNo: null,
         projectName: null,
         manageBy: null,
-        projectStatus: null,
+        status: '1'  // 默认显示进行中, 可选值：unstarted, 1, 2        
       },
       // 表单参数
       form: {},
@@ -355,13 +408,47 @@ export default {
       recordDate: '',
       recordDateColumns: [],
       pivotTableData: [],
+      dateRange: [],
+      statusFilter: '未开始', // 默认过滤状态
     };
   },
   created() {
+    this.initDateRange();
     this.getList();
     this.getUserList();
   },
+  computed: {
+  filteredPivotTableData() {
+    // projectStatus字段值需和标签对应
+    const statusMap = {
+      '未开始': '0',
+      '进行中': '1',
+      '已归档': '2'
+    };
+    this.getList();
+    return this.pivotTableData.filter(item => item.projectStatus === statusMap[this.statusFilter]);
+  }
+},
   methods: {
+    filterStatus(status) {
+      this.queryParams.status = status;
+      this.getList();
+    // 只需触发刷新，computed会自动更新
+  },
+    initDateRange(){
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 30);
+          // 格式化为 yyyy-MM-dd
+      const format = date => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+
+      this.dateRange = [format(start), format(end)];
+    },
     handleProgress(row) {
       const expIds = row.expId || this.ids;
       this.newProgressList = this.experimentList.filter(item => expIds.includes(item.expId));
@@ -435,33 +522,35 @@ export default {
     /** 查询质粒模块-实验管理列表 */
     getList() {
       this.loading = true;
-      listExperiment(this.queryParams).then(response => {
+      listExperiment(this.addDateRange(this.queryParams, this.dateRange)).then(response => {
         this.experimentList = response.rows;
         // 处理所有progressList，收集所有recordDate
-    let allDates = new Set();
-    this.experimentList.forEach(item => {
-      (item.progressList || []).forEach(d => allDates.add(d.recordDate));
-    });
-    this.recordDateColumns = Array.from(allDates).sort((a, b) => new Date(b) - new Date(a));
-
-    // 透视化每个项目
-    this.pivotTableData = this.experimentList.map(item => {
-      let row = {
-        projectNo: item.projectNo,
-        projectName: item.projectName,
-        manageBy: item.manageBy,
-        projectStatus: item.projectStatus,
-        expId: item.expId,
-        // 你可以加其他字段
-      };
-      (item.progressList || []).forEach(d => {
-        row[d.recordDate] = d.projectStatus;
-      });
-      return row;
-    });
-        this.total = response.total;
-        this.loading = false;
-      });
+        let allDates = new Set();
+        // 透视化每个项目
+        this.pivotTableData = this.experimentList
+          .map(item => {
+            let row = {
+              projectNo: item.projectNo,
+              projectName: item.projectName,
+              manageBy: item.manageBy,
+              manageByNickName: item.manageByNickName,
+              projectStatus: item.projectStatus,
+              expId: item.expId,
+              status: item.status
+            };
+            (item.progressList || []).forEach(d => {   
+              let projectStatus = d.projectStatus.trim();
+              if(projectStatus !== undefined && projectStatus !== null && projectStatus !== '' && projectStatus.length > 0){
+                row[d.recordDate] = projectStatus;
+                allDates.add(d.recordDate);
+              } 
+            });
+            return row;
+          });
+          this.recordDateColumns = Array.from(allDates).sort((a, b) => new Date(b) - new Date(a));
+          this.total = response.total;
+          this.loading = false;
+        });
     },
     // 取消按钮
     cancel() {
@@ -496,6 +585,7 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
+      this.dateRange = [];
       this.resetForm("queryForm");
       this.handleQuery();
     },
@@ -515,20 +605,37 @@ export default {
     handleUpdate(row) {
       this.reset();
       const expId = row.expId || this.ids
+      console.log(row)
+      const params = {manageBy:row.manageBy, createBy:row.createBy, expId:expId}
+      // 修改权限验证
+      // checkPermission(params).then(response => {
+      //   if(response == 0){
+      //     Message.error("无权限！")
+      //     return;
+      //   } else {
+      //       getExperiment(expId).then(response => {
+      //         this.form = response.data;
+      //         this.plasmidGeneList = response.data.detailList;
+      //         this.open = true;
+      //         this.title = "修改质粒模块-实验管理";
+      //       });
+      //   }
+      // });
       getExperiment(expId).then(response => {
-        this.form = response.data;
-        this.plasmidGeneList = response.data.detailList;
-        this.open = true;
-        this.title = "修改质粒模块-实验管理";
-      });
+              this.form = response.data;
+              this.plasmidGeneList = response.data.detailList;
+              this.open = true;
+              this.title = "修改质粒模块-实验管理";
+            });
+      
     },
     
     /** 提交按钮 */
     submitForm() {
       checkPermission({manageBy:this.form.manageBy, createBy:this.form.createBy}).then(response => {
         if(response == 0){
-          Message.error("无权限！")
-          return;
+          // Message.error("无权限！")
+          // return;
         }
         this.$refs["form"].validate(valid => {
         if (valid) {

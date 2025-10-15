@@ -24,7 +24,9 @@
         </thead>
         <tbody>
           <tr v-for="(plasmid, pIndex) in plasmids" :key="plasmid.geneName">
-            <td v-for="(col, colIndex) in columns" :key="col.key" :style="getGeneColHighlightStyle(col.key, plasmid[col.key], col.style)" :class="{'fixed-column': colIndex === 0 || colIndex === 1}">
+            <td v-for="(col, colIndex) in columns" :key="col.key" 
+              :style="getGeneColHighlightStyle(col.key, plasmid[col.key], col.style)" 
+              :class="{'fixed-column': colIndex === 0 || colIndex === 1}">
               <template v-if="col.key === 'index'">
                 {{ pIndex + 1 }}
               </template>
@@ -35,12 +37,21 @@
                 {{ plasmid[col.key] }}
               </template>
             </td>
-            <td v-for="recordDate in uniqueDates" :key="`${plasmid.geneName}-${recordDate}`"
-                :style="getStatusHighlightStyle(recordDate, getStatusForDate(plasmid, recordDate))">
+            <td v-for="(recordDate,dateIndex) in uniqueDates" :key="`${plasmid.geneName}-${recordDate}`"
+                :style="Object.assign(
+                  {},
+                  getStatusHighlightStyle(recordDate, getStatusForDate(plasmid, recordDate)),
+                  dateIndex === 0 && uniqueDates[0] && uniqueDates[1] && 
+                  getStatusForDate(plasmid, recordDate) !== getStatusForDate(plasmid, uniqueDates[1])
+                    ? { background: '#ffd6e0' }
+                    : {}
+                )"
+                >
               {{ getStatusForDate(plasmid, recordDate) }}
             </td>
           </tr>
         </tbody>
+
       </table>
     </div>
   </div>
@@ -97,6 +108,7 @@ export default {
       // 提取项目信息(假设第一条数据包含项目信息)
       this.projectInfo.projectName = this.rawData[0].projectName;
       this.projectInfo.projectNo = this.rawData[0].projectNo;
+      this.projectInfo.manageBy = this.rawData[0].manageBy;
       // 按质粒分组
       const plasmidMap = new Map();
       this.rawData.forEach(item => {

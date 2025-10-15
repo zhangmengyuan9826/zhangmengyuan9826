@@ -9,10 +9,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="基因名称" prop="geneName">
+      <el-form-item label="质粒名称" prop="geneName">
         <el-input
           v-model="queryParams.geneName"
-          placeholder="请输入基因名称"
+          placeholder="请输入质粒名称"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -59,7 +59,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="项目号" align="center" prop="projectNo" />
       <el-table-column label="项目名称" align="center" prop="projectName" />
-      <el-table-column label="基因名称" align="center" prop="geneName" />
+      <el-table-column label="质粒名称" align="center" prop="geneName" />
       <el-table-column label="酶切位点" align="center" prop="linearDigestion" />
       <el-table-column label="抗性基因" align="center" prop="resistanceGene" />
       <el-table-column label="实验进展状态" align="center" prop="progressStatus" />

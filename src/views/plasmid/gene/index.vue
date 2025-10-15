@@ -137,8 +137,8 @@
       style="width: 100%; border-color: white"
       border
       :row-style="{ height: '20px' }"
-      :cell-style="{ padding: '0px' }"
-      :header-cell-style="{ color: '#606266' }"
+      :cell-style="{ padding: '0px'}"
+      :header-cell-style="{ color: '#606266'}"
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
@@ -253,7 +253,7 @@
         label="操作"
         align="center"
         class-name="small-padding fixed-width"
-        width="120"
+        width="160"
         resizable
       >
         <template slot-scope="scope">
@@ -916,13 +916,13 @@ export default {
         url: process.env.VUE_APP_BASE_API + "/plasmid/gene/importData",
       },
       statusDict: {
-        created: "已创建",
-        temporary: "草稿",
+        status2: "已创建",
+        status1: "草稿",
       },
       statusColor: {
-        created: "green",
-        temporary: "orange",
-        ordered: "grey",
+        status2: "green",
+        status1: "orange",
+        status3: "grey",
       },
       selectedValue: "",
       viewType: "View",
@@ -1211,7 +1211,7 @@ export default {
       });
     },
     submitTemp() {
-      this.form["status"] = "temporary";
+      this.form["status"] = "status1";
       if (this.form.geneId != null) {
         updateGene(this.form).then((response) => {
           this.$modal.msgSuccess("修改成功");
@@ -1289,7 +1289,7 @@ export default {
           if (!this.validateForm(this.form)) {
             return;
           }
-          this.form.status = "created";
+          this.form.status = "status2";
           if (this.form.geneId != null) {
             if (this.viewType == "Copy") {
               this.form["geneId"] = null;
@@ -1413,9 +1413,17 @@ export default {
     handleFullSeq(geneId) {
       this.loadFullSeq = true;
       getGeneFullSeq(geneId).then((response) => {
+        if(response.code == '500'){
+          Message.error("获取完整序列失败，请稍后重试！");
+          this.loadFullSeq = false;
+          return;
+        }
         this.fullSeqInfo = response.data;
         this.fullSeqHtml = this.formattedDna(this.fullSeqInfo);
         this.showFullSeq = true;
+      }).catch(err => {
+        Message.error("获取完整序列失败，请稍后重试！");
+        this.loadFullSeq = false;
       });
     },
     /**

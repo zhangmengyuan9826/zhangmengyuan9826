@@ -33,7 +33,7 @@
         />
       </el-form-item>
       <el-form-item label="PM项目" prop="pmProject">
-        <el-select v-model="queryParams.pmProject" placeholder="请选择PM项目号">
+        <el-select v-model="queryParams.pmProject" placeholder="请选择PM项目号" clearable>
           <el-option
             v-for="item in pmProjectList"
             :key="item.value"
@@ -43,7 +43,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="requireStatus">
-        <el-select v-model="queryParams.requireStatus" placeholder="请选择状态">
+        <el-select v-model="queryParams.requireStatus" placeholder="请选择状态" clearable>
           <el-option
             v-for="(value, key) in statusDict"
             :key="key"
@@ -61,6 +61,7 @@
           range-separator="-"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
+          clearable
         ></el-date-picker>
       </el-form-item>
       <el-form-item>
@@ -69,11 +70,9 @@
           icon="el-icon-search"
           size="mini"
           @click="handleQuery"
-          >搜索</el-button
-        >
+          >搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-          >重置</el-button
-        >
+          >重置</el-button>
       </el-form-item>
     </el-form>
     <el-row :gutter="10" class="mb8">
@@ -560,6 +559,7 @@
             :disabled="
               (scope.row.requireStatus !== 'created' &&
                 scope.row.requireStatus !== 'un_approved' &&
+                scope.row.requireStatus !== 'po' &&
                 scope.row.requireStatus !== 'un_purchase') ||
               scope.row.createBy !== currentUser
             "
@@ -1167,8 +1167,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row>
-          
+        <el-row>          
         </el-row>
         <el-row>
           <el-col :span="12">
@@ -1208,11 +1207,6 @@
         <el-row>
           <el-col :span="20">
             <el-form-item label="进口原因" prop="importReason">
-              <!-- <el-input
-                v-model="matForm.importReason"
-                placeholder="进口原因"
-                :rules="dynamicRules"
-              /> -->
               <el-input
                 type="textarea"
                 v-model="matForm.importReason"
@@ -1377,17 +1371,36 @@
         <el-button @click="cancelApprovedForm">取 消</el-button>
       </div>
     </el-dialog>
+
     <el-dialog
-    :title="'物料详情 —— 到货确认'"
+      :title="detailOperTitle"
       :visible.sync="viewMultiDoneMatDetail"
       width="90%"
       height="90%"
       append-to-body
       :close-on-click-modal="false"
     >
-    <div>
+    <div v-if="newStatus == 'done'">
       <el-button type="primary" @click="submitDoneDetails">确 定 到 货</el-button>
       <el-button @click="cancelDoneDialog">取 消</el-button>
+    </div>
+    <div v-if="newStatus == 'po'">
+      <el-form :model="poForm" ref="poForm" label-width="100px">
+        <el-row>
+          <el-col :span="10">
+            <el-form-item label="PO日期" prop="poDate">
+              <el-date-picker v-model="poForm.poDate" type="date" placeholder="选择日期" value-format="yyyy-MM-dd">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-button type="primary" @click="submitPoDetails">确 定</el-button>
+          </el-col>
+          <el-col :span="3">
+            <el-button @click="cancelDoneDialog">取 消</el-button>
+          </el-col>
+        </el-row>
+      </el-form>
     </div>
     <el-table
         v-loading="loading"
@@ -2184,6 +2197,25 @@
          
         </div>
     </el-dialog>
+    <el-dialog
+      title="PO转化时间"
+      :visible.sync="openPoStatus"
+      width="50%"
+    >
+      <el-form :model="form" ref="form">
+        <el-form-item label="PO日期" prop="poDate">
+          <el-date-picker
+            v-model="poDate"
+            type="date"
+            placeholder="选择日期"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="submitPoRequire">确定</el-button>
+        <el-button @click="openPoStatus = false">取消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -2198,7 +2230,9 @@ import {
   getMatDetailListbyRequireIds,
   getRequireLogs,
   submitDoneDetailByDetailIds,
-  getRecordPeriods
+  getRecordPeriods,
+  updatePo,
+  submitPoForm
 } from "@/api/stock/matRequire";
 import { Message } from "element-ui";
 import { listMat } from "@/api/base/mat";
@@ -2404,6 +2438,7 @@ export default {
         { name: "审核不通过", value: "un_approved", type: "danger" },
         { name: "采购中", value: "processing", type: "warning" },
         { name: "采购不通过", value: "un_purchase", type: "danger" },
+        { name: "PO转化", value: "po", type: "warning" },
         { name: "采购到货", value: "done", type: "PRIMARY" },
       ],
       statusDictButtonsCheck: [
@@ -2413,6 +2448,7 @@ export default {
       statusDictButtonsPurchase: [
         { name: "采购中", value: "processing", type: "warning" },
         { name: "采购不通过", value: "un_purchase", type: "danger" },
+        { name: "PO转化", value: "po", type: "warning" },
         { name: "采购到货", value: "done", type: "PRIMARY" },
       ],
       statusDict: {
@@ -2420,6 +2456,7 @@ export default {
         approved: "审核通过",
         un_approved: "审核不通过",
         processing: "采购中",
+        po: "PO转化",
         un_purchase: "采购不通过",
         done: "已到货",
       },
@@ -2428,6 +2465,7 @@ export default {
         approved: "green",
         un_approved: "red",
         processing: "blue",
+        po: "blue",
         un_purchase: "red",
         done: "grey",
         deal: "blue",
@@ -2471,6 +2509,15 @@ export default {
         },
       locationList: [],
       locationDict: {},
+      poDate: null,
+      openPoStatus: false,
+      multiPoDetailList: [],
+      viewMultiPoMatDetail: false,
+      poForm: {
+        detailIds: [],
+        // 其他字段
+      },
+      detailOperTitle:""
     };
   },
   created() {
@@ -2553,7 +2600,7 @@ export default {
     },
     //是否可选
     checkSelectable(row){
-      if(row.matStatus === "done"){
+      if(row.matStatus === "done" && this.newStatus === "done"){
         return false;
       }else{
         return true;
@@ -2773,6 +2820,7 @@ export default {
       var selectStatus = this.selectItems.map((item) => item.requireStatus);
       if (
         selectStatus.indexOf("processing") >= 0 ||
+        selectStatus.indexOf("po") >= 0 ||
         selectStatus.indexOf("done") >= 0 ||
         selectStatus.indexOf("deal") >= 0 ||
         selectStatus.indexOf("un_purchase") >= 0 ||
@@ -2792,7 +2840,20 @@ export default {
       this.isRemark = true;
       this.openUnapprovedReason = true;
     },
+    submitPoDetails(){
+      // const poForm = this.poForm;
 
+      if(!this.doneDetailIds || this.doneDetailIds.length == 0){
+        Message.warning("请先选择物料！")
+        return
+      }
+      this.poForm['date'] = this.poForm.poDate;
+      this.poForm['detailIds'] = this.doneDetailIds;
+      submitPoForm( this.poForm).then((response) => {
+        Message.success("提交成功！")
+      }).catch(() => {});
+      this.viewMultiDoneMatDetail = false;     
+    },
     handleChangeStatusPurchase(status) {
       var selectStatus = this.selectItems.map((item) => item.requireStatus);
       for (let oldStatus of selectStatus) {
@@ -2801,7 +2862,7 @@ export default {
         } else if (oldStatus === "created" || oldStatus === "un_approved") {
           Message.warning("未审核通过的需求单不可发起采购！");
           return;
-        } else if (oldStatus === "done") {
+        } else if (oldStatus === "done" && status!="po") {
           Message.warning("需求单物料已全部入库！");
           return;
         } else if (oldStatus === "processing" && status === "processing") {
@@ -2809,10 +2870,24 @@ export default {
           return;
         }
       }
+      // PO最小单位是物料
+      if(status === "po"){
+        this.multiPoDetailList = [];
+        const requireIds = this.ids;
+        this.newStatus = status;
+        getMatDetailListbyRequireIds(requireIds)
+          .then((response) => {
+            this.multiDoneDetailList = response;           
+            this.viewMultiDoneMatDetail = true;
+          })
+          .catch(() => {});
+        // this.openPoStatus = true;
+      }
       // 入库最小单位改成物料
-      if(status === "done"){
+      else if(status === "done"){
         this.multiDoneDetailList = [];
         const requireIds = this.ids;
+        this.newStatus = status;
         getMatDetailListbyRequireIds(requireIds)
           .then((response) => {
             this.multiDoneDetailList = response;           
@@ -2826,7 +2901,17 @@ export default {
         this.openUnapprovedReason = true;
       }      
     },
-
+    submitPoRequire(){
+      this.openPoStatus = false;
+      var request = {
+        requireIds: this.ids,
+        poDate: this.poDate
+      };
+      updatePo(request).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("更改成功");
+      });
+    },
     submitApprovedForm() {
       this.openUnapprovedReason = false;
       var request = {
@@ -3344,7 +3429,7 @@ export default {
       return boolType;
     },
     formatLocation(locationCode){
-      return locationCode+"-"+this.locationDict[locationCode]
+      return locationCode + "-" + this.locationDict[locationCode]
     },
     //查询货位
     getBaselocationList() {

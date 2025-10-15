@@ -98,3 +98,11 @@ export function getRecordPeriods(data) {
     method: 'post'
   })
 }
+
+export function submitPoForm(data) {
+  return request({
+    url: '/stock/matRequire/changeStatusPo',
+    method: 'post',
+    data: data
+  })
+}
