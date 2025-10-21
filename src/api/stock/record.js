@@ -50,3 +50,10 @@ export function delRecord(recordId) {
     method: 'delete'
   })
 }
+
+export function getRecordMatNames() {
+  return request({
+    url: '/stock/record/matNames',
+    method: 'get'
+  })
+}

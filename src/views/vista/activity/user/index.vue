@@ -110,24 +110,23 @@
       </el-dialog>
     <!-- chart: 折线图 -->
     <el-card class="box-card" shadow="hover" style="margin-bottom: 20px">
-        <MultiLineChart :initData="initData" />
+        <StackedBarChart :initData="initData" title="物料-用户操作情况"/>
     </el-card>
     </div>
 </template>
 
 <script>
-import { vistaMatStockActivity } from '@/api/vista/activity';
+import { vistaMatUser } from '@/api/vista/activity';
 import { getRecordMatNames } from '@/api/stock/record';
 import { exportStatsStockIn } from '@/api/stats/stockIn';
-import * as echarts from 'echarts/lib/echarts';
 require('echarts/theme/macarons') // echarts theme
-// import resize from './mixins/resize'
-import MultiLineChart from '../../charts/MultiLineChart.vue';
+
+import StackedBarChart from '../../charts/StackedBarChart.vue';
 
 export default {
-  name: 'VistaMatStock',
+  name: 'VistaMatUser',
   components: {
-    MultiLineChart
+    StackedBarChart
   },
   data() {
     return {
@@ -145,7 +144,7 @@ export default {
       total: 0,
       tableData: [],
       initData: [
-       
+
         ],
         matNames: [],
     };
@@ -166,7 +165,7 @@ export default {
           this.$message.warning("请输入物料名称");
           return;
         }
-      vistaMatStockActivity(this.addDateRange(this.queryParams, this.dateRange)).then((res) => {
+      vistaMatUser(this.addDateRange(this.queryParams, this.dateRange)).then((res) => {
         this.loading = false;
         const returnData = res.data || [];
             
@@ -177,6 +176,7 @@ export default {
         }));
         // 处理图表数据
         this.initData = data;
+        console.log(this.initData);
       }).catch(() => {
         this.loading = false;
       });

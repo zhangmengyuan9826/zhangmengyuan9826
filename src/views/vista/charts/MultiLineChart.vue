@@ -14,11 +14,19 @@ import 'echarts/lib/component/legend';
 import 'echarts/lib/component/grid';
 
 export default {
-  name: 'MaterialTrendChart',
+  name: 'MultiLineChart',
   props: {
     initData: {
       type: Array,
       default: () => []
+    }
+  },
+  watch: {
+    initData: {
+      handler() {
+        this.initChart();
+      },
+      immediate: true
     }
   },
   data() {
@@ -46,29 +54,29 @@ export default {
       }
 
       // 获取唯一的物料名称（用于标题）
-      const matName = this.initData[0]?.matName || '';
+      const title = this.initData[0]?.title || '';
       
       // 获取所有操作类型
-      const operTypes = [...new Set(this.initData.map(item => item.operTypeLabel))];
+      const classTypes = [...new Set(this.initData.map(item => item.classType))];
       
       // 获取所有日期
-      const dates = [...new Set(this.initData.map(item => item.operDate))].sort();
+      const xLabels = [...new Set(this.initData.map(item => item.xLabel))].sort();
       
       // 为每种操作类型准备数据
-      const seriesData = operTypes.map(operTypeLabel => {
+      const seriesData = classTypes.map(classType => {
         // 按日期分组该操作类型的数据
         const dataByDate = {};
         this.initData
-          .filter(item => item.operTypeLabel === operTypeLabel)
+          .filter(item => item.classType === classType)
           .forEach(item => {
-            dataByDate[item.operDate] = (dataByDate[item.operDate] || 0) + item.quantity;
+            dataByDate[item.xLabel] = (dataByDate[item.xLabel] || 0) + item.quantity;
           });
         
         // 构建系列数据
-        const data = dates.map(date => dataByDate[date] || 0);
-        
+        const data = xLabels.map(xLabel => dataByDate[xLabel] || 0);
+
         return {
-          name: this.getOperTypeName(operTypeLabel),
+          name: this.getClassTypeName(classType),
           type: 'line',
           data: data,
           smooth: true
@@ -77,7 +85,7 @@ export default {
 
       const option = {
         title: {
-          text: `${matName} - 库存趋势图`,
+          text: `${title}`,
           left: 'center',
           textStyle: {
             fontSize: 16,
@@ -95,7 +103,7 @@ export default {
           }
         },
         legend: {
-          data: operTypes.map(type => this.getOperTypeName(type)),
+          data: classTypes.map(type => this.getClassTypeName(type)),
           top: '10%'
         },
         grid: {
@@ -107,7 +115,7 @@ export default {
         },
         xAxis: {
           type: 'category',
-          data: dates,
+          data: xLabels,
           axisLabel: {
             rotate: 45
           }
@@ -124,9 +132,9 @@ export default {
       // 响应窗口大小变化
       window.addEventListener('resize', this.handleResize);
     },
-    
-    getOperTypeName(operType) {      
-      return operType;
+
+    getClassTypeName(classType) {
+      return classType;
     },
     
     handleResize() {

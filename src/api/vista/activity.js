@@ -8,3 +8,36 @@ export function vistaMatStockActivity(query) {
     params: query
   })
 }
+
+export function vistaMatWorkshop(query) {
+  return request({
+    url: '/vista/matWorkshop',
+    method: 'get',
+    params: query
+  })
+}
+export function vistaMatUser(query) {
+  return request({
+    url: '/vista/matUser',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getVistaChartData(chartNo, query) {
+  return request({
+    url: `/vista/vistaChart/${chartNo}`,
+    method: 'get',
+    params: query
+  })
+}
+
+
+
+export function getVistaChartDataPages(query) {
+  return request({
+    url: `/vista/vistaChartPage`,
+    method: 'get',
+    params: query
+  })
+}

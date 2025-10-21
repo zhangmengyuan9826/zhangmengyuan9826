@@ -1,15 +1,12 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-        <el-form-item label="物料名称" prop="matName">
-        
-        <el-select v-model="queryParams.matName" placeholder="物料名称" clearable filterable style="width: 200px">
-            <el-option
-                v-for="item in matNames"
-                :key="item"
-                :label="item"
-                :value="item">
-            </el-option></el-select>
+        <el-form-item label="物料名称" prop="matName">        
+
+        <el-select v-model="queryParams.matName" placeholder="请选择下拉选择" multiple clearable filterable style="width: 200px">
+          <el-option v-for="item in matNames" :key="item" :label="item"
+            :value="item"></el-option>
+        </el-select>
       </el-form-item>
 
       <el-form-item label="操作时间">
@@ -110,24 +107,26 @@
       </el-dialog>
     <!-- chart: 折线图 -->
     <el-card class="box-card" shadow="hover" style="margin-bottom: 20px">
-        <MultiLineChart :initData="initData" />
+        <!-- <MultiLineChart :initData="initData" /> -->
+        <StackedBarChart :initData="initData" title="物料-实验室分布堆叠图"
+    />
     </el-card>
     </div>
 </template>
 
 <script>
-import { vistaMatStockActivity } from '@/api/vista/activity';
+import { vistaMatWorkshop } from '@/api/vista/activity';
 import { getRecordMatNames } from '@/api/stock/record';
 import { exportStatsStockIn } from '@/api/stats/stockIn';
 import * as echarts from 'echarts/lib/echarts';
 require('echarts/theme/macarons') // echarts theme
 // import resize from './mixins/resize'
-import MultiLineChart from '../../charts/MultiLineChart.vue';
+import StackedBarChart from '../../charts/StackedBarChart.vue';
 
 export default {
   name: 'VistaMatStock',
   components: {
-    MultiLineChart
+    StackedBarChart
   },
   data() {
     return {
@@ -145,7 +144,7 @@ export default {
       total: 0,
       tableData: [],
       initData: [
-       
+
         ],
         matNames: [],
     };
@@ -160,27 +159,38 @@ export default {
             this.matNames = res.data;
         });
     },
-    // 获取列表数据
-    getList() {
-        if(this.queryParams.matName == null || this.queryParams.matName.trim() === ''){
-          this.$message.warning("请输入物料名称");
-          return;
-        }
-      vistaMatStockActivity(this.addDateRange(this.queryParams, this.dateRange)).then((res) => {
-        this.loading = false;
-        const returnData = res.data || [];
+    
+    async getList() {
+    if(this.queryParams.matName == null || this.queryParams.matName.length === 0){
+        this.$message.warning("请输入物料名称");
+        return;
+    }
+    
+    this.loading = true;
+    let lastData = [];
+    
+    for (const matName of this.queryParams.matName) {            
+        try {
+            const res = await vistaMatWorkshop(this.addDateRange({'matName':matName}, this.dateRange));
+            const returnData = res.data || [];
             
-        const data = returnData.map(matStock => ({
-            xLabel: matStock.xLabel,
-            value: matStock.quantity,
-            classType: matStock.classType,
-        }));
-        // 处理图表数据
-        this.initData = data;
-      }).catch(() => {
-        this.loading = false;
-      });
-    },
+            const data = returnData.map(matStock => ({
+                xLabel: matStock.xLabel,
+                value: matStock.quantity,
+                classType: matStock.classType,
+            }));
+            
+            lastData = [...lastData, ...data];
+            console.log('当前lastData:', lastData); // 可以看到逐步累积
+        } catch (error) {
+            console.error(`加载物料 ${matName} 数据失败:`, error);
+        }
+    }      
+    
+    console.log('最后的initData:', lastData); // 现在会有正确数据
+    this.initData = lastData;
+    this.loading = false;
+},
     // 重置查询条件
     resetQuery() {
       this.$refs.queryForm.resetFields();
@@ -222,6 +232,7 @@ export default {
       this.tableData = this.initData
       this.loading = false;
     },
+    handleClose(){}
   }
 };
 </script>
