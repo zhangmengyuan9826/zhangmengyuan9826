@@ -45,6 +45,20 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="创建人" prop="createBy">
+        <el-select
+          v-model="queryParams.createBy"
+          clearable
+          placeholder="请选择创建人"
+        >
+          <el-option
+            v-for="item in userList"
+            :key="item.userName"
+            :label="item.nickName"
+            :value="item.userName"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="创建时间">
         <el-date-picker
           v-model="dateRange"
@@ -100,11 +114,16 @@
 
     <el-table v-loading="loading" :data="outOrderList" style="width: 100%" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="单据号" align="center" prop="orderNo" />
+      <el-table-column label="单据号" align="center" prop="orderNo" width="160px" />
       <el-table-column label="单据类型" align="center" prop="orderTypeLabel" />
       <el-table-column label="仓库" align="center" prop="warehouseName" />
       <el-table-column label="实验室" align="center" prop="workshopName" />
       <el-table-column label="单据状态" align="center" prop="orderStatusLabel" />
+      <el-table-column label="创建人" align="center" prop="createBy" >
+        <template slot-scope="scope">
+          <span>{{ getUserName(scope.row.createBy) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime">
         <template slot-scope="scope">
           <span>{{$moment(scope.row.createTime).format('YYYY-MM-DD HH:mm')}}</span>
@@ -236,7 +255,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="领料人：">
-              <span>{{form.createBy}}</span>
+              <span>{{ getUserName(form.createBy) }}</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -299,6 +318,7 @@ import { listAllLocation } from "@/api/base/location";
 
 // import selectMat from "../../components/select-mat/index"
 import selectMatLabel from "../../components/select-mat-label-out/index";
+import { listUserAll } from "@/api/system/user";
 
 export default {
   name: "OutOrder",
@@ -340,6 +360,7 @@ export default {
         quantity: null,
         orderStatus: null,
         warehouseKeeper: null,
+        createBy: null,
       },
       // 表单参数
       form: {},
@@ -381,6 +402,7 @@ export default {
       labelIdArr: [],
       locationList: [],
       locationDict: {},
+      userList: [],
     };
   },
   created() {
@@ -388,6 +410,7 @@ export default {
     this.getWarehouseList();
     this.getWorkshopList();
     this.getBaselocationList();
+    this.getUserList();
   },
   methods: {
     formatLocation(locationCode){
@@ -401,6 +424,11 @@ export default {
           dict[obj.locationCode] = obj.locationName;
           return dict;
         }, {});
+      });
+    },
+     getUserList() {
+      listUserAll().then((response) => {
+        this.userList = response;
       });
     },
     /** 查询出库单列表 */
@@ -609,6 +637,10 @@ export default {
       this.labelIdArr.splice(this.labelIdArr.indexOf(row.labelId), 1);
       this.matLabelList.splice(index, 1);
     },
+    getUserName(createBy){
+      const user = this.userList.find((u) => u.userName === createBy);
+      return user ? user.nickName : createBy;
+    }
   }
 };
 </script>
