@@ -41,7 +41,7 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="操作者" prop="manageBy">
+      <el-form-item label="操作者" prop="createBy">
         <el-select
           v-model="queryParams.createBy"
           clearable
@@ -52,6 +52,20 @@
             :key="item.userName"
             :label="item.nickName"
             :value="item.userName"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="操作类型" prop="recordType">
+        <el-select
+          v-model="queryParams.recordType"
+          placeholder="请选择操作类型"
+          clearable
+        >
+          <el-option
+            v-for="item in recordTypeOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           ></el-option>
         </el-select>
       </el-form-item>
@@ -228,6 +242,7 @@ export default {
       locationCode: "",
       workshopCode: "",
       updateBy: "",
+      recordType: "",
     },
     userList: [],
     tagList: [],
@@ -249,6 +264,15 @@ export default {
         { label: "操作时间", value: "create_time" },
         { label: "操作类型", value: "record_type" }
       ],
+    recordTypeOptions: [
+        { label: "采购入库", value: "in_purchase" },
+        { label: "通用出库", value: "out_common" },
+        { label: "调拨入库", value: "allot_in" },
+        { label: "调拨出库", value: "allot_out" },
+        { label: "采购入库退货", value: "in_purchase_return" },
+        { label: "通用出库退货", value: "out_common_return" },
+       
+    ]
     
   };
 },
@@ -276,7 +300,7 @@ export default {
       chartParams['classType'] = this.classType;
       this.addDateRange(this.queryParams, this.dateRange)
       Object.assign(this.queryParams.params, chartParams);
-
+      console.log(this.queryParams);
       getVistaChartData(
         chartNo,
         this.queryParams
@@ -290,48 +314,48 @@ export default {
             resData = this.completeDateAxisMultipleTypes(resData, classType);
           }
           this.initData = resData;
+          console.log(this.initData);
         })
         .catch(() => {});
     },
     completeDateAxisMultipleTypes(data, classTypes = ["管理员"]) {
-  // 获取所有日期
-  const dates = data.map(item => new Date(item.xLabel));
-  const minDate = new Date(Math.min(...dates));
-  const maxDate = new Date(Math.max(...dates));
-  
-  // 按日期和类型组织数据
-  const dataMap = new Map();
-  data.forEach(item => {
-    const key = `${item.xLabel}_${item.classType}`;
-    dataMap.set(key, item);
-  });
-
-  const result = [];
-  const currentDate = new Date(minDate);
-  
-  while (currentDate <= maxDate) {
-    const dateStr = currentDate.toISOString().split('T')[0];
-    
-    classTypes.forEach(classType => {
-      const key = `${dateStr}_${classType}`;
+      // 获取所有日期
+      const dates = data.map(item => new Date(item.xLabel));
+      const minDate = new Date(Math.min(...dates));
+      const maxDate = new Date(Math.max(...dates));
       
-      if (dataMap.has(key)) {
-        result.push(dataMap.get(key));
-      } else {
-        result.push({
-          xLabel: dateStr,
-          quantity: 0,
-          classType: classType,
-          xlabel: dateStr
-        });
-      }
-    });
-    
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
+      // 按日期和类型组织数据
+      const dataMap = new Map();
+      data.forEach(item => {
+        const key = `${item.xLabel}_${item.classType}`;
+        dataMap.set(key, item);
+      });
 
-  return result;
-},
+      const result = [];
+      const currentDate = new Date(minDate);
+      
+      while (currentDate <= maxDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        classTypes.forEach(classType => {
+          const key = `${dateStr}_${classType}`;
+          
+          if (dataMap.has(key)) {
+            result.push(dataMap.get(key));
+          } else {
+            result.push({
+              xLabel: dateStr,
+              quantity: 0,
+              classType: classType,
+            });
+          }
+        });
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      return result;
+    },
     getChartNo() {
       //   p1
       // input: matName,

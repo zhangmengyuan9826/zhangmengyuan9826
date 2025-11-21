@@ -49,3 +49,10 @@ export function delEquipment(eqId) {
     method: 'delete'
   })
 }
+
+export function statLabEquipmentData() {
+  return request({
+    url: '/lab/equipment/stat',
+    method: 'get'
+  })
+}

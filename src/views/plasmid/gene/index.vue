@@ -228,8 +228,8 @@
         prop="promoter"
         resizable
       />
-      <el-table-column label="加帽" align="center" prop="cap" resizable />
-      <el-table-column label="批次" align="center" prop="batch" resizable />
+      <!-- <el-table-column label="加帽" align="center" prop="cap" resizable /> -->
+      <!-- <el-table-column label="批次" align="center" prop="batch" resizable /> -->
       <el-table-column label="状态" align="center" prop="status" resizable>
         <template slot-scope="scope">
           <span :style="formatStatusStyle(scope.row.status)">
@@ -237,6 +237,11 @@
           </span>
         </template>
       </el-table-column>
+      <el-table-column label="创建人" align="center" prop="createBy" resizable >
+        <template slot-scope="scope">
+          {{ getNickName(scope.row.createBy) }}
+        </template>
+      </el-table-column>  
       <el-table-column label="备注" align="center" prop="remark" resizable>
         <template slot-scope="scope">
           <el-tooltip
@@ -783,6 +788,8 @@ import {
 } from "@/api/plasmid/dictData";
 import { getPlasmidVentorByName } from "@/api/plasmid/meta";
 import { getDicts } from "@/api/system/dict/data";
+import { listUserAll } from "@/api/system/user";
+
 import { getToken } from "@/utils/auth";
 import { Message } from "element-ui";
 
@@ -887,9 +894,9 @@ export default {
             trigger: "change",
           },
         ],
-        signalPeptide: [
-          { required: true, message: "信号肽不能为空", trigger: "blur" },
-        ],
+        // signalPeptide: [
+        //   { required: true, message: "信号肽不能为空", trigger: "blur" },
+        // ],
         // proteinType: [
         //   {
         //     required: true,
@@ -942,6 +949,8 @@ export default {
       showFullSeq: false,
       fullSeq: "atcg...",
       fullSeqHtml: "",
+      setWatch : 0,
+      userList: [],
     };
   },
   computed: {},
@@ -964,6 +973,10 @@ export default {
       this.form.plasmidFullName = _geneName + "_" + _pVector;
     },
     "form.plasmidVector"(newVal) {
+      if (this.setWatch == 0){
+        this.setWatch = 1
+        return
+      }
       var _pVector = (newVal != null) & (newVal != "") ? newVal : "";
       var _geneName =
         (this.form.geneName != null) & (this.form.geneName != "")
@@ -978,6 +991,15 @@ export default {
     this.initData();
   },
   methods: {
+    getUserList() {
+      listUserAll().then((response) => {
+        this.userList = response;
+      });
+    },
+    getNickName(userName) {
+      const user = this.userList.find((u) => u.userName === userName);
+      return user ? user.nickName : userName;
+    },
     formattedDna(fullSeqInfo) {
       const fullSeq = fullSeqInfo['pvSeq']
       const chunkSize = 60;
@@ -1018,13 +1040,10 @@ export default {
     getLinkerInfo(cdsSeq) {
       var cdsProteinSeq = this.translateSequence(cdsSeq);
       var linkerList = [];
-      console.log(cdsProteinSeq);
-      console.log(this.linkerInfos);
       var proteinNum = 1;
       if (this.linkerInfos && this.linkerInfos.length > 0) {
         for (let i = 0; i < this.linkerInfos.length; i++) {
           var linkerProteinSeq = this.linkerInfos[i]["proteinSeq"];
-          console.log(linkerProteinSeq);
           var match =
             cdsProteinSeq.match(new RegExp(linkerProteinSeq, "gi")) || [];
           proteinNum = proteinNum + match.length;
@@ -1036,7 +1055,6 @@ export default {
           }
         }
       }
-      console.log(linkerList)
       if (linkerList.length > 0) {
         this.$set(this.form, "cdsProteinNum", proteinNum);
         this.$set(this.form, "linker", linkerList.join(";"));
@@ -1105,6 +1123,7 @@ export default {
         this.fieldList = response.data.map((item) => item.dictValue);
         this.getField();
         this.getFieldSeqs();
+        this.getUserList();
         this.getList();
       });
     },
@@ -1207,6 +1226,7 @@ export default {
       this.reset();
       const geneId = row.geneId || this.ids;
       this.viewType = "Edit";
+      this.setWatch = 0;
       getGene(geneId).then((response) => {
         this.form = response.data;
         this.open = true;
@@ -1215,7 +1235,23 @@ export default {
     },
     submitTemp() {
       this.form["status"] = "status1";
-      if (this.form.geneId != null) {
+      if (this.viewType == "Copy") {
+        this.form["geneId"] = null;
+        this.form["orderNo"] = null;
+        this.form["updateTime"] = null;
+        this.form["updateBy"] = null;
+        addGene(this.form)
+          .then((response) => {
+            this.$modal.msgSuccess("新增成功");
+            this.open = false;
+            this.getList();
+          })
+          .catch((err) => {
+            Message.error(err);
+            return;
+          });
+      } else {
+         if (this.form.geneId != null) {
         updateGene(this.form).then((response) => {
           this.$modal.msgSuccess("修改成功");
           this.open = false;
@@ -1228,12 +1264,14 @@ export default {
           this.getList();
         });
       }
+      }
     },
     /** 修改按钮操作 */
     handleCopy(row) {
       this.reset();
       const geneId = row.geneId || this.ids;
       this.viewType = "Copy";
+      this.setWatch = 0;
       getGene(geneId).then((response) => {
         this.form = response.data;
         this.open = true;
@@ -1406,6 +1444,7 @@ export default {
       return { color: this.statusColor[statusCode] };
     },
     handleDetail(geneId) {
+      this.setWatch = 0;
       getGene(geneId).then((response) => {
         this.form = response.data;
         this.viewType = "View";

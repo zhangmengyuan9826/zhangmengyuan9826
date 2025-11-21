@@ -15,15 +15,7 @@
           clearable
           @keyup.enter.native="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="火眼编号" prop="hyNo">
-        <el-input
-          v-model="queryParams.hyNo"
-          placeholder="请输入火眼编号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+      </el-form-item>      
       <el-form-item label="设备名称" prop="eqName">
         <el-input
           v-model="queryParams.eqName"
@@ -102,6 +94,20 @@
             :label="item.nickName"
             :value="item.userName"
           ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <el-select
+          v-model="queryParams.status"
+          placeholder="请选择状态"
+          clearable
+        >
+          <el-option
+            v-for="opt in statusOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -183,12 +189,7 @@
         prop="eqNo"
         width="75px"
       />
-      <el-table-column
-        label="火眼编号"
-        align="center"
-        prop="hyNo"
-        width="75px"
-      />
+
       <el-table-column
         label="设备名称"
         align="center"
@@ -201,7 +202,7 @@
         prop="figNum"
         width="120px"
       />
-      <el-table-column label="制造单位" align="center" prop="manufactor" />
+      <el-table-column label="制造单位" align="center" prop="manufactor" width="110px"/>
       <el-table-column
         label="序列号"
         align="center"
@@ -215,9 +216,9 @@
         prop="calibDate"
         width="100px"
       >
-        <template slot-scope="scope">
+        <!-- <template slot-scope="scope">
           <span>{{ parseTime(scope.row.calibDate, "{y}-{m}-{d}") }}</span>
-        </template>
+        </template> -->
       </el-table-column>
       <el-table-column
         label="校准效期"
@@ -225,9 +226,9 @@
         prop="validDate"
         width="100px"
       >
-        <template slot-scope="scope">
+        <!-- <template slot-scope="scope">
           <span>{{ parseTime(scope.row.validDate, "{y}-{m}-{d}") }}</span>
-        </template>
+        </template> -->
       </el-table-column>
       <el-table-column
         label="实验室"
@@ -241,14 +242,16 @@
         prop="eqClass"
         width="50px"
       />
-      <!-- <el-table-column label="设备级别组" align="center" prop="eqGroup" /> -->
-      <!-- <el-table-column label="是否为计量器具" align="center" prop="isMeasure" /> -->
       <el-table-column label="责任人" align="center" prop="manageBy">
         <template slot-scope="scope">
           {{ getNickName(scope.row.manageBy) }}
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" prop="status" width="50px" />
+      <el-table-column label="状态" align="center" prop="status" width="100px" >
+        <template slot-scope="scope">
+          {{ getStatusLabel(scope.row.status) }}
+        </template>
+      </el-table-column>
       <el-table-column
         label="操作"
         align="center"
@@ -341,7 +344,6 @@
               <el-date-picker
                 clearable
                 v-model="form.installDate"
-                type="date"
                 value-format="yyyy-MM-dd"
                 placeholder="请选择安装日期"
               >
@@ -464,7 +466,20 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="状态" prop="status">
-              <el-input v-model="form.status" placeholder="请输入状态" />
+              <!-- <el-input v-model="form.status" placeholder="请输入状态" :disabled="operType != 'add'"/> -->
+            <el-select
+               v-model="form.status"
+                placeholder="请选择状态"
+                :disabled="operType != 'add'"
+                clearable
+              >
+                <el-option
+                  v-for="opt in statusOptions"
+                 :key="opt.value"
+                 :label="opt.label"
+                 :value="opt.value"
+                />
+              </el-select>
             </el-form-item> </el-col
         ></el-row>
         <el-form-item label="描述" prop="remark">
@@ -517,26 +532,26 @@
             </el-col>
           </el-row>
           <el-row :gutter="20">
-            <el-col :span="12">
+            <el-col :span="8">
               <el-form-item label="校准时间" prop="calibDate">
                 <el-input
                   v-model="changeForm.calibDate"
                   disabled
                 /> </el-form-item
             ></el-col>
-            <el-col :span="12">
+            <el-col :span="8">
               <el-form-item label="校准效期" prop="validDate">
                 <el-input v-model="changeForm.validDate" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="20">
-            <el-col :span="12">
+            <el-col :span="8">
               <el-form-item label="实验室" prop="workshop">
                 <el-input v-model="changeForm.workshop" disabled
               /></el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="8">
               <el-form-item label="责任人" prop="manageBy">
                 <el-select v-model="changeForm.manageBy" disabled>
                   <el-option
@@ -545,6 +560,22 @@
                     :label="item.nickName"
                     :value="item.userName"
                   ></el-option> </el-select></el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="状态" prop="status">
+                <el-select
+               v-model="form.status"
+                placeholder="请选择状态"
+                disabled
+              >
+                <el-option
+                  v-for="opt in statusOptions"
+                :key="opt.value"
+                 :label="opt.label"
+                 :value="opt.value"
+                />
+              </el-select>
+              </el-form-item>
             </el-col>
           </el-row>
           <span style="color: #dd55ee">请在下方输入变更内容：</span>
@@ -557,8 +588,9 @@
                   type="date"
                   value-format="yyyy-MM-dd"
                   placeholder="请选择校准时间"
-                /> </el-form-item
-            ></el-col>
+                /> </el-form-item>
+            
+            </el-col>
             <el-col :span="12">
               <el-form-item label="校准效期" prop="newValidDate">
                 <el-date-picker
@@ -571,7 +603,7 @@
             </el-col>
           </el-row>
           <el-row :gutter="20">
-            <el-col :span="12">
+            <el-col :span="8">
               <el-form-item label="实验室" prop="newWorkshop">
                 <el-select
                   v-model="changeForm.newWorkshop"
@@ -587,7 +619,7 @@
                   ></el-option> </el-select
               ></el-form-item>
             </el-col>
-            <el-col :span="12">
+            <el-col :span="8">
               <el-form-item label="责任人" prop="newManageBy">
                 <el-select
                   v-model="changeForm.newManageBy"
@@ -601,6 +633,21 @@
                     :value="item.userName"
                   ></el-option> </el-select
               ></el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="状态" prop="newStatus">
+                <el-select
+                  v-model="changeForm.newStatus"
+                  placeholder="请选择状态"
+                >
+                  <el-option
+                    v-for="opt in statusOptions"
+                    :key="opt.value"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
+              </el-form-item>
             </el-col>
           </el-row>
           <el-form-item label="变更说明" prop="remark">
@@ -616,9 +663,11 @@
           type="primary"
           @click="submitChange"
           v-hasPermi="['lab:equipment:edit']"
-          >确 定</el-button
-        >
-        <el-button @click="cancelChange">取 消</el-button></div>
+          >确 定</el-button>
+        <el-button 
+          @click="cancelChange"
+          >取 消</el-button>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -679,7 +728,9 @@ export default {
         status: null,
       },
       // 表单参数
-      form: {},
+      form: {
+        status: "1"
+      },
       // 表单校验
       rules: {
         eqNo: [
@@ -690,17 +741,20 @@ export default {
         ],
       },
       changeRules: {
-        newCalibDate: [
-          { required: true, message: "校准时间不能为空", trigger: "blur" },
-        ],
-        newValidDate: [
-          { required: true, message: "校准效期不能为空", trigger: "blur" },
-        ],
-        newWorkshop: [
-          { required: true, message: "实验室不能为空", trigger: "blur" },
-        ],
-        newManageBy: [
-          { required: true, message: "责任人不能为空", trigger: "blur" },
+        // newCalibDate: [
+        //   { required: true, message: "校准时间不能为空", trigger: "blur" },
+        // ],
+        // newValidDate: [
+        //   { required: true, message: "校准效期不能为空", trigger: "blur" },
+        // ],
+        // newWorkshop: [
+        //   { required: true, message: "实验室不能为空", trigger: "blur" },
+        // ],
+        // newManageBy: [
+        //   { required: true, message: "责任人不能为空", trigger: "blur" },
+        // ],
+        newStatus: [
+          { required: true, message: "状态不能为空", trigger: "blur" },
         ],
       },
       workshopList: [],
@@ -710,19 +764,29 @@ export default {
       // 是否显示变更弹出层
       openChange: false,
       changeForm: {
-      eqNo: null,
-      hyNo: null,
-      eqName: null,
-      calibDate: null,
-      validDate: null,
-      workshop: null,
-      manageBy: null,
-      newCalibDate: null,  // 确保这些字段被初始化
-      newValidDate: null,
-      newWorkshop: null,
-      newManageBy: null,
-      remark: null,
-    },
+        eqNo: null,
+        hyNo: null,
+        eqName: null,
+        calibDate: null,
+        validDate: null,
+        workshop: null,
+        manageBy: null,
+        status: null,
+        newCalibDate: null,  // 确保这些字段被初始化
+        newValidDate: null,
+        newWorkshop: null,
+        newManageBy: null,
+        newStatus: null,
+        remark: null,      
+      },
+    // 仪器状态
+    statusOptions: [
+        { label: "未启用", value: "0" },
+        { label: "正常", value: "1" },
+        { label: "维护", value: "2" },
+        { label: "停用", value: "3" },
+        { label: "其他", value: "4" }
+      ],
     };
   },
   created() {
@@ -764,7 +828,7 @@ export default {
         eqGroup: null,
         isMeasure: null,
         manageBy: null,
-        status: "0",
+        status: "1",
         remark: null,
       };
       this.resetForm("form");
@@ -799,6 +863,8 @@ export default {
       const eqId = row.eqId || this.ids;
       getEquipment(eqId).then((response) => {
         this.form = response.data;
+        this.form['installDate'] = this.form['installDate'] && this.form['installDate'] !='N/A' ? this.form['installDate'] : null;
+        this.form['startDate'] = this.form['startDate'] && this.form['startDate'] !='N/A' ? this.form['startDate'] : null;
         this.open = true;
         this.title = "修改仪器设备";
       });
@@ -866,45 +932,31 @@ export default {
       return user ? user.nickName : userName;
     },
     handleChange(row) {
-  this.operType = "change";
-  this.reset();
-  const eqId = row.eqId || this.ids;
-  getEquipment(eqId).then((response) => {
-    // 使用Object.assign确保所有字段都被正确设置
-    this.changeForm = Object.assign({
-      newCalibDate: null,
-      newValidDate: null,
-      newWorkshop: null,
-      newManageBy: null,
-      remark: null
-    }, response.data);
-    
-    // 设置新字段的初始值
-    this.changeForm.newCalibDate = this.changeForm.calibDate;
-    this.changeForm.newValidDate = this.changeForm.validDate;
-    this.changeForm.newManageBy = this.changeForm.manageBy;
-    this.changeForm.newWorkshop = this.changeForm.workshop;
-    
-    this.openChange = true;
-    this.title = "变更仪器设备";
-  });
-},
-    handleChange_(row) {
       this.operType = "change";
       this.reset();
       const eqId = row.eqId || this.ids;
       getEquipment(eqId).then((response) => {
-        this.changeForm = response.data;
-        let calibDate = this.changeForm["calibDate"];
-        let validDate = this.changeForm["validDate"];
-        this.changeForm["newCalibDate"] = calibDate;
-        this.changeForm["newValidDate"] = validDate;
-        this.changeForm["newManageBy"] = this.changeForm["manageBy"];
-        this.changeForm["newWorkshop"] = this.changeForm["workshop"];
+        // 使用Object.assign确保所有字段都被正确设置
+        this.changeForm = Object.assign({
+          newCalibDate: null,
+          newValidDate: null,
+          newWorkshop: null,
+          newManageBy: null,
+          newStatus: null,
+          remark: null
+        }, response.data);
+        
+        // 设置新字段的初始值
+        this.changeForm.newCalibDate = this.changeForm.calibDate && this.changeForm.calibDate !='N/A' ? this.changeForm.calibDate : null;
+        this.changeForm.newValidDate = this.changeForm.validDate && this.changeForm.validDate !='N/A' ? this.changeForm.validDate : null;
+        this.changeForm.newManageBy = this.changeForm.manageBy ? this.changeForm.manageBy : null;
+        this.changeForm.newWorkshop = this.changeForm.workshop ? this.changeForm.workshop : null;
+        this.changeForm.newStatus = this.changeForm.status ? this.changeForm.status : null;
+        
         this.openChange = true;
-        this.title = "变更仪器设备";
       });
     },
+    
     submitChange() {
       this.$refs["changeForm"].validate((valid) => {
         if (valid) {
@@ -915,6 +967,7 @@ export default {
             validDate: this.changeForm.newValidDate,
             workshop: this.changeForm.newWorkshop,
             manageBy: this.changeForm.newManageBy,
+            status: this.changeForm.newStatus,
             remark: this.changeForm.remark || '' 
           };
           changeEquipment(updatedData).then((response) => {
@@ -928,6 +981,13 @@ export default {
     cancelChange() {
       this.openChange = false;
       this.reset();
+    },
+    getStatusLabel(value) {
+      if (value == null) {
+        return '';
+      }
+      const opt = this.statusOptions.find(o => String(o.value) === String(value))
+      return opt ? opt.label : (value == null ? '' : value)
     },
   },
 };

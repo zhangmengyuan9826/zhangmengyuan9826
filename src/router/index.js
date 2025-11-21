@@ -5,6 +5,7 @@ Vue.use(Router)
 
 /* Layout */
 import Layout from '@/layout'
+import permission from '../store/modules/permission'
 
 /**
  * Note: 路由配置项
@@ -65,12 +66,13 @@ export const constantRoutes = [
     path: '',
     component: Layout,
     redirect: 'index',
+    hidden: true,
     children: [
       {
         path: 'index',
         component: () => import('@/views/index'),
         name: 'Index',
-        meta: { title: '首页', icon: 'dashboard', affix: true }
+        meta: { title: '首页', icon: 'dashboard', affix: false, hideLayout: true }
       }
     ]
   },
@@ -87,9 +89,64 @@ export const constantRoutes = [
         meta: { title: '个人中心', icon: 'user' }
       }
     ]
-  }
+  },
+  {
+  path: '/wms',
+  component: Layout,
+  hidden: true,
+  permission: ['base:mat:list'],
+  children: [
+    {
+      path: 'index', // 空路径，作为默认子路由
+      component: () => import('@/views/section/wms/index'),
+      name: 'WMSIndex',
+      meta: { title: 'WMS首页', activeMenu: '/wms/index' }
+    },
+     {
+      path: '', // 空路径，作为默认子路由
+      component: () => import('@/views/section/wms/index'),
+      name: 'WMSIndex',
+      meta: { title: 'WMS首页', activeMenu: '/wms/index' }
+    }
+  ]
+},{
+  path: '/pms',
+  component: Layout,
+  hidden: true,
+  children: [
+    {
+      path: '', // 空路径，作为默认子路由
+      component: () => import('@/views/plasmid/experiment/index'),
+      name: 'PMSIndex',
+      meta: { title: 'PMS首页', activeMenu: '/pms/index' }
+    }
+  ]
+},{
+  path: '/ems',
+  component: Layout,
+  hidden: true,
+  children: [
+    {
+      path: '', // 空路径，作为默认子路由
+      component: () => import('@/views/lab/equipment/index'),
+      name: 'EMSIndex',
+      meta: { title: 'EMS首页', activeMenu: '/ems/index' }
+    }
+  ]
+},{
+  path: '/system',
+  component: Layout,
+  hidden: true,
+  children: [
+    {
+      path: '', // 空路径，作为默认子路由
+      component: () => import('@/views/system/user/index'),
+      name: 'SystemIndex',
+      meta: { title: '系统首页', activeMenu: '/system/index' }
+    }
+  ]
+}
 ]
-
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes = [
   {
@@ -187,6 +244,19 @@ export const dynamicRoutes = [
         component: () => import('@/views/tool/gen/editTable'),
         name: 'GenEdit',
         meta: { title: '修改生成配置', activeMenu: '/tool/gen' }
+      }
+    ]
+  },
+  {
+    path: '/wms',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/section/wms/index'),
+        name: 'WMSIndex',
+        meta: { title: 'WMS首页', activeMenu: '/wms/index' }
       }
     ]
   }

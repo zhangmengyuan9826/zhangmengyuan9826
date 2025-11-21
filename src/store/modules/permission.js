@@ -32,8 +32,21 @@ const permission = {
     // 生成路由
     GenerateRoutes({ commit }) {
       return new Promise(resolve => {
+
+        // 获取当前 URL（优先使用 window.location，fallback 到 router.currentRoute）
+        const subUrl = (typeof window !== 'undefined' && window.location)
+          ? (window.location.pathname + window.location.search)
+          : (router && router.currentRoute && router.currentRoute.fullPath) || '/';
+        const cleanSubUrl = subUrl.replace('#/', '').replace(/\?.*$/, '').replace('/', '');
+        console.log('Current Sub URL:', subUrl);
+        console.log('Current Sub URL:', cleanSubUrl);
+        
+        const fullUrl = window.location.href;
+        console.log(fullUrl); 
+        const firstPathSegment = fullUrl.split("#/")[1].split("/")[0];
+        console.log('First Path Segment:', firstPathSegment);
         // 向后端请求路由数据
-        getRouters().then(res => {
+        getRouters(firstPathSegment).then(res => {
           const sdata = JSON.parse(JSON.stringify(res.data))
           const rdata = JSON.parse(JSON.stringify(res.data))
           const sidebarRoutes = filterAsyncRouter(sdata)
@@ -47,6 +60,7 @@ const permission = {
           commit('SET_TOPBAR_ROUTES', sidebarRoutes)
           resolve(rewriteRoutes)
         })
+       
       })
     }
   }

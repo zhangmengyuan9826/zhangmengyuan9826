@@ -28,9 +28,17 @@ export default {
   watch: {
     initData: {
       handler() {
-        this.initChart();
+        // 只有在 ref 可用时才初始化 / 更新图表，避免 "invalid dom" 错误
+        if (this.$refs && this.$refs.chart) {
+          this.initChart();
+        } else {
+          this.$nextTick(() => {
+            if (this.$refs && this.$refs.chart) this.initChart();
+          });
+        }
       },
-      immediate: true
+      immediate: true,
+      deep: true
     }
   },
   data() {
@@ -39,28 +47,39 @@ export default {
     };
   },
   mounted() {
-    this.initChart();
+    // mounted 时确保初始化
+    this.$nextTick(() => {
+      if (this.$refs && this.$refs.chart) this.initChart();
+    });
   },
   beforeDestroy() {
     if (this.chart) {
-      this.chart.dispose();
+      try { this.chart.dispose(); } catch (e) {}
+      this.chart = null;
     }
+    window.removeEventListener('resize', this.handleResize);
   },
   methods: {
     initChart() {
+      // 如果已经有实例，先销毁，避免重复初始化
+      if (this.chart) {
+        try { this.chart.dispose(); } catch (e) {}
+        this.chart = null;
+        window.removeEventListener('resize', this.handleResize);
+      }
+      if (!this.$refs || !this.$refs.chart) return;
       this.chart = echarts.init(this.$refs.chart);
       this.updateChart();
     },
     
     updateChart() {
-      if (!this.initData || this.initData.length === 0) {
-        return;
-      }
+      if (!this.chart) return;
+      this.chart.clear();
 
-      // 获取所有车间（x轴数据）
+      // 获取所有x轴数据
       const xLabels = [...new Set(this.initData.map(item => item.xLabel))];
       
-      // 获取所有物料名称（图例和系列数据）
+      // 获取所有图例和系列数据
       const classTypes = [...new Set(this.initData.map(item => item.classType))];
       
       // 为每种物料准备数据
@@ -139,9 +158,8 @@ export default {
         series: seriesData
       };
 
-      this.chart.setOption(option);
-      
-      // 响应窗口大小变化
+      this.chart.setOption(option, true);
+      window.removeEventListener('resize', this.handleResize);
       window.addEventListener('resize', this.handleResize);
     },
     
@@ -151,23 +169,23 @@ export default {
       }
     }
   },
-  watch: {
-    initData: {
-      handler() {
-        if (this.chart) {
-          this.updateChart();
-        }
-      },
-      deep: true
-    },
-    title: {
-      handler() {
-        if (this.chart) {
-          this.updateChart();
-        }
-      }
-    }
-  }
+  // watch: {
+  //   initData: {
+  //     handler() {
+  //       if (this.chart) {
+  //         this.updateChart();
+  //       }
+  //     },
+  //     deep: true
+  //   },
+  //   title: {
+  //     handler() {
+  //       if (this.chart) {
+  //         this.updateChart();
+  //       }
+  //     }
+  //   }
+  // }
 };
 </script>
 

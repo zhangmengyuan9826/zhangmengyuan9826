@@ -72,3 +72,10 @@ export function delExperiment(expId) {
     method: 'delete'
   })
 }
+
+export function statExperimentData() {
+  return request({
+    url: '/plasmid/experiment/stat',
+    method: 'get'
+    })
+  }

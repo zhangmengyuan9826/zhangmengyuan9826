@@ -24,9 +24,17 @@ export default {
   watch: {
     initData: {
       handler() {
-        this.initChart();
+        // 如果 ref 可用立即更新，否则在下一次 tick 尝试初始化
+        if (this.$refs && this.$refs.chart) {
+          this.initChart();
+        } else {
+          this.$nextTick(() => {
+            if (this.$refs && this.$refs.chart) this.initChart();
+          });
+        }
       },
-      immediate: true
+      immediate: true,
+      deep: true
     }
   },
   data() {
@@ -35,50 +43,63 @@ export default {
     };
   },
   mounted() {
-    this.initChart();
+    // 确保 DOM 就绪后再初始化，避免 invalid dom 错误
+    this.$nextTick(() => {
+      if (this.$refs && this.$refs.chart) this.initChart();
+    });
   },
   beforeDestroy() {
     if (this.chart) {
-      this.chart.dispose();
+      try { this.chart.dispose(); } catch (e) {}
+      this.chart = null;
     }
+    window.removeEventListener('resize', this.handleResize);
   },
   methods: {
     initChart() {
+      // 销毁旧实例并移除监听，防止重复和残留
+      if (this.chart) {
+        try { this.chart.dispose(); } catch (e) {}
+        this.chart = null;
+        window.removeEventListener('resize', this.handleResize);
+      }
+      if (!this.$refs || !this.$refs.chart) return;
       this.chart = echarts.init(this.$refs.chart);
       this.updateChart();
     },
-    
+
     updateChart() {
+      if (!this.chart) return;
+
+      // 如果没有数据，清空图表并返回
       if (!this.initData || this.initData.length === 0) {
-        return {};
+        this.chart.clear();
+        return;
       }
 
-      // 获取唯一的物料名称（用于标题）
-      const title = this.initData[0]?.title || '';
-      
-      // 获取所有操作类型
+      // 清空旧配置，避免 echarts merge 导致残留 series/legend
+      this.chart.clear();
+
+      // 获取标题（如果有）
+      const title = this.initData[0] && this.initData[0].title ? this.initData[0].title : '';
+
+      // 获取所有操作类型与横轴点
       const classTypes = [...new Set(this.initData.map(item => item.classType))];
-      
-      // 获取所有日期
       const xLabels = [...new Set(this.initData.map(item => item.xLabel))].sort();
-      
-      // 为每种操作类型准备数据
+
+      // 构造 series 数据
       const seriesData = classTypes.map(classType => {
-        // 按日期分组该操作类型的数据
-        const dataByDate = {};
+        const dataByX = {};
         this.initData
           .filter(item => item.classType === classType)
           .forEach(item => {
-            dataByDate[item.xLabel] = (dataByDate[item.xLabel] || 0) + item.quantity;
+            dataByX[item.xLabel] = (dataByX[item.xLabel] || 0) + Number(item.quantity || 0);
           });
-        
-        // 构建系列数据
-        const data = xLabels.map(xLabel => dataByDate[xLabel] || 0);
-
+        const data = xLabels.map(x => dataByX[x] || 0);
         return {
           name: this.getClassTypeName(classType),
           type: 'line',
-          data: data,
+          data,
           smooth: true
         };
       });
@@ -127,32 +148,24 @@ export default {
         series: seriesData
       };
 
-      this.chart.setOption(option);
-      
-      // 响应窗口大小变化
+      // 强制替换旧配置（避免 merge）
+      this.chart.setOption(option, true);
+
+      // 确保 resize 监听只注册一次
+      window.removeEventListener('resize', this.handleResize);
       window.addEventListener('resize', this.handleResize);
     },
 
     getClassTypeName(classType) {
       return classType;
     },
-    
+
     handleResize() {
       if (this.chart) {
         this.chart.resize();
       }
     }
   },
-  watch: {
-    initData: {
-      handler() {
-        if (this.chart) {
-          this.updateChart();
-        }
-      },
-      deep: true
-    }
-  }
 };
 </script>
 

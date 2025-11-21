@@ -453,7 +453,7 @@
             <el-form-item
               label="物料负责人"
               prop="manageBy"
-              label-width="110px"
+              label-width="100px"
             >
               <el-select v-model="form.manageBy" placeholder="请选择物料负责人">
                 <el-option
@@ -498,6 +498,13 @@
                 :precision="0"
                 placeholder="请输入单次最大出库数量"
               />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span=12>
+            <el-form-item label="是否过期提醒" prop="expiredNoticed" label-width="100px">
+              <el-switch v-model="form.expiredNoticed" active-value="0" inactive-value="1" active-text="是" inactive-text="否"/>
             </el-form-item>
           </el-col>
         </el-row>

@@ -706,7 +706,6 @@ export default {
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
-        console.log(this.form)
         if (valid) {
           this.form.labelType = 'purchase';
           if (this.form.labelId != null) {
@@ -764,7 +763,6 @@ export default {
     },
     //选择物料
     openSelectMatDialog(matSource){
-      console.log("matSource",matSource)
       if(matSource===1){ // 主数据
         this.selectMatOpen = true;
         this.form={}
@@ -781,7 +779,6 @@ export default {
       this.selectMatRequireOpen = false;
     },
     confirmSelectMat(item){
-      console.log(item)
       this.form.matCode = item.matCode;
       this.form.matName = item.matName;
       this.form.fdCode = item.fdCode;
@@ -796,15 +793,13 @@ export default {
       // }
       // this.form.batch = 'CG'+ this.$moment().format('YYYYMMDDHHmmss');
       if(item.matClass==='YY'){
-        this.form.supplierName='非小试物料供应商'
-        this.form.supplierCode='YY_SUPPLIER'
+        this.form.supplierName='非小试物料供应商';
+        this.form.supplierCode='YY_SUPPLIER';
       }
       this.form.matSource = 1;
-      console.log(this.form)
       this.selectMatOpen = false;
     },
     confirmSelectMatRequire(item){
-      console.log(item)
       this.form.matCode = item.matCode;
       this.form.matName = item.matName;
       this.form.fdCode = item.fdCode;
@@ -821,7 +816,6 @@ export default {
         this.form.supplierName='非小试物料供应商'
         this.form.supplierCode='YY_SUPPLIER'
       }
-      console.log(this.form)
       this.selectMatRequireOpen = false;
     },
     //选择供应商
@@ -846,15 +840,10 @@ export default {
       });
     },
     formatDate(dateString) {
-      // return new Date(dateString).toLocaleDateString();
       // 尝试将字符串转换为日期对象
-      if(dateString === ""){
+      if(dateString === "" || dateString === null || dateString === undefined){
         return dateString
       }
-      if(! dateString){
-        return dateString
-      }
-
       const date = new Date(dateString);
       // 如果无效的日期字符串，返回原始字符串
       if (isNaN(date)) {
