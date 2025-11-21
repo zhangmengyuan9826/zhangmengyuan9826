@@ -866,7 +866,7 @@ export default {
         promoter: [
           { required: true, message: "启动子不能为空", trigger: "blur" },
         ],
-        cap: [{ required: true, message: "加帽不能为空", trigger: "change" }],
+        // cap: [{ required: true, message: "加帽不能为空", trigger: "change" }],
         vectorType1: [
           {
             required: true,
@@ -890,13 +890,13 @@ export default {
         signalPeptide: [
           { required: true, message: "信号肽不能为空", trigger: "blur" },
         ],
-        proteinType: [
-          {
-            required: true,
-            message: "预测蛋白类型不能为空",
-            trigger: "change",
-          },
-        ],
+        // proteinType: [
+        //   {
+        //     required: true,
+        //     message: "预测蛋白类型不能为空",
+        //     trigger: "change",
+        //   },
+        // ],
       },
       fieldList: [],
       _dicts: {},
@@ -1037,9 +1037,12 @@ export default {
         }
       }
       console.log(linkerList)
-      if (linkerList.length > -1) {
+      if (linkerList.length > 0) {
         this.$set(this.form, "cdsProteinNum", proteinNum);
         this.$set(this.form, "linker", linkerList.join(";"));
+      } else {
+        this.$set(this.form, "cdsProteinNum", 1);
+        this.$set(this.form, "linker", "无");
       }
     },
     getSignalPeptideInfo(cdsSeq) {
