@@ -221,15 +221,12 @@
       <el-table-column label="3'UTR" align="center" prop="utr3" resizable />
       <el-table-column label="5'UTR" align="center" prop="utr5" resizable />
       <el-table-column label="polyA" align="center" prop="polyA" resizable />
-      <!-- <el-table-column label="CDS序列" align="center" prop="cdsSeq" /> -->
       <el-table-column
         label="启动子"
         align="center"
         prop="promoter"
         resizable
       />
-      <!-- <el-table-column label="加帽" align="center" prop="cap" resizable /> -->
-      <!-- <el-table-column label="批次" align="center" prop="batch" resizable /> -->
       <el-table-column label="状态" align="center" prop="status" resizable>
         <template slot-scope="scope">
           <span :style="formatStatusStyle(scope.row.status)">
@@ -734,7 +731,7 @@
         :limit="1"
         accept=".xlsx, .xls"
         :headers="upload.headers"
-        :action="upload.url + '?updateSupport=' + upload.updateSupport"
+        :action="upload.url + '?isSaveTemp=' + upload.isSaveTemp"
         :disabled="upload.isUploading"
         :on-progress="handleFileUploadProgress"
         :on-success="handleFileSuccess"
@@ -743,6 +740,10 @@
       >
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <div class="el-upload__tip" slot="tip">
+            <el-checkbox v-model="upload.isSaveTemp" />
+            校验失败的信息是否存为草稿？
+          </div>
         <div class="el-upload__tip text-center" slot="tip">
           <span>仅允许导入xls、xlsx格式文件。</span>
           <el-link
@@ -906,7 +907,6 @@ export default {
         // ],
       },
       fieldList: [],
-      _dicts: {},
       fieldDataDict: [],
       upload: {
         // 是否显示弹出层（用户导入）
@@ -916,7 +916,7 @@ export default {
         // 是否禁用上传
         isUploading: false,
         // 是否更新已经存在的用户数据
-        updateSupport: 0,
+        isSaveTemp: 0,
         // 设置上传的请求头部
         headers: { Authorization: "Bearer " + getToken() },
         // 上传的地址
@@ -931,7 +931,6 @@ export default {
         status1: "orange",
         status3: "grey",
       },
-      selectedValue: "",
       viewType: "View",
       pVectorFormElements: [
         "resistanceGene",
@@ -949,8 +948,8 @@ export default {
       showFullSeq: false,
       fullSeq: "atcg...",
       fullSeqHtml: "",
-      setWatch : 0,
       userList: [],
+      originalPVector: "",
     };
   },
   computed: {},
@@ -973,17 +972,39 @@ export default {
       this.form.plasmidFullName = _geneName + "_" + _pVector;
     },
     "form.plasmidVector"(newVal) {
-      if (this.setWatch == 0){
-        this.setWatch = 1
+      // 检测到质粒载体发生变化，是否更新质粒骨架信息？
+      // 提示用户确认是否更新骨架信息
+      if(this.viewType === 'View' || this.open == false){
         return
       }
-      var _pVector = (newVal != null) & (newVal != "") ? newVal : "";
-      var _geneName =
-        (this.form.geneName != null) & (this.form.geneName != "")
-          ? this.form.geneName
-          : "";
-      this.form.plasmidFullName = _geneName + "_" + _pVector;
-      this.generateFormByPlasmidVector(newVal);
+      if(newVal == this.originalPVector){
+        return
+      } else {
+        this.originalPVector = newVal
+      }
+
+      this.$confirm('检测到质粒载体发生改变，是否更新质粒骨架信息？', '提示', {
+        confirmButtonText: '更新',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          var _pVector = (newVal != null) & (newVal != "") ? newVal : "";
+          var _geneName =
+            (this.form.geneName != null) & (this.form.geneName != "")
+              ? this.form.geneName
+              : "";
+
+          this.form.plasmidFullName = _geneName + "_" + _pVector;
+          this.generateFormByPlasmidVector(newVal);
+        })
+        .catch(() => {
+          // 用户取消：不执行更新
+        });
+
+
+
+      
     },
   },
   created() {
@@ -1226,9 +1247,9 @@ export default {
       this.reset();
       const geneId = row.geneId || this.ids;
       this.viewType = "Edit";
-      this.setWatch = 0;
       getGene(geneId).then((response) => {
         this.form = response.data;
+        this.originalPVector = response.data.plasmidVector;
         this.open = true;
         this.title = "修改质粒基因";
       });
@@ -1271,9 +1292,9 @@ export default {
       this.reset();
       const geneId = row.geneId || this.ids;
       this.viewType = "Copy";
-      this.setWatch = 0;
       getGene(geneId).then((response) => {
         this.form = response.data;
+        this.originalPVector = response.data.plasmidVector;
         this.open = true;
         this.title = "复制添加质粒基因";
       });
@@ -1431,12 +1452,6 @@ export default {
     submitFileForm() {
       this.$refs.upload.submit();
     },
-    formatLongPurpose(purpose) {
-      if (purpose && purpose.length >= 10) {
-        return purpose.substring(0, 10) + "...";
-      }
-      return purpose;
-    },
     formatStatus(statusCode) {
       return this.statusDict[statusCode];
     },
@@ -1444,7 +1459,7 @@ export default {
       return { color: this.statusColor[statusCode] };
     },
     handleDetail(geneId) {
-      this.setWatch = 0;
+      this.reset();
       getGene(geneId).then((response) => {
         this.form = response.data;
         this.viewType = "View";
@@ -1616,5 +1631,9 @@ export default {
 }
 .resistance-highlight:hover::after {
   content: "resistance gene";
+}
+.import-result-alert .el-message-box {
+  width: 60% !important;
+  max-width: 90% !important;
 }
 </style>

@@ -202,7 +202,7 @@
         prop="figNum"
         width="120px"
       />
-      <el-table-column label="制造单位" align="center" prop="manufactor" width="110px"/>
+      <el-table-column label="制造单位" align="center" prop="manufactor" width="130px"/>
       <el-table-column
         label="序列号"
         align="center"
@@ -234,7 +234,7 @@
         label="实验室"
         align="center"
         prop="workshop"
-        width="140px"
+        width="120px"
       />
       <el-table-column
         label="分类"
@@ -256,7 +256,7 @@
         label="操作"
         align="center"
         fixed="right"
-        width="120px"
+        width="170px"
         class-name="small-padding fixed-width"
       >
         <template slot-scope="scope">
