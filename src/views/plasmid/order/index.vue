@@ -673,8 +673,14 @@
       />
       <el-table-column label="加帽" align="center" prop="cap" resizable />
       <el-table-column label="批次" align="center" prop="batch" resizable />
-      <el-table-column label="状态" align="center" prop="status" resizable />
-        </el-table>
+      <el-table-column label="状态" align="center" prop="status" resizable >
+       <template slot-scope="scope">
+            <span :style="formatStatusStyle(scope.row.status)">
+              {{ formatStatus(scope.row.status) }}
+            </span>
+          </template>
+        </el-table-column>
+    </el-table>
 
     </el-dialog>
     <el-dialog
@@ -812,7 +818,7 @@ export default {
       geneIdArr: [],
       statusDictButtons: [
         // { name: "草稿", value: "status1"},
-        // { name: "已创建", value: "created", type: "info" },
+        // { name: "已创建", value: "status2", type: "info" },
         { name: "已下单", value: "status3", type: "PRIMARY" },
         { name: "已到货", value: "status4", type: "success" },
         { name: "实验中", value: "status5", type: "warning" },
@@ -844,16 +850,6 @@ export default {
         { name: "已到货", value: "done", type: "PRIMARY" },
         { name: "实验中", value: "done2", type: "PRIMARY" },
       ],
-      // statusDict: {
-      //   status1: "草稿",
-      //   created: "已创建",
-      //   status3: "已下单",
-      //   status4: "已到货",
-      //   status5: "实验中",
-      //   status6: "实验完成",
-      //   status7: "状态异常",
-      //   status8:"状态回退",
-      // },
       statusDict: {
         status1: "草稿",
         status2: "已创建",

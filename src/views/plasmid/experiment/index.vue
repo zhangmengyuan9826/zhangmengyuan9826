@@ -139,7 +139,24 @@
     @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="项目流水号" align="center" prop="projectNo" width="100"/>
-      <el-table-column label="项目名称" align="center" prop="projectName" width="200"/>
+      <el-table-column label="项目名称" align="center" prop="projectName" width="200">
+  <template slot-scope="scope">
+    <div>
+      <template v-if="extractUrl(scope.row.docUrl)">
+        <el-link
+          :href="extractUrl(scope.row.docUrl)"
+          :underline="false"
+          target="_blank"
+        ><i :class="getFileIcon(scope.row.docUrl)"></i>
+          {{ scope.row.projectName }}
+        </el-link>
+      </template>
+      <template v-else>
+        {{ scope.row.projectName }}
+      </template>
+    </div>
+  </template>
+</el-table-column>
       <el-table-column label="项目负责人" align="center" prop="manageByNickName" width="100"/>
       <!-- <el-table-column label="项目状态" align="center" prop="projectStatus" width="100"/> -->
       <el-table-column
@@ -227,6 +244,9 @@
       </el-select>
     </el-form-item>
           </el-col></el-row>
+          <el-form-item label="项目文档地址" prop="docUrl" label-width="150px">
+            <el-input v-model="form.docUrl" placeholder="请输入项目文档地址" />
+        </el-form-item>
         <el-row>
           <el-col :span="8">
             <el-form-item label="选择质粒">
@@ -430,6 +450,56 @@ export default {
   }
 },
   methods: {
+    getFileIcon(filePath) {
+      const ext = filePath.split('.').pop().toLowerCase();
+      const iconMap = {
+        'xls': 'el-icon-document',
+        'xlsx': 'el-icon-document',
+        'doc': 'el-icon-document',
+        'docx': 'el-icon-document',
+        'ppt': 'el-icon-film',
+        'pptx': 'el-icon-film',
+        'pdf': 'el-icon-tickets'
+      };
+      return iconMap[ext] || 'el-icon-document';
+    },
+    // 在Vue实例的方法中
+  extractUrl(text) {
+    if (!text) return null;
+    
+    // 匹配各种常见URL模式
+    const urlPatterns = [
+      /(https?:\/\/[^\s\u4e00-\u9fa5【】]+)/,  // 匹配http/https链接
+      /(https?:\/\/[^\s]+)/,  // 更宽松的匹配
+    ];
+    
+    for (const pattern of urlPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    return null;
+  },
+  
+  // 或者更精确的匹配金山文档格式
+  extractKDocsUrl(text) {
+    if (!text) return null;
+    
+    // 匹配【金山文档】后面的链接
+    const pattern = /【金山文档】\s*[^\s]+\s*(https?:\/\/[^\s]+)/;
+    const match = text.match(pattern);
+    
+    if (match && match[1]) {
+      return match[1];
+    }
+    
+    // 如果没有匹配到特定格式，尝试直接提取URL
+    const urlMatch = text.match(/(https?:\/\/[^\s]+)/);
+    return urlMatch ? urlMatch[1] : null;
+  },
+
     filterStatus(status) {
       this.queryParams.status = status;
       this.getList();
@@ -536,10 +606,11 @@ export default {
               manageByNickName: item.manageByNickName,
               projectStatus: item.projectStatus,
               expId: item.expId,
-              status: item.status
+              status: item.status,
+              docUrl: item.docUrl
             };
             (item.progressList || []).forEach(d => {   
-              let projectStatus = d.projectStatus.trim();
+              let projectStatus = d.projectStatus != null ? d.projectStatus.trim() : '';
               if(projectStatus !== undefined && projectStatus !== null && projectStatus !== '' && projectStatus.length > 0){
                 row[d.recordDate] = projectStatus;
                 allDates.add(d.recordDate);

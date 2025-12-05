@@ -239,15 +239,15 @@
           {{ getNickName(scope.row.createBy) }}
         </template>
       </el-table-column>  
-      <el-table-column label="备注" align="center" prop="remark" resizable>
+      <el-table-column label="设计方案" align="center" prop="designMethod" resizable>
         <template slot-scope="scope">
           <el-tooltip
-            v-if="scope.row.remark != null"
+            v-if="scope.row.designMethod != null"
             effect="light"
             placement="top"
           >
-            <div class="content" slot="content" v-html="scope.row.remark"></div>
-            <div class="oneLine">{{ scope.row.remark }}</div>
+            <div class="content" slot="content" v-html="scope.row.designMethod"></div>
+            <div class="oneLine">{{ scope.row.designMethod }}</div>
           </el-tooltip>
         </template>
       </el-table-column>
@@ -687,13 +687,25 @@
               v-model="form.compoundMethod"
               :autosize="{ minRows: 1, maxRows: 10 }"
               resize="none"
-              placeholder="请输入备注"
+              placeholder="请输入合成方式"
               clearable
             >
             </el-input>
           </el-form-item>
         </el-col>
-
+        <el-col>
+          <el-form-item label="设计方案" prop="designMethod" label-width="100px">
+            <el-input
+              type="textarea"
+              v-model="form.designMethod"
+              :autosize="{ minRows: 1, maxRows: 10 }"
+              resize="none"
+              placeholder="请输入设计方案"
+              clearable
+            >
+            </el-input>
+          </el-form-item>
+        </el-col>
         <el-col>
           <el-form-item label="备注" prop="remark" label-width="100px">
             <el-input
@@ -893,8 +905,11 @@ export default {
             required: true,
             message: "CDS表达蛋白数量不能为空",
             trigger: "change",
-          },
+          }          
         ],
+        designMethod: [
+            { required: true, message: "设计方案不能为空", trigger: "blur" },
+          ],
         // signalPeptide: [
         //   { required: true, message: "信号肽不能为空", trigger: "blur" },
         // ],
@@ -1202,7 +1217,7 @@ export default {
         cdsSeq: null,
         promoter: "T7",
         vectorType1: "原核",
-        vectorType2: null,
+        vectorType2: "线性",
         tagInfo: null,
         linker: "无",
         cdsProteinNum: 1,
@@ -1215,6 +1230,7 @@ export default {
         updateTime: null,
         updateBy: null,
         delFlag: null,
+        designMethod: null,
         remark: null,
       };
       this.resetForm("form");

@@ -195,13 +195,12 @@
         label="物料描述"
         align="center"
         prop="matName"
-        width="120"
+        width="180"
         fixed
       />
       <el-table-column label="集团编码" align="center" prop="fdCode" />
-      <el-table-column label="规格" align="center" prop="figNum" />
-      <el-table-column label="货号" align="center" prop="artNum" />
-      <el-table-column label="三级编码" align="center" prop="subcode" />
+      <el-table-column label="规格" align="center" prop="figNum" width="120"/>
+      <el-table-column label="货号" align="center" prop="artNum" width="120"/>
       <el-table-column label="品牌" align="center" prop="brand" />
       <el-table-column label="物料组" align="center" prop="matGroupName" />
       <el-table-column label="分类" align="center" prop="matClassName" />
@@ -241,8 +240,7 @@
             size="mini"
             type="text"
             icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['base:mat:edit']"
+            @click="handleUpdate(scope.row)"            
             >修改</el-button
           >
           <el-button
@@ -511,7 +509,7 @@
       </el-form>
 
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" @click="submitForm" v-hasPermi="['base:mat:edit']">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
@@ -573,7 +571,6 @@ import { listUserAll } from "@/api/system/user";
 
 export default {
   name: "Mat",
-  // dicts: ['base_mat_unit','storage_conditions'],
   dicts: ["base_mat_unit"],
   data() {
     return {

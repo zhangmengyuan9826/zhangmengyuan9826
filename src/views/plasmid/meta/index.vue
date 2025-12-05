@@ -606,9 +606,11 @@ export default {
     },
     /** 提交按钮 */
     submitForm() {
+
       this.$refs["form"].validate(valid => {
         if (valid) {
           if(! this.validForm(this.form)){
+            Message.error("元件位置顺序错误，请检查后重新填写！\n 正确顺序：启动子 < 5’UTR < cds < 3’UTR < polyA");
             return;
           }
           if (this.form.metaId != null) {
@@ -624,6 +626,9 @@ export default {
               this.getList();
             });
           }
+        } else {
+          Message.error("表单验证失败，请检查填写内容！");
+          return false;
         }
       });
     },

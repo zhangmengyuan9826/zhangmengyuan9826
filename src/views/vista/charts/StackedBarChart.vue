@@ -99,7 +99,7 @@ export default {
           data: data,
           emphasis: {
             focus: 'series'
-          }
+          },
         };
       });
 
@@ -122,8 +122,11 @@ export default {
             let total = 0;
             
             params.forEach(param => {
-              result += `${param.marker} ${param.seriesName}: ${param.value}<br/>`;
-              total += param.value;
+              if (param.value > 0) {
+                result += `${param.marker} ${param.seriesName}: ${param.value}<br/>`;
+                total += param.value;
+              }
+              
             });
             
             result += `<hr style="margin: 5px 0; border: none; border-top: 1px solid #ccc;">`;
@@ -169,23 +172,6 @@ export default {
       }
     }
   },
-  // watch: {
-  //   initData: {
-  //     handler() {
-  //       if (this.chart) {
-  //         this.updateChart();
-  //       }
-  //     },
-  //     deep: true
-  //   },
-  //   title: {
-  //     handler() {
-  //       if (this.chart) {
-  //         this.updateChart();
-  //       }
-  //     }
-  //   }
-  // }
 };
 </script>
 
