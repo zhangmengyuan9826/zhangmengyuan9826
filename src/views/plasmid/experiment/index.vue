@@ -140,19 +140,29 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="项目流水号" align="center" prop="projectNo" width="100"/>
       <el-table-column label="项目名称" align="center" prop="projectName" width="200">
+</el-table-column>
+<el-table-column label="文档链接" align="center" prop="url" width="100">
   <template slot-scope="scope">
     <div>
-      <template v-if="extractUrl(scope.row.docUrl)">
+      <template v-if="extractKDocsUrl(scope.row.docUrl)">
         <el-link
-          :href="extractUrl(scope.row.docUrl)"
+          :href="extractKDocsUrl(scope.row.docUrl)"
           :underline="false"
           target="_blank"
-        ><i :class="getFileIcon(scope.row.docUrl)"></i>
-          {{ scope.row.projectName }}
+          style="color:#409EFF"
+        >
+          <i :class="getFileIcon(scope.row.docUrl)">项目文档</i>
         </el-link>
       </template>
-      <template v-else>
-        {{ scope.row.projectName }}
+      <template v-if="extractKDocsUrl(scope.row.ganttUrl)">
+        <el-link
+          :href="extractKDocsUrl(scope.row.ganttUrl)"
+          :underline="false"
+          target="_blank"
+          style="color:#409EFF"
+        >
+          <i class="el-icon-link">甘特图</i>
+        </el-link>
       </template>
     </div>
   </template>
@@ -246,6 +256,9 @@
           </el-col></el-row>
           <el-form-item label="项目文档地址" prop="docUrl" label-width="150px">
             <el-input v-model="form.docUrl" placeholder="请输入项目文档地址" />
+        </el-form-item>
+        <el-form-item label="甘特图地址" prop="ganttUrl" label-width="150px">
+            <el-input v-model="form.ganttUrl" placeholder="请输入甘特图地址" />
         </el-form-item>
         <el-row>
           <el-col :span="8">
@@ -607,7 +620,8 @@ export default {
               projectStatus: item.projectStatus,
               expId: item.expId,
               status: item.status,
-              docUrl: item.docUrl
+              docUrl: item.docUrl,
+              ganttUrl: item.ganttUrl
             };
             (item.progressList || []).forEach(d => {   
               let projectStatus = d.projectStatus != null ? d.projectStatus.trim() : '';

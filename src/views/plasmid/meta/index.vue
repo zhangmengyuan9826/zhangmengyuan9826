@@ -1,14 +1,30 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="质粒载体" prop="plasmidVector">
+      <el-form-item label="质粒载体名称" prop="plasmidVector">
         <el-input
           v-model="queryParams.plasmidVector"
-          placeholder="请输入质粒载体"
+          placeholder="请输入质粒载体名称"
           clearable
           @keyup.enter.native="handleQuery"
         />
-      </el-form-item>      
+      </el-form-item>   
+      <el-form-item label="质粒载体" prop="vector">
+        <el-select
+            clearable
+            v-model="queryParams.vector"
+            default-first-option
+            placeholder="请选择或输入"
+          >
+            <el-option
+              v-for="item in fieldDataDict['plasmidVector']"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+      </el-form-item>
       <el-form-item label="抗性基因" prop="resistanceGene">
         <el-input
           v-model="queryParams.resistanceGene"
@@ -25,9 +41,9 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="载体类型" prop="vectorType">
+      <el-form-item label="载体类型" prop="vectorType2">
         <el-input
-          v-model="queryParams.vectorType"
+          v-model="queryParams.vectorType2"
           placeholder="请输入载体类型"
           clearable
           @keyup.enter.native="handleQuery"
@@ -131,13 +147,14 @@
 
     <el-table v-loading="loading" :data="metaList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="质粒载体" align="center" prop="plasmidVector" fixed=""/>
+      <el-table-column label="载体名称" align="center" prop="plasmidVector" fixed=""/>
+      <el-table-column label="质粒载体" align="center" prop="vector" />
       <el-table-column label="cds位置" align="center" prop="cdsSite" />
       <el-table-column label="抗性基因" align="center" prop="resistanceGene" />
       <el-table-column label="抗性基因位置" align="center" prop="resistanceGeneSite" />
       <el-table-column label="克隆宿主" align="center" prop="cloneHost" />
-      <el-table-column label="载体类型" align="center" prop="vectorType" />
-      <el-table-column label="载体类型I" align="center" prop="vectorType1" />
+      <el-table-column label="载体类型" align="center" prop="vectorType2" />
+      <el-table-column label="原核/真核载体" align="center" prop="vectorType1" />
       <el-table-column label="表达宿主" align="center" prop="expressHost" />
       <el-table-column label="3’UTR" align="center" prop="utr3" />
       <el-table-column label="3’UTR位置" align="center" prop="utr3Site" />
@@ -180,11 +197,17 @@
     <el-dialog :title="title" :visible.sync="open" width="80%" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
-        <el-col :span="12">
-        <el-form-item label="质粒载体" prop="plasmidVector" >
+          <el-col :span="8">
+            <el-form-item label="载体名称" prop="plasmidVector">
+              <el-input v-model="form.plasmidVector" placeholder="请输入载体名称" />
+            </el-form-item>
+          </el-col>
+        <el-col :span="8">
+
+        <el-form-item label="质粒载体" prop="vector" >
           <el-select
               clearable
-              v-model="form.plasmidVector"
+              v-model="form.vector"
               default-first-option
               placeholder="请选择或输入"
             >
@@ -198,9 +221,58 @@
             </el-select>
         </el-form-item>
         </el-col>
+        <el-col :span="8">
+        <el-form-item label="cds位置" prop="cdsSite" label-width="80px">
+          <el-input v-model="form.cdsSite" placeholder="请输入cds位置，格式如：1..100" />
+        </el-form-item>
+        </el-col></el-row>
+        <el-row>
+          <el-col :span="12">
+        <el-form-item label="克隆宿主" prop="cloneHost">
+          <el-input v-model="form.cloneHost" placeholder="请输入克隆宿主" />
+        </el-form-item>
+        </el-col>
         <el-col :span="12">
-        <el-form-item label="cds位置" prop="cdsSite" label-width="115px">
-          <el-input v-model="form.cdsSite" placeholder="请输入cds位置，格式：100..200" />
+        <el-form-item label="表达宿主" prop="expressHost">
+          <el-input v-model="form.expressHost" placeholder="请输入表达宿主" />
+        </el-form-item>
+        </el-col></el-row>
+        <el-row>
+            <el-col :span="12">
+        <el-form-item label="原核/真核载体" prop="vectorType1" label-width="115px">
+           <el-select
+              v-model="form.vectorType1"
+              default-first-option
+              placeholder="请选择或输入"
+              clearable
+            >
+              <el-option
+                v-for="item in fieldDataDict['vectorType1']"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
+        </el-form-item>
+        </el-col>
+        <el-col :span="12">
+        <el-form-item label="载体类型" prop="vectorType2" label-width="105px">
+          <el-select
+              v-model="form.vectorType2"
+              default-first-option
+              placeholder="请选择或输入"
+              @change="valueChange"
+              clearable
+            >
+              <el-option
+                v-for="item in fieldDataDict['vectorType2']"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
         </el-form-item>
         </el-col>
         </el-row>
@@ -229,22 +301,9 @@
         </el-form-item>
         </el-col>
         </el-row>
-        <el-row>
-        <el-col :span="8">
-        <el-form-item label="克隆宿主" prop="cloneHost">
-          <el-input v-model="form.cloneHost" placeholder="请输入克隆宿主" />
-        </el-form-item>
-        </el-col>
-        <el-col :span="8">
-        <el-form-item label="载体类型I" prop="vectorType1" label-width="105px">
-          <el-input v-model="form.vectorType1" placeholder="请输入载体类型1" />
-        </el-form-item>
-        </el-col>
-        <el-col :span="8">
-        <el-form-item label="表达宿主" prop="expressHost">
-          <el-input v-model="form.expressHost" placeholder="请输入表达宿主" />
-        </el-form-item>
-        </el-col>
+        <el-row>      
+        
+        
         </el-row>
         <el-row>
         <el-col :span="12">
@@ -279,6 +338,7 @@
               v-model="form.utr5"
               default-first-option
               placeholder="请选择或输入"
+              
             >
               <el-option
                 v-for="item in fieldDataDict['utr5']"
@@ -304,6 +364,7 @@
               v-model="form.polyA"
               default-first-option
               placeholder="请选择或输入"
+              
             >
               <el-option
                 v-for="item in fieldDataDict['polyA']"
@@ -347,6 +408,18 @@
         </el-col>
         </el-row>
         <el-row>
+          <el-form-item label="核酸序列" prop="naSeq" label-width="80px">
+              <el-input
+                v-model="form.naSeq"
+                type="textarea"
+                :autosize="{ minRows: 4, maxRows: 10 }"
+                resize="none"
+                placeholder="请输入核酸序列"
+              >
+              </el-input>
+            </el-form-item>
+        </el-row>
+        <el-row>
         <el-col :span="24">
         <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
@@ -368,6 +441,7 @@ import { getDictDataListByDictType } from "@/api/plasmid/dictData";
 import { getDicts } from "@/api/system/dict/data";
 import { getToken } from "@/utils/auth";
 import { Message } from 'element-ui';
+import cloneDeep from "lodash/cloneDeep";
 export default {
   name: "Meta",
   data() {
@@ -395,11 +469,12 @@ export default {
         pageNum: 1,
         pageSize: 10,
         plasmidVector: null,
+        vector: null,
         cdsSite: null,
         resistanceGene: null,
         resistanceGeneSite: null,
         cloneHost: null,
-        vectorType: null,
+        vectorType2: null,
         vectorType1: null,
         expressHost: null,
         utr3: null,
@@ -410,18 +485,19 @@ export default {
         polyASite: null,
         promoter: null,
         promoterSite: null,
+        naSeq: null,
       },
       // 表单参数
       form: {},
       // 表单校验
-      rules: {
+      rules: {        
         plasmidVector: [
+          { required: true, message: "载体名称不能为空", trigger: "blur" }
+        ],
+        vector: [
           { required: true, message: "质粒载体不能为空", trigger: "blur" }
         ],
-        // cloneHost: [
-        //   { required: true, message: "质粒载体不能为空", trigger: "blur" }
-        // ],
-        vectorType: [
+        vectorType2: [
           { required: true, message: "载体类型不能为空", trigger: "blur" }
         ],
         vectorType1: [
@@ -466,6 +542,9 @@ export default {
           { required: true, message: '请输入promoter范围值' },
           { validator: this.validateRangeFormat, trigger: 'blur' }
         ],
+        naSeq: [
+          { required: true, message: "核酸序列不能为空", trigger: "blur" }
+        ],
       },
       fieldDataDict: [],
       fieldList:[],
@@ -474,7 +553,76 @@ export default {
   created() {
     this.initData();
   },
+  watch: {
+  'form.vectorType2': {
+    handler(newVal) {
+      if (newVal === "环化") {
+        this.rules.polyA = [{ required: false }];
+        this.rules.utr5Site = [{ required: false }];
+        this.rules.polyASite = [{ required: false }];
+        this.rules.utr3 = [{ required: false }];
+        this.rules.utr3Site = [{ required: false }];
+        this.rules.utr5 = [{ required: false }];
+        this.rules.resistanceGeneSite = [{ required: false }];
+        this.rules.cdsSite = [{ required: false }]
+        this.rules.promoter = [{ required: false }]
+        this.rules.promoterSite = [{ required: false }]
+        this.rules.naSeq = [{ required: false }]
+        // 其他字段...
+      } else {
+        this.rules.promoter = [
+          { required: true, message: "启动子不能为空", trigger: "blur" }
+        ];
+        this.rules.promoterSite = [
+          { required: true, message: '请输入promoter范围值' },
+          { validator: this.validateRangeFormat, trigger: 'blur' }
+        ];
+        this.rules.cdsSite = [
+          { required: true, message: '请输入cds范围值' },
+          { validator: this.validateRangeFormat, trigger: 'blur' }
+        ];
+        this.rules.polyA = [
+          { required: true, message: "polyA不能为空", trigger: "blur" }
+        ];
+        this.rules.utr5Site = [
+          { required: true, message: '请输入utr5范围值' },
+          { validator: this.validateRangeFormat, trigger: 'blur' }
+        ];
+        this.rules.polyASite = [
+          { required: true, message: '请输入polyA范围值' },
+          { validator: this.validateRangeFormat, trigger: 'blur' }
+        ];
+        this.rules.utr3 = [
+          { required: true, message: "3’UTR不能为空", trigger: "blur" }
+        ];
+        this.rules.utr3Site = [
+          { required: true, message: '请输入utr3范围值' },
+          { validator: this.validateRangeFormat, trigger: 'blur' }
+        ];
+        this.rules.utr5 = [
+          { required: true, message: "5‘UTR不能为空", trigger: "blur" }
+        ];
+        this.rules.resistanceGeneSite = [
+          { required: true, message: '请输入resistanceGene范围值' },
+          { validator: this.validateRangeFormat, trigger: 'blur' }
+        ];
+        this.rules.naSeq = [
+          { required: true, message: "核酸序列不能为空", trigger: "blur" }
+        ];
+        // 其他字段...
+      }
+      // 清除表单验证状态
+      this.$nextTick(() => {
+        this.$refs.formRef && this.$refs.formRef.clearValidate();
+      });
+    },
+    immediate: true
+  }
+},
   methods: {
+    valueChange(value) {
+      this.$nextTick(() => {});
+    },
     validateRangeFormat(rule, value, callback) {
       if (!value) {
         return callback(new Error('请输入范围值'));
@@ -535,11 +683,12 @@ export default {
       this.form = {
         metaId: null,
         plasmidVector: null,
+        vector: null,
         cdsSite: null,
         resistanceGene: null,
         resistanceGeneSite: null,
         cloneHost: null,
-        vectorType: null,
+        vectorType2: null,
         vectorType1: null,
         expressHost: null,
         utr3: null,
@@ -609,7 +758,8 @@ export default {
 
       this.$refs["form"].validate(valid => {
         if (valid) {
-          if(! this.validForm(this.form)){
+          // 环化的不用检查原件顺序
+          if(this.form.vectorType2 !=="环化" && ! this.validForm(this.form)){
             Message.error("元件位置顺序错误，请检查后重新填写！\n 正确顺序：启动子 < 5’UTR < cds < 3’UTR < polyA");
             return;
           }

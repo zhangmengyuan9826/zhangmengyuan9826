@@ -8,6 +8,12 @@ export function listMeta(query) {
     params: query
   })
 }
+export function listPVNames() {
+  return request({
+    url: '/plasmid/meta/listPVNames',
+    method: 'get'
+  })
+}
 
 // 查询质粒载体参与构建序列的元数据详细
 export function getMeta(metaId) {

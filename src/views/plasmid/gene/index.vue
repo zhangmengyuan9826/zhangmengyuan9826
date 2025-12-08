@@ -381,7 +381,7 @@
               onkeyup="value=value.replace(/[^ATCGUatcgu]/g, '')"
               :autosize="{ minRows: 1, maxRows: 10 }"
               resize="none"
-              placeholder="请输入序列，只能输入ATCGU或atcgu"
+              placeholder="请输入序列，只能输入ATCGU或atcgu；环化载体输入完整序列"
               clearable
             >
             </el-input>
@@ -619,12 +619,11 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="载体类型" prop="vectorType2" label-width="100px">
+          <el-form-item label="载体类型" prop="vectorType2" label-width="100px" >
             <el-select
               v-model="form.vectorType2"
               default-first-option
-              placeholder="请选择或输入"
-              clearable
+              disabled
             >
               <el-option
                 v-for="item in fieldDataDict['vectorType2']"
@@ -799,7 +798,7 @@ import {
   getDictDataShortListByDictType,
   getDictDataSeqListByDictType,
 } from "@/api/plasmid/dictData";
-import { getPlasmidVentorByName } from "@/api/plasmid/meta";
+import { listPVNames, getPlasmidVentorByName } from "@/api/plasmid/meta";
 import { getDicts } from "@/api/system/dict/data";
 import { listUserAll } from "@/api/system/user";
 
@@ -869,9 +868,6 @@ export default {
         linearDigestion: [
           { required: true, message: "线性酶切不能为空", trigger: "change" },
         ],
-        // resistanceGene: [
-        //   { required: true, message: "抗性基因不能为空", trigger: "blur" },
-        // ],
         cdsLength: [
           { required: true, message: "cds长度不能为空", trigger: "change" },
         ],
@@ -886,7 +882,6 @@ export default {
         promoter: [
           { required: true, message: "启动子不能为空", trigger: "blur" },
         ],
-        // cap: [{ required: true, message: "加帽不能为空", trigger: "change" }],
         vectorType1: [
           {
             required: true,
@@ -910,16 +905,29 @@ export default {
         designMethod: [
             { required: true, message: "设计方案不能为空", trigger: "blur" },
           ],
-        // signalPeptide: [
-        //   { required: true, message: "信号肽不能为空", trigger: "blur" },
-        // ],
-        // proteinType: [
-        //   {
-        //     required: true,
-        //     message: "预测蛋白类型不能为空",
-        //     trigger: "change",
-        //   },
-        // ],
+      },
+      circRules: {
+        geneName: [
+          { required: true, message: "基因名不能为空", trigger: "blur" },
+        ],
+        plasmidVector: [
+          { required: true, message: "质粒载体不能为空", trigger: "change" },
+        ],
+        vectorNo: [
+          { required: true, message: "载体编号不能为空", trigger: "blur" },
+        ],
+        cdsSeq: [
+          { required: true, message: "CDS序列不能为空", trigger: "change" },
+        ],
+        plasmidFullName: [
+          { required: true, message: "质粒全称不能为空", trigger: "blur" },
+        ],
+        vectorType1: [
+          { required: true, message: "原核/真核 载体不能为空", trigger: "blur" },
+        ],
+        vectorType2: [
+          { required: true, message: "载体类型不能为空", trigger: "change" },
+        ],
       },
       fieldList: [],
       fieldDataDict: [],
@@ -954,6 +962,7 @@ export default {
         "polyA",
         "promoter",
         "vectorType1",
+        "vectorType2",
       ],
       linkerInfos: {},
       resistanceGeneInfos: {},
@@ -992,7 +1001,7 @@ export default {
       if(this.viewType === 'View' || this.open == false){
         return
       }
-      if(newVal == this.originalPVector){
+      if(newVal == this.originalPVector || newVal == null || newVal == ""){
         return
       } else {
         this.originalPVector = newVal
@@ -1009,19 +1018,32 @@ export default {
             (this.form.geneName != null) & (this.form.geneName != "")
               ? this.form.geneName
               : "";
-
           this.form.plasmidFullName = _geneName + "_" + _pVector;
           this.generateFormByPlasmidVector(newVal);
         })
         .catch(() => {
           // 用户取消：不执行更新
-        });
-
-
-
-      
+        });      
     },
-  },
+    'form.vectorType2'(newVal){
+        if(newVal == "环化"){
+            this.rules.polyA = [{ required: false }];
+            this.rules.utr3 = [{ required: false }];
+            this.rules.utr5 = [{ required: false }];
+            this.rules.resistanceGeneSite = [{ required: false }];
+            this.rules.promoter = [{ required: false }]
+          } else {
+            this.rules.polyA = [  { required: true, message: "polyA不能为空", trigger: "change" } ];
+            this.rules.utr3 = [ { required: true, message: "3'UTR不能为空", trigger: "change" } ];
+            this.rules.utr5 = [ { required: true, message: "5'UTR不能为空", trigger: "blur" } ];
+            this.rules.resistanceGeneSite = [ { required: true, message: "抗性基因不能为空", trigger: "change" } ];
+            this.rules.promoter = [ { required: true, message: "启动子不能为空", trigger: "blur" } ]
+          }
+          this.$nextTick(() => {
+            this.$refs.formRef && this.$refs.formRef.clearValidate();
+          });
+      
+  }},
   created() {
     this.showSearch = false;
     this.initData();
@@ -1032,10 +1054,31 @@ export default {
         this.userList = response;
       });
     },
+    // 获取用户中文昵称
     getNickName(userName) {
       const user = this.userList.find((u) => u.userName === userName);
       return user ? user.nickName : userName;
     },
+    formattedDnaSimple(fullSeq) {
+      const chunkSize = 60;
+      let html = "";
+      for (let i = 0; i < fullSeq.length; i += chunkSize) {
+        const lineNumber = (i + 1).toString().padStart(6, " ");
+        const chunk = fullSeq.substr(i, chunkSize);        
+        // Add space every 10 characters
+        let spacedChunk = '';
+        for (let j = 0; j < chunk.length; j++) {
+          const char = chunk[j];      
+          spacedChunk += char;      
+          if ((j + 1) % 10 === 0 && j !== chunk.length - 1) {
+            spacedChunk += ' ';
+          }
+        }        
+        html += `<span class="line-number">${lineNumber}</span> ${spacedChunk}\n`;
+      }
+      return html;
+    },
+    // 格式化DNA序列显示
     formattedDna(fullSeqInfo) {
       const fullSeq = fullSeqInfo['pvSeq']
       const chunkSize = 60;
@@ -1073,6 +1116,7 @@ export default {
       }
       return html;
     },
+    // 自动从cds序列中识别到linker序列，并计算表达蛋白的数量
     getLinkerInfo(cdsSeq) {
       var cdsProteinSeq = this.translateSequence(cdsSeq);
       var linkerList = [];
@@ -1099,28 +1143,26 @@ export default {
         this.$set(this.form, "linker", "无");
       }
     },
+    // 自动从cds序列中识别到信号肽
     getSignalPeptideInfo(cdsSeq) {
       var cdsProteinSeq = this.translateSequence(cdsSeq);
       if (this.signalPeptideInfos && this.signalPeptideInfos.length > 0) {
         for (let i = 0; i < this.signalPeptideInfos.length; i++) {
           var signalPeptideProteinSeq =
             this.signalPeptideInfos[i]["proteinSeq"];
-          if (signalPeptideProteinSeq) {
-            if (
-              signalPeptideProteinSeq ==
-              cdsProteinSeq.slice(0, signalPeptideProteinSeq.length)
-            ) {
+          if (signalPeptideProteinSeq != "" && signalPeptideProteinSeq != null 
+              && signalPeptideProteinSeq == cdsProteinSeq.slice(0, signalPeptideProteinSeq.length) ){
               this.$set(
                 this.form,
                 "signalPeptide",
                 this.signalPeptideInfos[i]["dictValue"]
               );
-              break;
-            }
+              break;            
           }
         }
       }
     },
+    // 质粒载体更新后，同步更新表单字段信息
     generateFormByPlasmidVector(pVector) {
       if (pVector && pVector != "") {
         getPlasmidVentorByName(pVector).then((response) => {
@@ -1133,11 +1175,13 @@ export default {
                 pVector[this.pVectorFormElements[i]]
               );
             }
-            console.log(this.form);
+            // checkRules(pVector.vectorType2)
+            
           }
         });
       }
     },
+    // 根据value获取option的label和content
     selectedOptionLabel(value, options) {
       if (options) {
         const option = options.find((item) => item.value === value);
@@ -1154,13 +1198,23 @@ export default {
         this.loading = false;
       });
     },
+    // 初始化数据字典的数据
     initData() {
       getDicts("plasmid_field").then((response) => {
         this.fieldList = response.data.map((item) => item.dictValue);
         this.getField();
         this.getFieldSeqs();
+        this.getPlasmidVectorList();
         this.getUserList();
         this.getList();
+      });
+    },
+    getPlasmidVectorList(){
+      listPVNames().then((response) => {
+        this.fieldDataDict['plasmidVector'] = response.data.map((item) => ({
+          label: item,
+          value: item,
+        }));
       });
     },
     getField() {
@@ -1182,6 +1236,7 @@ export default {
       this.loading = false;
       this.showSearch = true;
     },
+    // 初始化序列数据字典——存在核酸活蛋白序列的字段
     getFieldSeqs() {
       getDictDataSeqListByDictType("linker").then((response) => {
         this.linkerInfos = response.data;
@@ -1270,6 +1325,7 @@ export default {
         this.title = "修改质粒基因";
       });
     },
+    // 提交暂存草稿
     submitTemp() {
       this.form["status"] = "status1";
       if (this.viewType == "Copy") {
@@ -1315,7 +1371,8 @@ export default {
         this.title = "复制添加质粒基因";
       });
     },
-    validateCdsProandLinker(num, linker) {
+    // CDS表达蛋白数量 和 linker 填写校验
+    validateCdsProAndLinker(num, linker) {
       if (num === 1) {
         if (linker != "无") {
           return false;
@@ -1337,9 +1394,10 @@ export default {
       }
       return true;
     },
+    // 表单规则校验
     validateForm(formInfo) {
       if (
-        !this.validateCdsProandLinker(formInfo.cdsProteinNum, formInfo.linker)
+        !this.validateCdsProAndLinker(formInfo.cdsProteinNum, formInfo.linker)
       ) {
         Message.warning("CDS表达蛋白数量 和 linker 填写校验不通过！");
         return false;
@@ -1354,7 +1412,7 @@ export default {
         }
       }
       return true;
-      // if(!this.validateCdsProandLinker(formInfo.plasmidVector, formInfo.resistanceGene)){
+      // if(!this.validateCdsProAndLinker(formInfo.plasmidVector, formInfo.resistanceGene)){
       //   Message.warning("不存在该线性酶切序列！")
       //   return false;
       // }
@@ -1364,7 +1422,7 @@ export default {
       this.$refs["form"].validate((valid) => {
         if (valid) {
           //规则校验
-          if (!this.validateForm(this.form)) {
+          if (this.form.vectorType2 != "环化" && !this.validateForm(this.form)){
             return;
           }
           this.form.status = "status2";
@@ -1474,6 +1532,7 @@ export default {
     formatStatusStyle(statusCode) {
       return { color: this.statusColor[statusCode] };
     },
+    /** 详情按钮操作 */
     handleDetail(geneId) {
       this.reset();
       getGene(geneId).then((response) => {
@@ -1483,6 +1542,7 @@ export default {
         this.title = "质粒基因详情";
       });
     },
+    // 生成完整的序列
     handleFullSeq(geneId) {
       this.loadFullSeq = true;
       getGeneFullSeq(geneId).then((response) => {
@@ -1492,7 +1552,13 @@ export default {
           return;
         }
         this.fullSeqInfo = response.data;
-        this.fullSeqHtml = this.formattedDna(this.fullSeqInfo);
+        if(this.fullSeqInfo.length == 1 && this.fullSeqInfo['pvSeq'] != ""){
+         this.fullSeqHtml = this.formattedDnaSimple(this.fullSeqInfo);
+        } else {
+            this.fullSeqHtml = this.formattedDna(this.fullSeqInfo);
+        }
+
+        
         this.showFullSeq = true;
       }).catch(err => {
         Message.error("获取完整序列失败，请稍后重试！");
