@@ -12,7 +12,7 @@
       <table class="fixed-table">
         <thead>
           <tr>
-            <th :colspan="5">质粒情况</th>
+            <th :colspan="5">到货情况</th>
             <th :colspan="uniqueDates.length">实验状态</th>
           </tr>
           <tr>
@@ -31,7 +31,7 @@
                 {{ pIndex + 1 }}
               </template>
               <template v-else-if="col.key === 'orderStatus'">
-                {{ getOrderStatusText(plasmid[col.key]) }}
+                {{ getOrderReceiveDate(plasmid['orderStatus'],plasmid['receiveDate']) }}
               </template>
               <template v-else>
                 {{ plasmid[col.key] }}
@@ -118,6 +118,7 @@ export default {
             resistanceGene: item.resistanceGene,
             linearDigestion: item.linearDigestion,
             orderStatus: item.orderStatus,
+            receiveDate: item.receiveDate,
             statusTimeline: []
           });
         }
@@ -158,8 +159,12 @@ export default {
       document.removeEventListener('mousemove', this.onResize);
       document.removeEventListener('mouseup', this.stopResize);
     },
-    getOrderStatusText(statusKey) {
-      return this.statusDict[statusKey] || statusKey;
+    getOrderReceiveDate(orderStatus, receiveDate) {
+      if(receiveDate != null && receiveDate !== "") {
+        return receiveDate
+      } else {
+        return "未到货";
+      }
     },
     getStatusHighlightStyle(recordDate, status) {
       // 获取该日期下所有质粒的状态

@@ -77,10 +77,11 @@ export function delGene(geneId) {
 }
 
 // 修改质粒状态_质粒到货
-export function submitDoneGeneByGeneIds(geneIds) {
+export function submitDoneGeneByGeneIds(params) {
   return request({
-    url: '/plasmid/gene/changeStatusDone/' + geneIds,
-    method: 'get'
+    url: '/plasmid/gene/changeStatusDone/',
+    method: 'post',
+    data: params
   })
 }
 

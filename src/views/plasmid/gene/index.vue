@@ -251,6 +251,7 @@
           </el-tooltip>
         </template>
       </el-table-column>
+      <el-table-column label="到货日期" align="center" prop="receiveDate" resizable />
       <el-table-column
         label="操作"
         align="center"
@@ -270,14 +271,22 @@
             size="mini"
             type="text"
             icon="el-icon-view"
-            @click="handleFullSeq(scope.row.geneId)"
+            @click="handleFullSeq(scope.row)"
             >序列</el-button
           >
-          <el-button
+          <!-- <el-button
             size="mini"
             type="text"
             icon="el-icon-edit"
             :disabled="scope.row.orderNo != '' && scope.row.orderNo != null"
+            @click="handleUpdate(scope.row)"
+            v-hasPermi="['plasmid:gene:edit']"
+            >修改</el-button
+          > -->
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['plasmid:gene:edit']"
             >修改</el-button
@@ -718,6 +727,31 @@
             </el-input>
           </el-form-item>
         </el-col>
+        <span>下单情况</span>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="下单日期" prop="orderDate" label-width="100px">
+            <el-date-picker
+              v-model="form.orderDate"
+              type="date"
+              placeholder="选择日期"
+              style="width: 100%;"
+              >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="到货日期" prop="receiveDate" label-width="100px">
+            <el-date-picker
+              v-model="form.receiveDate"
+              type="date"
+              placeholder="选择日期"
+              style="width: 100%;"
+              >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button v-if="viewType !== 'View'" type="primary" @click="submitTemp"
@@ -1287,6 +1321,8 @@ export default {
         delFlag: null,
         designMethod: null,
         remark: null,
+        receiveDate: null,
+        orderDate: null,
       };
       this.resetForm("form");
     },
@@ -1543,9 +1579,14 @@ export default {
       });
     },
     // 生成完整的序列
-    handleFullSeq(geneId) {
+    handleFullSeq(row) {
       this.loadFullSeq = true;
-      getGeneFullSeq(geneId).then((response) => {
+      if(row.vectorType2 == "环化"){
+        this.$alert("环化质粒不支持生成完整序列！","提示");
+        this.loadFullSeq = false;
+        return;
+      }
+      getGeneFullSeq(row.geneId).then((response) => {
         if(response.code == '500'){
           Message.error("获取完整序列失败，请稍后重试！");
           this.loadFullSeq = false;
@@ -1556,9 +1597,7 @@ export default {
          this.fullSeqHtml = this.formattedDnaSimple(this.fullSeqInfo);
         } else {
             this.fullSeqHtml = this.formattedDna(this.fullSeqInfo);
-        }
-
-        
+        }        
         this.showFullSeq = true;
       }).catch(err => {
         Message.error("获取完整序列失败，请稍后重试！");
