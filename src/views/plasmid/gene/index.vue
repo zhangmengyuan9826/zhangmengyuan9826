@@ -126,22 +126,31 @@
         >
       </el-col>
     </el-row>
-    <right-toolbar
+    <!-- <right-toolbar
       :showSearch.sync="showSearch"
       @queryTable="getList"
-    ></right-toolbar>
+    ></right-toolbar> -->
 
-    <el-table
-      v-loading="loading"
-      :data="plasmidList"
-      style="width: 100%; border-color: white"
-      border
-      :row-style="{ height: '20px' }"
-      :cell-style="{ padding: '0px'}"
-      :header-cell-style="{ color: '#606266'}"
-      @selection-change="handleSelectionChange"
-    >
+    <div >
+      <el-table
+        v-loading="loading"
+        :data="plasmidList"
+        style="width: 100%; border-color: white;"
+        border
+        height="calc(100vh - 40px)"  
+        :row-style="{ height: '20px' }"
+        :cell-style="{ padding: '0px'}"
+        :header-cell-style="{ color: '#606266', fixed: true, background: '#f5f7fa', fontWeight: 'bold' }"
+        @selection-change="handleSelectionChange"
+      >
       <el-table-column type="selection" width="55" align="center" />
+      <el-table-column
+        label="序号"
+        align="center"
+        type="index"
+        width="60"
+        :index="(index) => (queryParams.pageNum - 1) * queryParams.pageSize + index + 1"
+      />
       <el-table-column
         label="基因名"
         align="center"
@@ -309,15 +318,31 @@
           >
         </template>
       </el-table-column>
-    </el-table>
-
-    <pagination
+      </el-table>
+    </div>
+<div class="load-more-row">
+  <template v-if="plasmidList.length < total">
+    <el-button
+      type="primary"
+      plain
+      icon="el-icon-plus"
+      size="mini"
+      @click="loadMoreData"
+    >点击加载更多
+    </el-button>
+  </template>
+  <template v-else>
+    <span style="color: #909399;">已加载全部数据</span>
+  </template>
+  <span class="data-count">共 {{ plasmidList.length }} / {{ total }} 条数据</span>
+</div>
+    <!-- <pagination
       v-show="total > 0"
       :total="total"
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
-    />
+    /> -->
 
     <!-- 添加或修改质粒基因管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="94%" append-to-body>
@@ -735,6 +760,7 @@
               v-model="form.orderDate"
               type="date"
               placeholder="选择日期"
+              value-format="yyyy-MM-dd"
               style="width: 100%;"
               >
             </el-date-picker>
@@ -746,6 +772,7 @@
               v-model="form.receiveDate"
               type="date"
               placeholder="选择日期"
+              value-format="yyyy-MM-dd"
               style="width: 100%;"
               >
             </el-date-picker>
@@ -763,7 +790,7 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
-    <!-- 物料导入对话框 -->
+    <!-- 基因导入对话框 -->
     <el-dialog
       :title="upload.title"
       :visible.sync="upload.open"
@@ -864,7 +891,7 @@ export default {
       // 查询参数
       queryParams: {
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 20,
         geneName: null,
         plasmidVector: null,
         plasmidFullName: null,
@@ -1083,6 +1110,10 @@ export default {
     this.initData();
   },
   methods: {
+  loadMoreData() {
+      this.queryParams.pageSize += 20;
+      this.getList();
+    },
     getUserList() {
       listUserAll().then((response) => {
         this.userList = response;
@@ -1648,6 +1679,21 @@ export default {
 };
 </script>
 <style type="text/css">
+/* 纵向滚动条样式 */
+/* .plasmid-table-scroll {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+} */
+/* 加载更多和数据条数一行显示 */
+.load-more-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+.data-count {
+  color: #909399;
+}
 ::v-deep(.el-table__body td) {
   border: none !important;
 }

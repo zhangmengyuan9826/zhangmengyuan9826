@@ -167,6 +167,13 @@
     >
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column
+        label="序号"
+        type="index"
+        width="60"
+        align="center"
+        :index="(index) => index + 1"
+      />
+      <el-table-column
         label="项目流水号"
         align="center"
         prop="projectNo"
@@ -256,14 +263,14 @@
         </template>
       </el-table-column>
     </el-table>
-
-    <pagination
+    <br />
+    <!-- <pagination
       v-show="total > 0"
       :total="total"
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
-    />
+    /> -->
 
     <!-- 添加或修改质粒模块-实验管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="80%" append-to-body>
@@ -360,6 +367,13 @@
           :selectable="checkSelectable"
           width="55"
           align="center"
+        />
+        <el-table-column
+          label="序号"
+          type="index"
+          width="60"
+          align="center"
+          :index="(index) => index + 1"
         />
         <el-table-column
           label="基因名"
@@ -575,7 +589,7 @@ export default {
       // 查询参数
       queryParams: {
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 20,
         projectNo: null,
         projectName: null,
         manageBy: null,
@@ -618,7 +632,7 @@ export default {
       // 按时间倒序
       return (this.projectRecordList || [])
         .slice()
-        .sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
+        .sort((a, b) => new Date(b.recordDate) - new Date(a.recordDate));
     },
     filteredPivotTableData() {
       // projectStatus字段值需和标签对应

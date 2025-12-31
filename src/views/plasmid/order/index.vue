@@ -435,6 +435,12 @@
           align="center"
         />
         <el-table-column
+          label="序号"
+          type="index"
+          width="60"
+          align="center"
+          :index="(index) => index + 1" />
+        <el-table-column
           label="订单号"
           align="center"
           prop="geneNo"
