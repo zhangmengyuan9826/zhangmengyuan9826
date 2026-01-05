@@ -24,21 +24,56 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="启动子" prop="promoter" label-width="100px">
+      <el-form-item label="线性酶切" prop="linearDigestion" label-width="100px">
         <el-input
-          v-model="queryParams.promoter"
+          v-model="queryParams.linearDigestion"
           placeholder="请输入"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="批次" prop="batch">
-        <el-input
-          v-model="queryParams.batch"
-          placeholder="请输入"
+      <!-- 状态 -->
+      <el-form-item label="状态" prop="status">
+        <el-select
+          v-model="queryParams.status"
+          placeholder="请选择状态"
           clearable
-          @keyup.enter.native="handleQuery"
-        />
+        >
+          <el-option
+            v-for="item in statusDictDict"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="创建人" prop="createBy">
+        <el-select
+          v-model="queryParams.createBy"
+          placeholder="请选择创建人"
+        >
+          <el-option
+            v-for="item in userList"
+            :key="item.userName"
+            :label="item.nickName"
+            :value="item.userName"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <!-- 到货日期 -->
+      <el-form-item label="到货日期" prop="receiveDateRange">
+        <el-date-picker
+          v-model="receiveDateRange"
+          style="width: 240px"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          clearable
+        >
+        </el-date-picker>
       </el-form-item>
       <el-form-item>
         <el-button
@@ -891,7 +926,7 @@ export default {
       // 查询参数
       queryParams: {
         pageNum: 1,
-        pageSize: 20,
+        pageSize: 50,
         geneName: null,
         plasmidVector: null,
         plasmidFullName: null,
@@ -906,7 +941,9 @@ export default {
         proteinType: null,
         enhancer: null,
         batch: null,
+        createBy: null
       },
+      receiveDateRange: [],
       // 表单参数
       form: {},
       // 表单校验
@@ -1010,6 +1047,10 @@ export default {
         status2: "已创建",
         status1: "草稿",
       },
+      statusDictDict: [
+        { label: "已创建", value: "status2" },
+        { label: "草稿", value: "status1" },
+      ],
       statusColor: {
         status2: "green",
         status1: "orange",
@@ -1257,7 +1298,8 @@ export default {
     /** 查询质粒基因管理列表 */
     getList() {
       this.loading = true;
-      listGene(this.queryParams).then((response) => {
+
+      listGene(this.addDateRange(this.queryParams, this.receiveDateRange)).then((response) => {
         this.plasmidList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -1365,6 +1407,7 @@ export default {
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
+      this.receiveDateRange = [];
       this.handleQuery();
     },
     // 多选框选中数据

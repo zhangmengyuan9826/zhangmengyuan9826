@@ -486,17 +486,18 @@
           align="center"
           prop="manageByNickName"
         />
-        <el-table-column label="项目状态" align="center" prop="projectStatus" />
+        <el-table-column label="项目状态" align="center" prop="projectStatus" width="360" />
         <el-table-column
           label="更新状态"
           align="center"
           prop="newStatus"
-          width="260"
+          width="360"
         >
           <template slot-scope="scope">
             <el-input
               v-model="scope.row.newStatus"
               type="textarea"
+              :autosize="{ minRows: 2, maxRows: 10 }"
               placeholder="请输入更新状态"
             />
           </template>
