@@ -24,10 +24,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="线性酶切" prop="linearDigestion" label-width="100px">
+      <el-form-item label="订单号" prop="geneNo" label-width="100px">
         <el-input
-          v-model="queryParams.linearDigestion"
-          placeholder="请输入"
+          v-model="queryParams.geneNo"
+          placeholder="请输入质粒订单号"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -215,13 +215,13 @@
         resizable
       />
       <el-table-column
-        label="质粒全称"
+        label="订单号"
         align="center"
-        prop="plasmidFullName"
+        prop="geneNo"
         width="130"
         resizable
       >
-        <template slot-scope="scope">
+        <!-- <template slot-scope="scope">
           <el-tooltip
             v-if="
               (scope.row.plasmidFullName != null) &
@@ -237,7 +237,7 @@
             ></div>
             <div class="oneLine">{{ scope.row.plasmidFullName }}</div>
           </el-tooltip>
-        </template>
+        </template> -->
       </el-table-column>
       <el-table-column
         label="线性酶切"
@@ -1080,6 +1080,11 @@ export default {
   },
   computed: {},
   watch: {
+
+  '$route.query'(newQuery) {
+    // 根据query变化重新初始化数据
+    this.initData()
+  },
     "form.cdsSeq"(newVal) {
       if (newVal && newVal != "") {
         this.form.cdsLength = newVal.length;
@@ -1312,7 +1317,20 @@ export default {
         this.getField();
         this.getFieldSeqs();
         this.getPlasmidVectorList();
-        this.getUserList();
+        this.getUserList();        
+        var currentUrl = window.location.href;
+        console.log("currentUrl:", currentUrl);
+        // /plasmid/gene/?method=addNo&newGeneName=p30-34
+        if(currentUrl.indexOf("method=addNo") > -1 && currentUrl.indexOf("newGeneName") > -1){
+          this.reset();
+          this.title = "添加质粒基因";
+          const newGeneName = this.$route.query.newGeneName
+          console.log("newGeneName:", newGeneName);
+          this.form['geneName'] = newGeneName;
+          this.open = true;
+          Message.info("检测到新增质粒基因请求，已自动填充基因名："+newGeneName);
+          this.viewType = "Edit";
+        } 
         this.getList();
       });
     },

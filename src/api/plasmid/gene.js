@@ -84,4 +84,9 @@ export function submitDoneGeneByGeneIds(params) {
     data: params
   })
 }
-
+export function listGeneNo() {
+  return request({
+    url: '/plasmid/gene/listGeneNo',
+    method: 'get',
+  })
+}

@@ -12,7 +12,7 @@
       <table class="fixed-table">
         <thead>
           <tr>
-            <th :colspan="5">到货情况</th>
+            <th :colspan="6">到货情况</th>
             <th :colspan="uniqueDates.length">实验状态</th>
           </tr>
           <tr>
@@ -77,6 +77,8 @@ export default {
       columns: [
         { key: 'index', label: '序号', rowspan: 2, style: { minWidth: '40px', width: '40px', maxWidth: '80px', background: '#f5f5f5' } },
         { key: 'geneName', label: '质粒名称', rowspan: 2, style: { minWidth: '180px', wordBreak: 'break-all', whiteSpace: 'normal', maxWidth: '300px' } },
+        // 设计方案 designMethod
+        { key: 'designMethod', label: '设计方案', rowspan: 2, style: { minWidth: '180px', wordBreak: 'break-all', whiteSpace: 'normal', maxWidth: '300px' } },
         { key: 'resistanceGene', label: '抗性基因', rowspan: 2, style: { width: '120px' } },
         { key: 'linearDigestion', label: '线性酶切', rowspan: 2, style: { width: '120px' } },
         { key: 'orderStatus', label: '到货情况', rowspan: 2, style: { width: '120px' } }
@@ -115,6 +117,7 @@ export default {
         if (!plasmidMap.has(item.geneName)) {
           plasmidMap.set(item.geneName, {
             geneName: item.geneName,
+            designMethod: item.designMethod,
             resistanceGene: item.resistanceGene,
             linearDigestion: item.linearDigestion,
             orderStatus: item.orderStatus,
