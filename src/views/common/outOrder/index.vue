@@ -186,6 +186,15 @@
               </el-select>
             </el-form-item>
           </el-col>
+          <!-- 是否过期物料 -->
+          <el-col :span="8">
+            <el-form-item label="是否过期物料" prop="isExpired">
+              <el-select v-model="form.isExpired" placeholder="请选择">
+                <el-option label="是" value="1"></el-option>
+                <el-option label="否" value="0"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
           <el-form-item label="用途/原因" prop="orderReason">
@@ -209,7 +218,7 @@
           <template slot-scope="scope">
             <el-input-number style="width: 100px" size="small" 
             v-model="scope.row.quantity" controls-position="right" 
-            :min="1" :max="scope.row.maxQuantity" :precision="0"/>
+            :min="1" :max="scope.row.maxQuantity" :precision="0" :disabled="form.isExpired === '1'"/>
           </template>
         </el-table-column>
         <el-table-column label="单位" align="center" prop="unitCode">
@@ -268,6 +277,11 @@
           <el-col :span="8">
             <el-form-item label="实验室：">
               <span>{{form.workshopName}}</span>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="是否过期物料：">
+              <span>{{form.isExpired}}</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -580,7 +594,12 @@ export default {
     openSelectMatLabelDialog(){
       this.selectMatLabelOpen = true;
       this.$nextTick(function(){ 
-        this.$refs.matLabelPage.getList();
+        // this.$refs.matLabelPage.getList();
+        var queryParamsOut= {isExpired: this.form.isExpired,
+          warehouseCode: this.form.warehouseCode
+        };
+
+        this.$refs.matLabelPage.init(queryParamsOut);
       })
     },
     confirmSelectMatLabel(item){
@@ -590,8 +609,8 @@ export default {
         matName: item.matName,
         fdCode: item.fdCode,
         figNum: item.figNum,
-        quantity: 0,
-        maxQuantity: item.maxQuantity,
+        quantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity : 0,
+        maxQuantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity :item.maxQuantity,
         matTag: item.matTag,
         unitCode: item.unitCode,
         batch: item.batch,
@@ -614,8 +633,8 @@ export default {
           figNum: item.figNum,
           matGroup: item.matGroup,
           matClass: item.matClass,
-          quantity: 0,
-          maxQuantity: item.maxQuantity,
+          quantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity : 0,
+          maxQuantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity :item.maxQuantity,
           matTag: item.matTag,
           unitCode: item.unitCode,
           batch: item.batch,

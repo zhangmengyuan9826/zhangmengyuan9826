@@ -217,27 +217,12 @@
       <el-table-column
         label="订单号"
         align="center"
-        prop="geneNo"
-        width="130"
+        prop="vectorNo"
         resizable
       >
-        <!-- <template slot-scope="scope">
-          <el-tooltip
-            v-if="
-              (scope.row.plasmidFullName != null) &
-              (scope.row.plasmidFullName.length > 1)
-            "
-            effect="light"
-            placement="top"
-          >
-            <div
-              class="content"
-              slot="content"
-              v-html="scope.row.plasmidFullName"
-            ></div>
-            <div class="oneLine">{{ scope.row.plasmidFullName }}</div>
-          </el-tooltip>
-        </template> -->
+        <template slot-scope="scope">
+          {{ scope.row.vectorNo || scope.row.geneNo }}
+        </template>
       </el-table-column>
       <el-table-column
         label="线性酶切"

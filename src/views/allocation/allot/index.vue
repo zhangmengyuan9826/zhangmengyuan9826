@@ -535,7 +535,7 @@ export default {
       this.$nextTick(function(){ 
         let _locationCode = this.locationList[this.form.srcLocationCode].locationCode
         var queryParamsOut= {locationCode:_locationCode};
-        this.$refs.matLabelPage.init(_locationCode);
+        this.$refs.matLabelPage.init(queryParamsOut);
       })
     },
 

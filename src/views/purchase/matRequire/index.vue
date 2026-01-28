@@ -392,6 +392,33 @@
               prop="purchaseCount"
               width="60"
             />
+            <!-- 库存过期数量 -->
+            <el-table-column
+              label="过期库存"
+              align="center"
+              prop="expiredQuantity"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="60" 
+            />
+              <!-- 历史过期数量 -->
+            <el-table-column
+              label="历史过期数量"
+              align="center"
+              prop="historyExpiredQuantity"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="60" 
+            /> 
+            <el-table-column
+              label="提报原因"
+              align="center"
+              prop="expiredStockStatus"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="140" 
+            >
+              <template slot-scope="scope">
+                  {{ formatExpiredStockStatus(scope.row.expiredStockStatus, scope.row.expiredStockReason) }}
+              </template>            
+            </el-table-column> 
             <el-table-column
               label="用途"
               align="center"
@@ -1875,6 +1902,32 @@
           prop="purchaseCount"
           width="60"
         />
+        <el-table-column
+          label="过期库存"
+          align="center"
+          prop="expiredQuantity"
+          v-hasPermi="['stock:matRequire:editStatusCheck']"
+          width="60" 
+        />
+          <!-- 历史过期数量 -->
+        <el-table-column
+          label="历史过期数量"
+          align="center"
+          prop="historyExpiredQuantity"
+          v-hasPermi="['stock:matRequire:editStatusCheck']"
+          width="60" 
+        /> 
+        <el-table-column
+              label="提报原因"
+              align="center"
+              prop="expiredStockStatus"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="140" 
+            >
+              <template slot-scope="scope">
+                  {{ formatExpiredStockStatus(scope.row.expiredStockStatus, scope.row.expiredStockReason) }}
+              </template>            
+            </el-table-column> 
         <el-table-column label="用途" align="center" prop="purpose" width="120">
           <template slot-scope="scope">
             <el-popover
@@ -2246,7 +2299,7 @@ import { listAllLocation } from "@/api/base/location";
 import { listMatLabelAll } from "@/api/stock/matLabel";
 import { listInfo} from "@/api/stock/info";
 import { getCurrentUser, listUserAll } from "@/api/system/user";
-import selectMat from "../../components/select-mat/index";
+import selectMat from "../../components/select-require-mat/index";
 import selectSupplier from "../../components/select-supplier/index";
 import cloneDeep from "lodash/cloneDeep";
 
@@ -2581,6 +2634,15 @@ export default {
     },
   },
   methods: {
+    formatExpiredStockStatus(status,reason){
+      if(status == "0"){
+        return "不存在过期物料";
+        }
+      if(status=="1"){
+        return reason;
+      }
+      return "暂无信息";
+    },
     getCurVal(val) {
       this.value = val.target.value;
     },
@@ -3050,6 +3112,8 @@ export default {
         updateTime: null,
         stockNotice: "0",
         safetyStock: null,
+        expiredStockReason:null,
+        expiredStockStatus:null
       };
       this.resetForm("matForm");
     },
@@ -3295,17 +3359,22 @@ export default {
       this.matForm.reset();
       this.addMatDetailOpen = false;
     },
+    // 确认选择物料，字段转化和合规检查（包括物料编码、剩余库存、相同物品标签的库存检查，采购时间提醒）
     confirmSelectMat(_item) {
+      console.log(_item)
       this.item = _item;
       this.matForm.matCode = this.item.matCode;
       this.matForm.matName = this.item.matName;
       this.matForm.fdCode = this.item.fdCode;
       this.matForm.figNum = this.item.figNum;
-      if (this.item.artNum) {
-        this.matForm.artNum = this.item.artNum;
-      }
       this.matForm.matGroup = this.item.matGroup;
       this.matForm.matClass = this.item.matClass;
+      this.matForm.expiredStockStatus = this.item.expiredStockStatus;
+      this.matForm.expiredStockReason = this.item.expiredStockReason;
+
+      if (this.item.artNum) {
+        this.matForm.artNum = this.item.artNum;
+      }      
       if (this.item.matTag) {
         this.matForm.matTag = this.item.matTag;
       }
@@ -3315,6 +3384,7 @@ export default {
       if (this.item.subcode) {
         this.matForm.subcode = this.item.subcode;
       }
+
       this.matForm.batch = "CG" + this.$moment().format("YYYYMMDDHHmmss");
       if (
         !this.item.safetyStock ||
@@ -3377,16 +3447,18 @@ export default {
           });  
           }
                
-      }});
-      
+      }});      
       this.selectMatOpen = false;
     },
+    // 取消选择物料
     cancelSelectMat() {
       this.selectMatOpen = false;
     },
+    // 去除一条物料
     handleRemoveMat(index, row) {
       this.requireDetailList.splice(index, 1);
     },
+    // 修改物料新型
     handleEditMat(index, row) {
       this.isEditMat = true;
       this.addMatDetailOpen = true;
@@ -3394,10 +3466,12 @@ export default {
       this.matForm = this.requireDetailList[index];
       this.isSelect = this.matForm['matSource']=="1" ? true :false
     },
+    // 查看提报物料的详情
     handleDetailMat(index, row) {
       this.addMatDetailOpen = true;
       this.matForm = this.requireDetailList[index];
     },
+
     formatDate(dateString) {
       // 尝试将字符串转换为日期对象
       if (dateString === "") {
