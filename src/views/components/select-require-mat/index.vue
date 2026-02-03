@@ -137,6 +137,7 @@ import { listMat } from "@/api/base/mat";
 import { listAllGroup } from "@/api/base/group";
 import { listAllClass } from "@/api/base/class";
 import { listAllSubcode } from "@/api/base/subcode";
+import {checkExpiredMat} from "@/api/stock/outOrder";
 
 export default {
   name: "SelectMat",
@@ -186,6 +187,7 @@ export default {
       groupList: [],
       classList: [],
       subcodeList:[],
+      expiredMatCodeList:[],
     };
   },
   created() {
@@ -213,9 +215,8 @@ export default {
       this.resetForm("queryForm");
       this.handleQuery();
     },
-    //确认选择
-    handleSelect(row){
-      // 加一个提示：前往链接“https://hywms.com”检查过期物料库存。
+    /** 提示过期物料 */
+    promptExpiredMaterial(row) {// 加一个提示：前往链接“https://hywms.com”检查过期物料库存。
       this.$alert(
         `<div>
           请先前往 <a href="https://365.kdocs.cn/l/csnuFbPK8qab" target="_blank" style="color:#409EFF;">【金山文档 | WPS云文档】 过期物料领用记录表</a> 检查过期物料库存。
@@ -253,7 +254,36 @@ export default {
           }
         }
       );
-      return;
+      },
+    //确认选择
+    handleSelect(row){
+      console.log("Selected row:", row);
+      checkExpiredMat(row.matCode).then(response => {
+        console.log("checkExpiredMat response:", response);
+        // response.data:false
+        if (response.data || response.data === 'true') {
+          // 如果在列表中，弹出提示框
+          this.promptExpiredMaterial(row);
+        } else {
+          // 如果不在列表中，直接确认选择
+          row.expiredStockReason = "";
+          row.expiredStockStatus="2";
+          this.$refs.selectMatTable.clearSelection();
+          this.$emit("confirmSelect", row);
+        }      
+      });
+      // // 检查是否在过期物料列表中
+      //   if (this.expiredMatCodeList.includes(row.matCode)) {
+      //     // 如果在列表中，弹出提示框
+      //     this.promptExpiredMaterial(row);
+      //   } else {
+      //     // 如果不在列表中，直接确认选择
+      //   row.expiredStockReason = "";
+      //   row.expiredStockStatus="0";
+      //   this.$refs.selectMatTable.clearSelection();
+      //   this.$emit("confirmSelect", row);
+      // }      
+      // return;
 
       // this.$refs.selectMatTable.clearSelection();
       // this.$emit("confirmSelect", row);

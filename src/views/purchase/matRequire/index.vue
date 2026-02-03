@@ -409,7 +409,7 @@
               width="60" 
             /> 
             <el-table-column
-              label="提报原因"
+              label="备注"
               align="center"
               prop="expiredStockStatus"
               v-hasPermi="['stock:matRequire:editStatusCheck']"
@@ -1918,7 +1918,7 @@
           width="60" 
         /> 
         <el-table-column
-              label="提报原因"
+              label="备注"
               align="center"
               prop="expiredStockStatus"
               v-hasPermi="['stock:matRequire:editStatusCheck']"
@@ -2636,7 +2636,7 @@ export default {
   methods: {
     formatExpiredStockStatus(status,reason){
       if(status == "0"){
-        return "不存在过期物料";
+        return "已用完";
         }
       if(status=="1"){
         return reason;

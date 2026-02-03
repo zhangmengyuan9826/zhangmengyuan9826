@@ -83,6 +83,13 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <!-- 非零库存 -->
+      <el-form-item label="非零库存" prop="isNotEmpty">
+        <el-radio-group v-model="queryParams.params.isNotEmpty">
+          <el-radio :label="1">是</el-radio>
+          <el-radio :label="0">否</el-radio>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -339,8 +346,13 @@ export default {
         supplierCode: null,
         supplierName: null,
         isExpired: null,
+        isNotEmpty: 1,
+        params:{}
       },
-      isExpiredList:[{value:'1','label':'过期'},{value:'2','label':'未过期'}],
+      isExpiredList:[
+        {value:'','label':'全部'},
+        {value:'1','label':'过期'},
+      {value:'2','label':'未过期'}],
       //选择仓库、实验室
       warehouseList: [],
       form: {},
@@ -384,7 +396,11 @@ export default {
     },
     /** 查询库存信息列表 */
     getList() {
-      this.loading = true;      
+      this.loading = true;  
+      // if (!this.queryParams['params']) {
+      //   this.queryParams['params'] = {};
+      // }
+      // this.queryParams['params']['isNotEmpty'] = this.queryParams.isNotEmpty
       listInfo(this.queryParams).then(response => {
         this.infoList = response.rows;
         this.total = response.total;

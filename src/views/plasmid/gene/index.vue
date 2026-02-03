@@ -289,13 +289,13 @@
         resizable
       >
         <template slot-scope="scope">
-          <el-button
+          <!-- <el-button
             size="mini"
             type="text"
             icon="el-icon-view"
             @click="handleDetail(scope.row.geneId)"
             >详情</el-button
-          >
+          > -->
           <el-button
             size="mini"
             type="text"
@@ -303,15 +303,6 @@
             @click="handleFullSeq(scope.row)"
             >序列</el-button
           >
-          <!-- <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            :disabled="scope.row.orderNo != '' && scope.row.orderNo != null"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['plasmid:gene:edit']"
-            >修改</el-button
-          > -->
           <el-button
             size="mini"
             type="text"
@@ -328,6 +319,20 @@
             v-hasPermi="['plasmid:gene:add']"
             >复制</el-button
           >
+          <!-- snapGene文件 -->
+          <el-dropdown>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-document"
+            >
+              原文件<i class="el-icon-arrow-down el-icon--right"></i>
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item :disabled="!scope.row.originalFilename" @click.native="downloadSnapGeneFile(scope.row)">下载文件</el-dropdown-item>
+              <el-dropdown-item @click.native="uploadSnapGeneFile(scope.row)" v-hasPermi="['plasmid:gene:edit']">上传文件</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
           <el-button
             size="mini"
             type="text"
@@ -863,6 +868,41 @@
         <pre v-html="fullSeqHtml"></pre>
       </div>
     </el-dialog>
+    
+    <!-- 上传snapGene -->
+    <el-dialog
+      :title="uploadSnapGene.title"
+      :visible.sync="uploadSnapGene.open"
+      width="400px"
+      append-to-body
+      :close-on-click-modal="false"
+    >
+      <el-upload
+        ref="uploadSnapGene"
+        :limit="1"
+        accept=".dna"
+        :headers="uploadSnapGene.headers"
+        :action="uploadSnapGene.url + '?geneId=' + currentGeneId"
+        :disabled="uploadSnapGene.isUploading"
+        :before-upload="beforeUploadSnapGene"
+        :on-progress="handleFileUploadProgressSnapGene"
+        :on-success="handleFileSuccessSnapGene"
+        :auto-upload="false"
+        drag
+      >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        
+        <div class="el-upload__tip text-center" slot="tip">
+          <span>仅允许导入.dna格式文件。</span>          
+        </div>
+      </el-upload>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitSnapGeneFile">确 定</el-button>
+        <el-button @click="uploadSnapGene.open = false">取 消</el-button>
+      </div>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -1028,6 +1068,18 @@ export default {
         // 上传的地址
         url: process.env.VUE_APP_BASE_API + "/plasmid/gene/importData",
       },
+      uploadSnapGene: {
+        // 是否显示弹出层（用户导入）
+        open: false,
+        // 弹出层标题（用户导入）
+        title: "上传snapGene文件",
+        // 是否禁用上传
+        isUploading: false,
+        // 设置上传的请求头部
+        headers: { Authorization: "Bearer " + getToken() },
+        // 上传的地址
+        url: process.env.VUE_APP_BASE_API + "/plasmid/gene/uploadSnapGeneFile",
+      },
       statusDict: {
         status2: "已创建",
         status1: "草稿",
@@ -1061,6 +1113,10 @@ export default {
       fullSeqHtml: "",
       userList: [],
       originalPVector: "",
+      showSnapGeneFile: false,
+      currentGeneId: null,
+      currentGeneName: "",
+      
     };
   },
   computed: {},
@@ -1141,6 +1197,61 @@ export default {
     this.initData();
   },
   methods: {
+  beforeUploadSnapGene(file) {
+    if (file.name !== this.currentGeneName+".dna") {
+        this.$message.error(`文件名"${file.name}"必须与基因名称"${this.currentGeneName}"一致！`);
+        return false; // 阻止上传
+      }
+    return true; // 允许上传
+
+  },
+  handleSnapGeneFile(row){
+    if(row.geneId == null || row.geneId == ""){
+      Message.error("无法获取该基因的原始文件，请先保存基因信息！");
+      return;
+    }
+    this.showSnapGeneFile = true;
+    this.currentGeneId = row.geneId;
+  },
+  downloadSnapGeneFile(row) {
+    if (row.geneId == null || row.geneId == "") {
+      Message.error("无法获取该基因的原始文件，请先保存基因信息！");
+      return;
+    }    
+    this.download(
+      "plasmid/gene/downloadSnapGeneFile",
+      {
+        geneId: row.geneId,
+      },
+      row.originalFilename ? row.originalFilename : `snapGene_${this.currentGeneId}.dna`
+    ).catch(error => {
+      // 从响应头获取错误信息
+      console.log(error.response);
+      const errorMsg = error.response?.headers?.['x-error-message'] || 
+                      error.response?.data?.message || 
+                      "下载失败";
+      Message.error(errorMsg);
+    });
+  },
+  uploadSnapGeneFile(row){
+    if(row.geneId == null || row.geneId == ""){
+      Message.error("无法获取该基因的原始文件，请先保存基因信息！");
+      return;
+    }
+    this.currentGeneId = row.geneId;
+    this.currentGeneName = row.geneName
+    this.uploadSnapGene.title = "SnapGene文件上传";
+    this.uploadSnapGene.open = true;
+  },
+    initData() {
+      this.loading = true;
+      this.getList();
+      this.getFieldDataDict();
+      this.getLinkerDictInfo();
+      this.getResistanceGeneDictInfo();
+      this.getSignalPeptideDictInfo();
+      this.getUserList();
+    },
   loadMoreData() {
       this.queryParams.pageSize += 20;
       this.getList();
@@ -1304,13 +1415,11 @@ export default {
         this.getPlasmidVectorList();
         this.getUserList();        
         var currentUrl = window.location.href;
-        console.log("currentUrl:", currentUrl);
         // /plasmid/gene/?method=addNo&newGeneName=p30-34
         if(currentUrl.indexOf("method=addNo") > -1 && currentUrl.indexOf("newGeneName") > -1){
           this.reset();
           this.title = "添加质粒基因";
           const newGeneName = this.$route.query.newGeneName
-          console.log("newGeneName:", newGeneName);
           this.form['geneName'] = newGeneName;
           this.open = true;
           Message.info("检测到新增质粒基因请求，已自动填充基因名："+newGeneName);
@@ -1608,6 +1717,7 @@ export default {
     handleImport() {
       this.upload.title = "质粒基因导入";
       this.upload.open = true;
+      
     },
     /** 下载模板操作 */
     importTemplate() {
@@ -1638,6 +1748,26 @@ export default {
     // 提交上传文件
     submitFileForm() {
       this.$refs.upload.submit();
+    },
+
+    submitSnapGeneFile() {
+      this.$refs.uploadSnapGene.submit();
+    },
+    handleFileUploadProgressSnapGene(event, file, fileList) {
+      this.uploadSnapGene.isUploading = true;
+    },
+    handleFileSuccessSnapGene(response, file, fileList) {
+      this.uploadSnapGene.open = false;
+      this.uploadSnapGene.isUploading = false;
+      this.$refs.uploadSnapGene.clearFiles();
+      this.$alert(
+        "<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" +
+          response.msg +
+          "</div>",
+        "上传结果",
+        { dangerouslyUseHTMLString: true }
+      );
+      this.getList();
     },
     formatStatus(statusCode) {
       return this.statusDict[statusCode];
