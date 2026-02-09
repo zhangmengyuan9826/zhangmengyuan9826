@@ -80,3 +80,18 @@ export function getInfoO(orderId) {
     data: data
    })
   }
+
+  export function getHistoryExpiredMatCodeList(){
+    return request({
+      url: '/stock/outOrder/expiredMatList',
+      method: 'get'
+    })
+  }
+  // checkExpiredMat
+  export function checkExpiredMat(matCode){
+    return request({
+      url: '/stock/outOrder/checkExpiredMat/',
+      method: 'post',
+      data: { matCode: matCode }
+    })
+  }

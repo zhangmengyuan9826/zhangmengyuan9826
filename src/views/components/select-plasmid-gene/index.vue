@@ -657,7 +657,6 @@ export default {
     // 表单重置
     reset() {
       this.form = {
-        geneId: null,
         geneName: null,
         plasmidVector: null,
         plasmidFullName: null,
@@ -679,12 +678,6 @@ export default {
         proteinType: null,
         enhancer: null,
         batch: null,
-        createTime: null,
-        createBy: null,
-        updateTime: null,
-        updateBy: null,
-        delFlag: null,
-        remark: null,
       };
       this.resetForm("form");
       this.geneIdArr=null;

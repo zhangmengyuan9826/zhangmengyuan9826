@@ -17,14 +17,14 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="联系方式" prop="contact">
+      <!-- <el-form-item label="联系方式" prop="contact">
         <el-input
           v-model="queryParams.contact"
           placeholder="请输入联系方式"
           clearable
           @keyup.enter.native="handleQuery"
         />
-      </el-form-item>
+      </el-form-item> -->
       
       <el-form-item label="是否合格" prop="isQualified">
         <el-input
@@ -93,14 +93,14 @@
       <el-table-column label="供应商编码" fixed align="center" prop="supplierCode" width="120" />
       <el-table-column label="供应商名称" fixed align="center" prop="supplierName" width="180" />
       <el-table-column label="供货名称" align="center" prop="supplyType" width="120" />
-      <el-table-column label="地址" align="center" prop="address" width="120" />
-      <el-table-column label="联系方式" align="center" prop="contact" width="120" />
-      <el-table-column label="税号" align="center" prop="taxNumber" width="120" />
-      <el-table-column label="开户行" align="center" prop="depositBank" width="120" />
-      <el-table-column label="账号" align="center" prop="bankAccount" width="120" />
+      <!-- <el-table-column label="地址" align="center" prop="address" width="120" /> -->
+      <!-- <el-table-column label="联系方式" align="center" prop="contact" width="120" /> -->
+      <!-- <el-table-column label="税号" align="center" prop="taxNumber" width="120" /> -->
+      <!-- <el-table-column label="开户行" align="center" prop="depositBank" width="120" /> -->
+      <!-- <el-table-column label="账号" align="center" prop="bankAccount" width="120" /> -->
       <el-table-column label="是否合格" align="center" prop="isQualified" width="80" />
       <el-table-column label="城市" align="center" prop="city" width="80" />
-      <el-table-column label="邮政编码" align="center" prop="postalCode" width="80" />
+      <!-- <el-table-column label="邮政编码" align="center" prop="postalCode" width="80" /> -->
       <el-table-column label="操作" fixed="right" align="center" width="120" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -144,7 +144,7 @@
         <el-form-item label="地址" prop="address">
           <el-input v-model="form.address" placeholder="请输入地址" />
         </el-form-item>
-        <el-form-item label="联系方式" prop="contact">
+        <!-- <el-form-item label="联系方式" prop="contact">
           <el-input v-model="form.contact" placeholder="请输入联系方式" />
         </el-form-item>
         <el-form-item label="税号" prop="taxNumber">
@@ -155,7 +155,7 @@
         </el-form-item>
         <el-form-item label="账号" prop="bankAccount">
           <el-input v-model="form.bankAccount" placeholder="请输入账号" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="是否合格" prop="isQualified">
           <el-select v-model="form.isQualified" placeholder="请选择是否合格">
             <el-option v-for="dict in dict.type.sys_yes_no"
@@ -214,10 +214,10 @@ export default {
         supplierName: null,
         supplyType: null,
         address: null,
-        contact: null,
-        taxNumber: null,
-        depositBank: null,
-        bankAccount: null,
+        // contact: null,
+        // taxNumber: null,
+        // depositBank: null,
+        // bankAccount: null,
         isQualified: null,
         city: null,
         postalCode: null,
@@ -261,10 +261,10 @@ export default {
         supplierName: null,
         supplyType: null,
         address: null,
-        contact: null,
-        taxNumber: null,
-        depositBank: null,
-        bankAccount: null,
+        // contact: null,
+        // taxNumber: null,
+        // depositBank: null,
+        // bankAccount: null,
         isQualified: null,
         city: null,
         postalCode: null,

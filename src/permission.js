@@ -9,7 +9,12 @@ import { isRelogin } from '@/utils/request'
 NProgress.configure({ showSpinner: false })
 
 const whiteList = ['/login', '/auth-redirect', '/bind', '/register']
-
+// function checkoutSectionPath() {
+//   const fullUrl = window.location.href;
+//   const firstPathSegment = fullUrl.split("#/")[1].split("/")[0];
+//   var sectionList=['wms','pms','ems','system'];
+//   return sectionList.includes(firstPathSegment);
+// }
 router.beforeEach((to, from, next) => {
   NProgress.start()
   if (getToken()) {
@@ -35,7 +40,8 @@ router.beforeEach((to, from, next) => {
               next({ path: '/' })
             })
           })
-      } else {
+      } 
+      else {
         next()
       }
     }

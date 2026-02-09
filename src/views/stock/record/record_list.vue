@@ -98,6 +98,7 @@
             <dict-tag :options="dict.type.base_mat_unit" :value="scope.row.unitCode"/>
           </template>
       </el-table-column>
+      <el-table-column label="品牌" align="center" prop="brand" width="180" />
       <el-table-column label="供应商" align="center" prop="supplierName" width="180" />
       <el-table-column label="批次" align="center" prop="batch" width="180" />
       <el-table-column label="单据号" align="center" prop="orderNo" width="180" />

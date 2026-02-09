@@ -85,6 +85,18 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="更新时间">
+        <el-date-picker
+          v-model="dateRange"
+          style="width: 240px"
+          value-format="yyyy-MM-dd"
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          clearable
+        ></el-date-picker>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -346,6 +358,7 @@
                 filterable
                 clearable
                 @blur="getCurVal_unit"
+                :disabled="addSelect"
               >
                 <el-option
                   v-for="dict in dict.type.base_mat_unit"
@@ -371,19 +384,31 @@
           </el-col>
           </el-row>
         <el-row>
-          <el-col :span="12">
+          <el-col :span="8">
             <el-form-item label="有效期" prop="expiredTime">
-              <el-date-picker clearable
-                v-model="form.expiredTime"
-                type="date"
-                value-format="yyyy-MM-dd"
-                placeholder="请选择有效期"
-                :picker-options="{ disabledDate: (time) => disabledDateExpired(time) }"
-                >
-              </el-date-picker>
+                <el-date-picker
+                  clearable
+                  v-model="form.expiredTime"
+                  type="date"
+                  value-format="yyyy-MM-dd"
+                  placeholder="请选择有效期"
+                  :disabled="form.isPermanent"
+                  :picker-options="{ disabledDate: (time) => disabledDateExpired(time) }"
+                />
             </el-form-item>
           </el-col>  
-          <el-col :span="12">           
+          <el-col :span="6">
+            <el-form-item label="是否长期" prop="isPermanent">
+              <el-switch 
+                  v-model="form.isPermanent" 
+                  active-text="是" 
+                  inactive-text="否"
+                  active-color="#13ce66"
+                  @change="handlePermanentChange"
+              ></el-switch>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">           
           <el-form-item label="存储条件" prop="storageCondition">
           <el-select v-model="form.storageCondition" placeholder="请选择存储条件">
             <el-option
@@ -392,9 +417,9 @@
               :label="dict.label"
               :value="dict.value"
             ></el-option>
-          </el-select>
-      </el-form-item> 
-        </el-col>  
+          </el-select></el-form-item> 
+        </el-col>
+          
         </el-row>
         <el-row>
           <el-col :span="12">
@@ -451,6 +476,7 @@ import { listAllClass } from "@/api/base/class";
 import selectMat from "../../components/select-mat/index"
 import selectMatRequire from "../../components/select-mat-require/index"
 import selectSupplier from "../../components/select-supplier/index"
+import { Message } from 'element-ui';
 
 
 export default {
@@ -509,9 +535,7 @@ export default {
         matName: [
           { required: true, message: "物料名称不能为空", trigger: "blur" },
         ],
-        // fdCode: [
-        //   { required: true, message: "财务编码不能为空", trigger: "blur" },
-        // ],
+        
         figNum: [
           { required: true, message: "规格不能为空", trigger: "blur" },
         ],
@@ -535,9 +559,13 @@ export default {
           { required: true, message: "请选择生产时间", trigger: "blur" },
         ],
         expiredTime: [
-          { required: true, message: "有效期", trigger: "blur" },
-        ],
-        quantity: [
+    { 
+      required: true, 
+      message: '请选择有效期', 
+      trigger: 'blur',
+    }
+  ],        
+  quantity: [
           { required: true, message: "请输入数量", trigger: "blur" },
         ],
         storageCondition: [
@@ -553,6 +581,7 @@ export default {
       selectMatRequireOpen: false,
       //选择供应商
       selectSupplierOpen: false,
+      dateRange: [],
 
     };
   },
@@ -561,8 +590,17 @@ export default {
     this.getGroupList();
     this.getClassList();
   },
-  
   methods: {
+    handlePermanentChange(value) {
+      // 长期有效的默认有效期
+        if (value) {
+            this.form.expiredTime = '2099-09-09';
+        }
+        // 移除之前的验证结果
+        this.$nextTick(() => {
+            this.$refs.form.clearValidate(['expiredTime']);
+        });
+    },
     valueChange(value) {
       this.$nextTick(() => {
       });
@@ -576,7 +614,7 @@ export default {
     /** 查询物料标签列表 */
     getList() {
       this.loading = true;
-      listMatLabel(this.queryParams).then(response => {
+      listMatLabel(this.addDateRange(this.queryParams, this.dateRange)).then(response => {
         this.matLabelList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -629,6 +667,7 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
+      this.dateRange = [];
       this.resetForm("queryForm");
       this.handleQuery();
     },
@@ -667,7 +706,6 @@ export default {
     /** 提交按钮 */
     submitForm() {
       this.$refs["form"].validate(valid => {
-        console.log(this.form)
         if (valid) {
           this.form.labelType = 'purchase';
           if (this.form.labelId != null) {
@@ -725,7 +763,6 @@ export default {
     },
     //选择物料
     openSelectMatDialog(matSource){
-      console.log("matSource",matSource)
       if(matSource===1){ // 主数据
         this.selectMatOpen = true;
         this.form={}
@@ -742,7 +779,6 @@ export default {
       this.selectMatRequireOpen = false;
     },
     confirmSelectMat(item){
-      console.log(item)
       this.form.matCode = item.matCode;
       this.form.matName = item.matName;
       this.form.fdCode = item.fdCode;
@@ -757,15 +793,13 @@ export default {
       // }
       // this.form.batch = 'CG'+ this.$moment().format('YYYYMMDDHHmmss');
       if(item.matClass==='YY'){
-        this.form.supplierName='非小试物料供应商'
-        this.form.supplierCode='YY_SUPPLIER'
+        this.form.supplierName='非小试物料供应商';
+        this.form.supplierCode='YY_SUPPLIER';
       }
       this.form.matSource = 1;
-      console.log(this.form)
       this.selectMatOpen = false;
     },
     confirmSelectMatRequire(item){
-      console.log(item)
       this.form.matCode = item.matCode;
       this.form.matName = item.matName;
       this.form.fdCode = item.fdCode;
@@ -782,7 +816,6 @@ export default {
         this.form.supplierName='非小试物料供应商'
         this.form.supplierCode='YY_SUPPLIER'
       }
-      console.log(this.form)
       this.selectMatRequireOpen = false;
     },
     //选择供应商
@@ -807,15 +840,10 @@ export default {
       });
     },
     formatDate(dateString) {
-      // return new Date(dateString).toLocaleDateString();
       // 尝试将字符串转换为日期对象
-      if(dateString === ""){
+      if(dateString === "" || dateString === null || dateString === undefined){
         return dateString
       }
-      if(! dateString){
-        return dateString
-      }
-
       const date = new Date(dateString);
       // 如果无效的日期字符串，返回原始字符串
       if (isNaN(date)) {
@@ -848,3 +876,10 @@ export default {
   }
 };
 </script>
+<style scoped>
+.warning {
+            font-size: 13px;
+            color: #e6a23c;
+            margin-top: 5px;
+        }
+</style>

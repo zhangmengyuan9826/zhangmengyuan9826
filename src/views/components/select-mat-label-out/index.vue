@@ -273,8 +273,11 @@ export default {
     this.getBaselocationList();
   },
   methods: {
-    init(val) {
-      this.queryParams['locationCode'] = val   //接收父组件传递的id值
+    init(queryParams) {
+      this.queryParams['locationCode'] = queryParams.locationCode;   //接收父组件传递的id值
+      this.queryParams['isExpired'] = queryParams.isExpired;
+      // warehouseCode
+      this.queryParams['warehouseCode'] = queryParams.warehouseCode;
       this.getList()
     },
     formatLocation(locationCode){

@@ -33,7 +33,7 @@
         />
       </el-form-item>
       <el-form-item label="PM项目" prop="pmProject">
-        <el-select v-model="queryParams.pmProject" placeholder="请选择PM项目号">
+        <el-select v-model="queryParams.pmProject" placeholder="请选择PM项目号" clearable>
           <el-option
             v-for="item in pmProjectList"
             :key="item.value"
@@ -43,7 +43,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="requireStatus">
-        <el-select v-model="queryParams.requireStatus" placeholder="请选择状态">
+        <el-select v-model="queryParams.requireStatus" placeholder="请选择状态" clearable>
           <el-option
             v-for="(value, key) in statusDict"
             :key="key"
@@ -61,6 +61,7 @@
           range-separator="-"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
+          clearable
         ></el-date-picker>
       </el-form-item>
       <el-form-item>
@@ -69,11 +70,9 @@
           icon="el-icon-search"
           size="mini"
           @click="handleQuery"
-          >搜索</el-button
-        >
+          >搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery"
-          >重置</el-button
-        >
+          >重置</el-button>
       </el-form-item>
     </el-form>
     <el-row :gutter="10" class="mb8">
@@ -393,6 +392,33 @@
               prop="purchaseCount"
               width="60"
             />
+            <!-- 库存过期数量 -->
+            <el-table-column
+              label="过期库存"
+              align="center"
+              prop="expiredQuantity"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="60" 
+            />
+              <!-- 历史过期数量 -->
+            <el-table-column
+              label="历史过期数量"
+              align="center"
+              prop="historyExpiredQuantity"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="60" 
+            /> 
+            <el-table-column
+              label="备注"
+              align="center"
+              prop="expiredStockStatus"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="140" 
+            >
+              <template slot-scope="scope">
+                  {{ formatExpiredStockStatus(scope.row.expiredStockStatus, scope.row.expiredStockReason) }}
+              </template>            
+            </el-table-column> 
             <el-table-column
               label="用途"
               align="center"
@@ -560,6 +586,7 @@
             :disabled="
               (scope.row.requireStatus !== 'created' &&
                 scope.row.requireStatus !== 'un_approved' &&
+                scope.row.requireStatus !== 'po' &&
                 scope.row.requireStatus !== 'un_purchase') ||
               scope.row.createBy !== currentUser
             "
@@ -1167,8 +1194,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row>
-          
+        <el-row>          
         </el-row>
         <el-row>
           <el-col :span="12">
@@ -1208,11 +1234,6 @@
         <el-row>
           <el-col :span="20">
             <el-form-item label="进口原因" prop="importReason">
-              <!-- <el-input
-                v-model="matForm.importReason"
-                placeholder="进口原因"
-                :rules="dynamicRules"
-              /> -->
               <el-input
                 type="textarea"
                 v-model="matForm.importReason"
@@ -1278,7 +1299,7 @@
             <el-form-item label="货位" prop="locationCode">
               <el-select v-model="matForm.locationCode" placeholder="请选择货位" :rules="dynamicRules">
                 <el-option
-                  v-for="(item, index) in locationList"
+                  v-for="item in locationList"
                   :key="item.locationCode"
                   :label="formatLocation(item.locationCode)"
                   :value="item.locationCode"
@@ -1377,17 +1398,36 @@
         <el-button @click="cancelApprovedForm">取 消</el-button>
       </div>
     </el-dialog>
+
     <el-dialog
-    :title="'物料详情 —— 到货确认'"
+      :title="detailOperTitle"
       :visible.sync="viewMultiDoneMatDetail"
       width="90%"
       height="90%"
       append-to-body
       :close-on-click-modal="false"
     >
-    <div>
+    <div v-if="newStatus == 'done'">
       <el-button type="primary" @click="submitDoneDetails">确 定 到 货</el-button>
       <el-button @click="cancelDoneDialog">取 消</el-button>
+    </div>
+    <div v-if="newStatus == 'po'">
+      <el-form :model="poForm" ref="poForm" label-width="100px">
+        <el-row>
+          <el-col :span="10">
+            <el-form-item label="PO日期" prop="poDate">
+              <el-date-picker v-model="poForm.poDate" type="date" placeholder="选择日期" value-format="yyyy-MM-dd">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+          <el-col :span="3">
+            <el-button type="primary" @click="submitPoDetails">确 定</el-button>
+          </el-col>
+          <el-col :span="3">
+            <el-button @click="cancelDoneDialog">取 消</el-button>
+          </el-col>
+        </el-row>
+      </el-form>
     </div>
     <el-table
         v-loading="loading"
@@ -1862,6 +1902,32 @@
           prop="purchaseCount"
           width="60"
         />
+        <el-table-column
+          label="过期库存"
+          align="center"
+          prop="expiredQuantity"
+          v-hasPermi="['stock:matRequire:editStatusCheck']"
+          width="60" 
+        />
+          <!-- 历史过期数量 -->
+        <el-table-column
+          label="历史过期数量"
+          align="center"
+          prop="historyExpiredQuantity"
+          v-hasPermi="['stock:matRequire:editStatusCheck']"
+          width="60" 
+        /> 
+        <el-table-column
+              label="备注"
+              align="center"
+              prop="expiredStockStatus"
+              v-hasPermi="['stock:matRequire:editStatusCheck']"
+              width="140" 
+            >
+              <template slot-scope="scope">
+                  {{ formatExpiredStockStatus(scope.row.expiredStockStatus, scope.row.expiredStockReason) }}
+              </template>            
+            </el-table-column> 
         <el-table-column label="用途" align="center" prop="purpose" width="120">
           <template slot-scope="scope">
             <el-popover
@@ -2184,6 +2250,25 @@
          
         </div>
     </el-dialog>
+    <el-dialog
+      title="PO转化时间"
+      :visible.sync="openPoStatus"
+      width="50%"
+    >
+      <el-form :model="form" ref="form">
+        <el-form-item label="PO日期" prop="poDate">
+          <el-date-picker
+            v-model="poDate"
+            type="date"
+            placeholder="选择日期"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="submitPoRequire">确定</el-button>
+        <el-button @click="openPoStatus = false">取消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -2197,7 +2282,10 @@ import {
   updateMatRequireStatus,
   getMatDetailListbyRequireIds,
   getRequireLogs,
-  submitDoneDetailByDetailIds
+  submitDoneDetailByDetailIds,
+  getRecordPeriods,
+  updatePo,
+  submitPoForm
 } from "@/api/stock/matRequire";
 import { Message } from "element-ui";
 import { listMat } from "@/api/base/mat";
@@ -2211,7 +2299,7 @@ import { listAllLocation } from "@/api/base/location";
 import { listMatLabelAll } from "@/api/stock/matLabel";
 import { listInfo} from "@/api/stock/info";
 import { getCurrentUser, listUserAll } from "@/api/system/user";
-import selectMat from "../../components/select-mat/index";
+import selectMat from "../../components/select-require-mat/index";
 import selectSupplier from "../../components/select-supplier/index";
 import cloneDeep from "lodash/cloneDeep";
 
@@ -2403,6 +2491,7 @@ export default {
         { name: "审核不通过", value: "un_approved", type: "danger" },
         { name: "采购中", value: "processing", type: "warning" },
         { name: "采购不通过", value: "un_purchase", type: "danger" },
+        { name: "PO转化", value: "po", type: "warning" },
         { name: "采购到货", value: "done", type: "PRIMARY" },
       ],
       statusDictButtonsCheck: [
@@ -2412,6 +2501,7 @@ export default {
       statusDictButtonsPurchase: [
         { name: "采购中", value: "processing", type: "warning" },
         { name: "采购不通过", value: "un_purchase", type: "danger" },
+        { name: "PO转化", value: "po", type: "warning" },
         { name: "采购到货", value: "done", type: "PRIMARY" },
       ],
       statusDict: {
@@ -2419,6 +2509,7 @@ export default {
         approved: "审核通过",
         un_approved: "审核不通过",
         processing: "采购中",
+        po: "PO转化",
         un_purchase: "采购不通过",
         done: "已到货",
       },
@@ -2427,6 +2518,7 @@ export default {
         approved: "green",
         un_approved: "red",
         processing: "blue",
+        po: "blue",
         un_purchase: "red",
         done: "grey",
         deal: "blue",
@@ -2470,6 +2562,15 @@ export default {
         },
       locationList: [],
       locationDict: {},
+      poDate: null,
+      openPoStatus: false,
+      multiPoDetailList: [],
+      viewMultiPoMatDetail: false,
+      poForm: {
+        detailIds: [],
+        // 其他字段
+      },
+      detailOperTitle:""
     };
   },
   created() {
@@ -2533,6 +2634,15 @@ export default {
     },
   },
   methods: {
+    formatExpiredStockStatus(status,reason){
+      if(status == "0"){
+        return "已用完";
+        }
+      if(status=="1"){
+        return reason;
+      }
+      return "暂无信息";
+    },
     getCurVal(val) {
       this.value = val.target.value;
     },
@@ -2552,7 +2662,7 @@ export default {
     },
     //是否可选
     checkSelectable(row){
-      if(row.matStatus === "done"){
+      if(row.matStatus === "done" && this.newStatus === "done"){
         return false;
       }else{
         return true;
@@ -2772,6 +2882,7 @@ export default {
       var selectStatus = this.selectItems.map((item) => item.requireStatus);
       if (
         selectStatus.indexOf("processing") >= 0 ||
+        selectStatus.indexOf("po") >= 0 ||
         selectStatus.indexOf("done") >= 0 ||
         selectStatus.indexOf("deal") >= 0 ||
         selectStatus.indexOf("un_purchase") >= 0 ||
@@ -2791,7 +2902,20 @@ export default {
       this.isRemark = true;
       this.openUnapprovedReason = true;
     },
+    submitPoDetails(){
+      // const poForm = this.poForm;
 
+      if(!this.doneDetailIds || this.doneDetailIds.length == 0){
+        Message.warning("请先选择物料！")
+        return
+      }
+      this.poForm['date'] = this.poForm.poDate;
+      this.poForm['detailIds'] = this.doneDetailIds;
+      submitPoForm( this.poForm).then((response) => {
+        Message.success("提交成功！")
+      }).catch(() => {});
+      this.viewMultiDoneMatDetail = false;     
+    },
     handleChangeStatusPurchase(status) {
       var selectStatus = this.selectItems.map((item) => item.requireStatus);
       for (let oldStatus of selectStatus) {
@@ -2800,7 +2924,7 @@ export default {
         } else if (oldStatus === "created" || oldStatus === "un_approved") {
           Message.warning("未审核通过的需求单不可发起采购！");
           return;
-        } else if (oldStatus === "done") {
+        } else if (oldStatus === "done" && status!="po") {
           Message.warning("需求单物料已全部入库！");
           return;
         } else if (oldStatus === "processing" && status === "processing") {
@@ -2808,10 +2932,24 @@ export default {
           return;
         }
       }
+      // PO最小单位是物料
+      if(status === "po"){
+        this.multiPoDetailList = [];
+        const requireIds = this.ids;
+        this.newStatus = status;
+        getMatDetailListbyRequireIds(requireIds)
+          .then((response) => {
+            this.multiDoneDetailList = response;           
+            this.viewMultiDoneMatDetail = true;
+          })
+          .catch(() => {});
+        // this.openPoStatus = true;
+      }
       // 入库最小单位改成物料
-      if(status === "done"){
+      else if(status === "done"){
         this.multiDoneDetailList = [];
         const requireIds = this.ids;
+        this.newStatus = status;
         getMatDetailListbyRequireIds(requireIds)
           .then((response) => {
             this.multiDoneDetailList = response;           
@@ -2825,7 +2963,17 @@ export default {
         this.openUnapprovedReason = true;
       }      
     },
-
+    submitPoRequire(){
+      this.openPoStatus = false;
+      var request = {
+        requireIds: this.ids,
+        poDate: this.poDate
+      };
+      updatePo(request).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("更改成功");
+      });
+    },
     submitApprovedForm() {
       this.openUnapprovedReason = false;
       var request = {
@@ -2964,6 +3112,8 @@ export default {
         updateTime: null,
         stockNotice: "0",
         safetyStock: null,
+        expiredStockReason:null,
+        expiredStockStatus:null
       };
       this.resetForm("matForm");
     },
@@ -3066,8 +3216,7 @@ export default {
                 })
                 .catch(() => {});
             });
-          } else {
-            
+          } else {            
             that.$modal
               .confirm("是否提交该需求单信息？")
               .then(function () {
@@ -3165,7 +3314,6 @@ export default {
         return false
       }
       return true
-
     },
     confirmAddExistMat(){
       this.existMatDialog = false
@@ -3211,17 +3359,22 @@ export default {
       this.matForm.reset();
       this.addMatDetailOpen = false;
     },
+    // 确认选择物料，字段转化和合规检查（包括物料编码、剩余库存、相同物品标签的库存检查，采购时间提醒）
     confirmSelectMat(_item) {
+      console.log(_item)
       this.item = _item;
       this.matForm.matCode = this.item.matCode;
       this.matForm.matName = this.item.matName;
       this.matForm.fdCode = this.item.fdCode;
       this.matForm.figNum = this.item.figNum;
-      if (this.item.artNum) {
-        this.matForm.artNum = this.item.artNum;
-      }
       this.matForm.matGroup = this.item.matGroup;
       this.matForm.matClass = this.item.matClass;
+      this.matForm.expiredStockStatus = this.item.expiredStockStatus;
+      this.matForm.expiredStockReason = this.item.expiredStockReason;
+
+      if (this.item.artNum) {
+        this.matForm.artNum = this.item.artNum;
+      }      
       if (this.item.matTag) {
         this.matForm.matTag = this.item.matTag;
       }
@@ -3231,6 +3384,7 @@ export default {
       if (this.item.subcode) {
         this.matForm.subcode = this.item.subcode;
       }
+
       this.matForm.batch = "CG" + this.$moment().format("YYYYMMDDHHmmss");
       if (
         !this.item.safetyStock ||
@@ -3256,7 +3410,7 @@ export default {
           .reduce((acc, num) => acc + num, 0);
         this.matForm.warehouseQuantity = matlabel_quantity;
       });
-      this.$set(this.matForm, "warehouseQuantity", matlabel_quantity);
+      this.$set(this.matForm, "warehouseQuantity", matlabel_quantity);      
 
       var sameTagQuantity = 0;
       var label_query_param_2 = { matTag: this.item.matTag };
@@ -3271,15 +3425,40 @@ export default {
       this.$set(this.matForm, "sameTagQuantity", sameTagQuantity);
       } else {
         this.$set(this.matForm, "sameTagQuantity", 0)
-      }    
+      }  
+      // 显示到货和PO转化时间
+      getRecordPeriods({ matName: this.item.matName }).then((response) => {
+        if (response.data) {
+          var infoMsg = "";
+          if(response.data['poDay'])
+          infoMsg += "平均PO转化周期为"+response.data['poDay']+"天; 预计PO转化日期为："+response.data['poDate'];
+        if(response.data['receivedDay']){
+          infoMsg += "<br>平均到货周期为"+response.data['receivedDay']+"天; 预计到货日期为："+response.data['receivedDate']; 
+        }
+          if(infoMsg !=""){
+            const info = "该物料<b>"+this.item.matName+"</b><br>"+infoMsg;
+            this.$alert(info, '物料周期提示', {
+            confirmButtonText: '我已知悉',
+            dangerouslyUseHTMLString: true,
+            customStyle: {
+              width: '300px' // 设置弹窗宽度
+            },
+            callback: () => {}
+          });  
+          }
+               
+      }});      
       this.selectMatOpen = false;
     },
+    // 取消选择物料
     cancelSelectMat() {
       this.selectMatOpen = false;
     },
+    // 去除一条物料
     handleRemoveMat(index, row) {
       this.requireDetailList.splice(index, 1);
     },
+    // 修改物料新型
     handleEditMat(index, row) {
       this.isEditMat = true;
       this.addMatDetailOpen = true;
@@ -3287,10 +3466,12 @@ export default {
       this.matForm = this.requireDetailList[index];
       this.isSelect = this.matForm['matSource']=="1" ? true :false
     },
+    // 查看提报物料的详情
     handleDetailMat(index, row) {
       this.addMatDetailOpen = true;
       this.matForm = this.requireDetailList[index];
     },
+
     formatDate(dateString) {
       // 尝试将字符串转换为日期对象
       if (dateString === "") {
@@ -3322,7 +3503,7 @@ export default {
       return boolType;
     },
     formatLocation(locationCode){
-      return locationCode+"-"+this.locationDict[locationCode]
+      return locationCode + "-" + this.locationDict[locationCode]
     },
     //查询货位
     getBaselocationList() {

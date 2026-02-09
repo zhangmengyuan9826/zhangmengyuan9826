@@ -40,6 +40,13 @@ export function getDictDataSeqListByDictType(dictType) {
   })
 }
 
+export function getDictDataShortListByDictType(dictType) {
+  return request({
+    url: '/plasmid/dictData/short/' + dictType,
+    method: 'get'    
+  })
+}
+
 // 查询质粒字段数据详细
 export function getDictData(dictId) {
   return request({

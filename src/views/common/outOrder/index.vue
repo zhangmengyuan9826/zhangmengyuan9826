@@ -45,6 +45,20 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="创建人" prop="createBy">
+        <el-select
+          v-model="queryParams.createBy"
+          clearable
+          placeholder="请选择创建人"
+        >
+          <el-option
+            v-for="item in userList"
+            :key="item.userName"
+            :label="item.nickName"
+            :value="item.userName"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="创建时间">
         <el-date-picker
           v-model="dateRange"
@@ -100,11 +114,16 @@
 
     <el-table v-loading="loading" :data="outOrderList" style="width: 100%" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="单据号" align="center" prop="orderNo" />
+      <el-table-column label="单据号" align="center" prop="orderNo" width="160px" />
       <el-table-column label="单据类型" align="center" prop="orderTypeLabel" />
       <el-table-column label="仓库" align="center" prop="warehouseName" />
       <el-table-column label="实验室" align="center" prop="workshopName" />
       <el-table-column label="单据状态" align="center" prop="orderStatusLabel" />
+      <el-table-column label="创建人" align="center" prop="createBy" >
+        <template slot-scope="scope">
+          <span>{{ getUserName(scope.row.createBy) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="创建时间" align="center" prop="createTime">
         <template slot-scope="scope">
           <span>{{$moment(scope.row.createTime).format('YYYY-MM-DD HH:mm')}}</span>
@@ -167,6 +186,15 @@
               </el-select>
             </el-form-item>
           </el-col>
+          <!-- 是否过期物料 -->
+          <el-col :span="8">
+            <el-form-item label="是否过期物料" prop="isExpired">
+              <el-select v-model="form.isExpired" placeholder="请选择">
+                <el-option label="是" value="1"></el-option>
+                <el-option label="否" value="0"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
           <el-form-item label="用途/原因" prop="orderReason">
@@ -190,7 +218,7 @@
           <template slot-scope="scope">
             <el-input-number style="width: 100px" size="small" 
             v-model="scope.row.quantity" controls-position="right" 
-            :min="1" :max="scope.row.maxQuantity" :precision="0"/>
+            :min="1" :max="scope.row.maxQuantity" :precision="0" :disabled="form.isExpired === '1'"/>
           </template>
         </el-table-column>
         <el-table-column label="单位" align="center" prop="unitCode">
@@ -236,7 +264,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="领料人：">
-              <span>{{form.createBy}}</span>
+              <span>{{ getUserName(form.createBy) }}</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -249,6 +277,11 @@
           <el-col :span="8">
             <el-form-item label="实验室：">
               <span>{{form.workshopName}}</span>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="是否过期物料：">
+              <span>{{form.isExpired}}</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -299,6 +332,7 @@ import { listAllLocation } from "@/api/base/location";
 
 // import selectMat from "../../components/select-mat/index"
 import selectMatLabel from "../../components/select-mat-label-out/index";
+import { listUserAll } from "@/api/system/user";
 
 export default {
   name: "OutOrder",
@@ -340,6 +374,7 @@ export default {
         quantity: null,
         orderStatus: null,
         warehouseKeeper: null,
+        createBy: null,
       },
       // 表单参数
       form: {},
@@ -381,6 +416,7 @@ export default {
       labelIdArr: [],
       locationList: [],
       locationDict: {},
+      userList: [],
     };
   },
   created() {
@@ -388,6 +424,7 @@ export default {
     this.getWarehouseList();
     this.getWorkshopList();
     this.getBaselocationList();
+    this.getUserList();
   },
   methods: {
     formatLocation(locationCode){
@@ -401,6 +438,11 @@ export default {
           dict[obj.locationCode] = obj.locationName;
           return dict;
         }, {});
+      });
+    },
+     getUserList() {
+      listUserAll().then((response) => {
+        this.userList = response;
       });
     },
     /** 查询出库单列表 */
@@ -552,7 +594,12 @@ export default {
     openSelectMatLabelDialog(){
       this.selectMatLabelOpen = true;
       this.$nextTick(function(){ 
-        this.$refs.matLabelPage.getList();
+        // this.$refs.matLabelPage.getList();
+        var queryParamsOut= {isExpired: this.form.isExpired,
+          warehouseCode: this.form.warehouseCode
+        };
+
+        this.$refs.matLabelPage.init(queryParamsOut);
       })
     },
     confirmSelectMatLabel(item){
@@ -562,8 +609,8 @@ export default {
         matName: item.matName,
         fdCode: item.fdCode,
         figNum: item.figNum,
-        quantity: 0,
-        maxQuantity: item.maxQuantity,
+        quantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity : 0,
+        maxQuantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity :item.maxQuantity,
         matTag: item.matTag,
         unitCode: item.unitCode,
         batch: item.batch,
@@ -586,8 +633,8 @@ export default {
           figNum: item.figNum,
           matGroup: item.matGroup,
           matClass: item.matClass,
-          quantity: 0,
-          maxQuantity: item.maxQuantity,
+          quantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity : 0,
+          maxQuantity: this.form.isExpired === '1' ? item.quantity - item.receivedQuantity :item.maxQuantity,
           matTag: item.matTag,
           unitCode: item.unitCode,
           batch: item.batch,
@@ -609,6 +656,10 @@ export default {
       this.labelIdArr.splice(this.labelIdArr.indexOf(row.labelId), 1);
       this.matLabelList.splice(index, 1);
     },
+    getUserName(createBy){
+      const user = this.userList.find((u) => u.userName === createBy);
+      return user ? user.nickName : createBy;
+    }
   }
 };
 </script>

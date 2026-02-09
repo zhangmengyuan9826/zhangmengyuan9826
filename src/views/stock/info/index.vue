@@ -83,6 +83,13 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <!-- 非零库存 -->
+      <el-form-item label="非零库存" prop="isNotEmpty">
+        <el-radio-group v-model="queryParams.params.isNotEmpty">
+          <el-radio :label="1">是</el-radio>
+          <el-radio :label="0">否</el-radio>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -226,8 +233,36 @@
               </el-select>
             </el-form-item>
          </el-col>
-
+         <el-col :span="12">
+        <el-form-item label="批次" prop="batch">
+          <el-input v-model="form.batch" :disabled="false" />
+        </el-form-item>
+        </el-col>
         </el-row>
+        <el-row>
+          
+        <el-col :span="12">
+          <el-form-item label="生产日期" prop="prodTime">
+            <el-date-picker
+          clearable
+          v-model="form.prodTime"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择生产日期"
+        >
+        </el-date-picker>
+            </el-form-item></el-col>
+        <el-col :span="12">
+          <el-form-item label="有效期" prop="expiredTime">
+            <el-date-picker
+          clearable
+          v-model="form.expiredTime"
+          type="date"
+          value-format="yyyy-MM-dd"
+          placeholder="请选择有效期"
+        >
+        </el-date-picker>
+            </el-form-item></el-col>    </el-row>
         <el-row>
           <el-col :span="12">
         <el-form-item label="采购数量" prop="quantity">
@@ -269,7 +304,8 @@
 </template>
 
 <script>
-import { listInfo, getStockInfoDetail, handleUpdate } from "@/api/stock/info";
+import { listInfo, handleUpdate } from "@/api/stock/info";
+import {getMatLabel} from "@/api/stock/matLabel"
 import { listAllWarehouse } from "@/api/base/warehouse";
 import { listAllLocation } from "@/api/base/location";
 import { listAllTag } from "@/api/base/tag";
@@ -309,9 +345,13 @@ export default {
         quantity: null,
         supplierCode: null,
         supplierName: null,
-        isExpired: null,
+        isExpired: null,        
+        params:{isNotEmpty: 1,}
       },
-      isExpiredList:[{value:'1','label':'过期'},{value:'2','label':'未过期'}],
+      isExpiredList:[
+        {value:'','label':'全部'},
+        {value:'1','label':'过期'},
+      {value:'2','label':'未过期'}],
       //选择仓库、实验室
       warehouseList: [],
       form: {},
@@ -355,7 +395,11 @@ export default {
     },
     /** 查询库存信息列表 */
     getList() {
-      this.loading = true;      
+      this.loading = true;  
+      // if (!this.queryParams['params']) {
+      //   this.queryParams['params'] = {};
+      // }
+      // this.queryParams['params']['isNotEmpty'] = this.queryParams.isNotEmpty
       listInfo(this.queryParams).then(response => {
         this.infoList = response.rows;
         this.total = response.total;
@@ -385,7 +429,11 @@ export default {
       }, `info_${new Date().getTime()}.xlsx`)
     },
     handleEdit(row) {
-      getStockInfoDetail(row).then((response) => {
+      if (!row['labelId']) {
+        this.$message.error("找不到物料标签信息！");
+        return;
+      }
+      getMatLabel(row.labelId).then((response) => {
         this.form = response.data
         this.form['remainQuantity'] = row.quantity
         this.form['infoId'] = row.infoId

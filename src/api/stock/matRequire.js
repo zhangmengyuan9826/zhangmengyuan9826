@@ -91,3 +91,18 @@ export function getRequireLogs(requireId) {
     method: 'get'
   })
 }
+export function getRecordPeriods(data) {
+  return request({
+    url: '/stock/matRequire/periods/',
+    data: data,
+    method: 'post'
+  })
+}
+
+export function submitPoForm(data) {
+  return request({
+    url: '/stock/matRequire/changeStatusPo',
+    method: 'post',
+    data: data
+  })
+}

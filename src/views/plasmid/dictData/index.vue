@@ -183,6 +183,7 @@
     <!-- 添加或修改质粒字段数据对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="800px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-row>
         <el-col :span="12">
           <el-form-item label="业务类型" prop="manageType">
             <el-select
@@ -221,6 +222,8 @@
             </el-select>
           </el-form-item>
         </el-col>
+        </el-row>
+        <el-row>
         <el-col :span="12">
           <el-form-item label="字段标签" prop="dictLabel">
             <el-input v-model="form.dictLabel" placeholder="请输入字段标签" />
@@ -231,7 +234,9 @@
             <el-input v-model="form.dictValue" placeholder="请输入字段键值" />
           </el-form-item>
         </el-col>
-        <el-col :span="24">
+        </el-row>
+        <el-row>
+        <el-col :span="21">
           <el-form-item label="核酸序列" prop="naSeq">
             <el-input
               type="textarea"
@@ -242,6 +247,17 @@
             />
           </el-form-item>
         </el-col>
+        <el-col :span="3">
+            <el-button
+              type="primary"
+              icon="el-icon-search"
+              size="mini"
+              style="margin-left:10px"
+              @click="fillFormProteinSeq"
+              >翻译</el-button
+            ></el-col>
+        </el-row>
+        <el-row>
         <el-col :span="24">
           <el-form-item label="蛋白序列" prop="proteinSeq">
             <el-input
@@ -253,6 +269,8 @@
             />
           </el-form-item>
         </el-col>
+        </el-row>
+        <el-row>
         <el-col :span="24">
           <el-form-item
             label="具体内容"
@@ -270,6 +288,8 @@
             />
           </el-form-item>
         </el-col>
+        </el-row>
+        <el-row>
         <el-col :span="24">
           <el-form-item label="备注" prop="remark">
             <el-input
@@ -279,6 +299,7 @@
             />
           </el-form-item>
         </el-col>
+        </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -408,6 +429,10 @@ export default {
     this.getList();
   },
   methods: {
+    fillFormProteinSeq(){
+      const proteinSeq = this.translateSequence(this.form.naSeq);
+      this.$set(this.form, "proteinSeq", proteinSeq);
+    },
     validateJSON(rule, value, callback) {
     if (!value || value=="") {
       callback();
@@ -574,6 +599,47 @@ export default {
     },
     getCurVal(val) {
       this.value = val.target.value;
+    },
+    translateSequence(sequence, isRNA = false) {
+      // 遗传密码子表 (标准)
+      const codonTable = {
+        ATA: "I", ATC: "I", ATT: "I", ATG: "M", ACA: "T", ACC: "T", ACG: "T", ACT: "T", AAC: "N", AAT: "N", AAA: "K",
+        AAG: "K", AGC: "S", AGT: "S", AGA: "R", AGG: "R", CTA: "L", CTC: "L", CTG: "L", CTT: "L", CCA: "P", CCC: "P",
+        CCG: "P", CCT: "P", CAC: "H", CAT: "H", CAA: "Q", CAG: "Q", CGA: "R", CGC: "R", CGG: "R", CGT: "R", GTA: "V",
+        GTC: "V", GTG: "V", GTT: "V", GCA: "A", GCC: "A", GCG: "A", GCT: "A", GAC: "D", GAT: "D", GAA: "E", GAG: "E",
+        GGA: "G", GGC: "G", GGG: "G", GGT: "G", TCA: "S", TCC: "S", TCG: "S", TCT: "S", TTC: "F", TTT: "F", TTA: "L",
+        TTG: "L", TAC: "Y", TAT: "Y", TAA: "*", TAG: "*", TGC: "C", TGT: "C", TGA: "*", TGG: "W",
+        // RNA密码子
+        AUA: "I", AUC: "I", AUU: "I", AUG: "M", ACA: "T", ACC: "T", ACG: "T", ACU: "T", AAC: "N", AAU: "N", AAA: "K",
+        AAG: "K", AGC: "S", AGU: "S", AGA: "R", AGG: "R", CUA: "L", CUC: "L", CUG: "L", CUU: "L", CCA: "P", CCC: "P",
+        CCG: "P", CCU: "P", CAC: "H", CAU: "H", CAA: "Q", CAG: "Q", CGA: "R", CGC: "R", CGG: "R", CGU: "R", GUA: "V",
+        GUC: "V", GUG: "V", GUU: "V", GCA: "A", GCC: "A", GCG: "A", GCU: "A", GAC: "D", GAU: "D", GAA: "E", GAG: "E",
+        GGA: "G", GGC: "G", GGG: "G", GGU: "G", UCA: "S", UCC: "S", UCG: "S", UCU: "S", UUC: "F", UUU: "F", UUA: "L",
+        UUG: "L", UAC: "Y", UAU: "Y", UAA: "*", UAG: "*", UGC: "C", UGU: "C", UGA: "*", UGG: "W",
+      };
+
+      // 处理输入序列
+      sequence = sequence.toUpperCase().replace(/\s+/g, "");
+
+      // 如果是DNA，将T转换为U(模拟RNA)
+      if (!isRNA) {
+        sequence = sequence.replace(/T/g, "U");
+      }
+      let protein = "";
+      // 按3个碱基一组进行翻译
+      for (let i = 0; i < sequence.length - 2; i += 3) {
+        const codon = sequence.substr(i, 3);
+        const aminoAcid = codonTable[codon] || "?"; // 未知密码子用?表示
+        protein += aminoAcid;
+      }
+      while(true){
+        if(protein.charAt(protein.length - 1)=="*"){
+          protein = protein.substr(0, protein.length - 1)
+        } else{
+          break
+        }        
+      }      
+      return protein;
     },
   },
 };
