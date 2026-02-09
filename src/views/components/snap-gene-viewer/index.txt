@@ -1,0 +1,554 @@
+<!-- components/SnapGeneViewer.vue -->
+<template>
+  <el-dialog
+    :title="dialogTitle"
+    :visible.sync="visible"
+    width="90%"
+    top="5vh"
+    :fullscreen="isFullscreen"
+    @close="handleClose"
+    custom-class="snapgene-viewer-dialog"
+  >
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <el-button-group>
+        <el-button 
+          size="small" 
+          icon="el-icon-zoom-in" 
+          @click="zoomIn"
+          title="放大"
+        />
+        <el-button 
+          size="small" 
+          icon="el-icon-zoom-out" 
+          @click="zoomOut"
+          title="缩小"
+        />
+        <el-button 
+          size="small" 
+          icon="el-icon-refresh" 
+          @click="rotatePlasmid"
+          title="旋转"
+        />
+        <el-button 
+          size="small" 
+          :icon="isFullscreen ? 'el-icon-close' : 'el-icon-full-screen'"
+          @click="toggleFullscreen"
+          :title="isFullscreen ? '退出全屏' : '全屏'"
+        />
+      </el-button-group>
+      
+      <div class="gene-info">
+        <span v-if="currentGene">基因: {{ currentGene.geneName }}</span>
+        <span v-if="plasmidData">长度: {{ plasmidData.sequence.length }} bp</span>
+      </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-container">
+      <el-progress 
+        type="circle" 
+        :percentage="loadProgress" 
+        :status="loadStatus"
+        :width="100"
+      >
+        <span v-if="loadError">{{ loadError }}</span>
+      </el-progress>
+      <p>{{ loadMessage }}</p>
+    </div>
+
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="error-container">
+      <el-result
+        icon="error"
+        title="加载失败"
+        :sub-title="error"
+      >
+        <template #extra>
+          <el-button type="primary" @click="retryLoad">
+            重试
+          </el-button>
+        </template>
+      </el-result>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div v-else class="viewer-container">
+      <!-- 质粒图谱显示区域 -->
+      <div 
+        ref="plasmidContainer" 
+        class="plasmid-container"
+        :style="{ 
+          transform: `scale(${zoomLevel}) rotate(${rotation}deg)` 
+        }"
+      />
+      
+      <!-- 特征信息面板 -->
+      <div class="features-panel">
+        <h3>特征列表</h3>
+        <el-table
+          :data="features"
+          height="400"
+          style="width: 100%"
+          @row-click="highlightFeature"
+        >
+          <el-table-column
+            prop="name"
+            label="特征名称"
+            width="150"
+          />
+          <el-table-column
+            prop="type"
+            label="类型"
+            width="100"
+          />
+          <el-table-column
+            label="位置"
+            width="120"
+          >
+            <template slot-scope="scope">
+              {{ scope.row.start }} - {{ scope.row.end }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="strand"
+            label="链"
+            width="60"
+          />
+          <el-table-column
+            prop="notes"
+            label="备注"
+            show-overflow-tooltip
+          />
+        </el-table>
+      </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <template #footer>
+      <el-button @click="handleClose">关闭</el-button>
+      <el-button 
+        type="primary" 
+        @click="downloadJson"
+        :loading="downloadingJson"
+      >
+        导出JSON数据
+      </el-button>
+      <el-button 
+        type="success"
+        @click="downloadSequence"
+        :loading="downloadingSequence"
+      >
+        导出序列文件
+      </el-button>
+    </template>
+  </el-dialog>
+</template>
+
+<script>
+import { snapgeneToJson } from '@teselagen/bio-parsers';
+let GenbankViewer;
+let BioRender;
+
+// 动态导入，避免构建错误
+const loadViewerLibraries = async () => {
+  try {
+    // 尝试加载GenbankViewer
+    GenbankViewer = (await import('genbank-js')).default;
+    return 'genbank';
+  } catch (e) {
+    console.log('GenBank viewer not available:', e);
+  }
+  
+  try {
+    // 备用方案：使用简单的Canvas绘图
+    return 'canvas';
+  } catch (e) {
+    console.error('All viewers failed:', e);
+    return 'none';
+  }
+};export default {
+  name: 'SnapGeneViewer',
+  
+  data() {
+    return {
+      // ... 原有数据
+      viewerType: '', // 使用的查看器类型
+    };
+  },
+  
+  methods: {
+    // 渲染质粒图谱（修改版）
+    async renderPlasmid() {
+      if (!this.plasmidData || !this.$refs.plasmidContainer) {
+        throw new Error('缺少渲染数据或容器');
+      }
+      
+      // 加载查看器库
+      if (!this.viewerType) {
+        this.viewerType = await loadViewerLibraries();
+      }
+      
+      // 清空容器
+      this.$refs.plasmidContainer.innerHTML = '';
+      
+      switch (this.viewerType) {
+        case 'genbank':
+          await this.renderWithGenbankViewer();
+          break;
+        case 'canvas':
+          await this.renderWithCanvas();
+          break;
+        default:
+          await this.renderSimpleView();
+      }
+    },
+    
+    // 使用GenbankViewer渲染
+    async renderWithGenbankViewer() {
+      try {
+        // 创建GenBank格式的数据
+        const genbankData = this.convertToGenbankFormat();
+        
+        // 创建查看器
+        const viewer = new GenbankViewer(this.$refs.plasmidContainer, {
+          sequence: this.plasmidData.sequence,
+          features: this.plasmidData.features,
+          circular: true,
+          width: 600,
+          height: 600
+        });
+        
+        viewer.render();
+        this.jsPlasmid = viewer; // 保存实例以便清理
+        
+      } catch (error) {
+        console.error('GenBank viewer渲染失败:', error);
+        // 降级到简单渲染
+        await this.renderSimpleView();
+      }
+    },
+    
+    // 使用Canvas自定义渲染
+    async renderWithCanvas() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 600;
+      canvas.style.width = '100%';
+      canvas.style.height = 'auto';
+      
+      this.$refs.plasmidContainer.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      
+      // 绘制圆形质粒
+      this.drawCircularPlasmid(ctx);
+      
+      // 绘制特征
+      this.drawFeatures(ctx);
+      
+      this.canvas = canvas;
+    },
+    
+    // 绘制圆形质粒
+    drawCircularPlasmid(ctx) {
+      const centerX = 300;
+      const centerY = 300;
+      const radius = 200;
+      
+      // 绘制外圈
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = '#3a8ee6';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      
+      // 绘制内圈
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius - 10, 0, Math.PI * 2);
+      ctx.strokeStyle = '#e6a23c';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // 绘制刻度
+      const bpCount = this.plasmidData.sequence.length;
+      for (let i = 0; i < 360; i += 30) {
+        const angle = (i * Math.PI) / 180;
+        const x1 = centerX + (radius - 5) * Math.cos(angle);
+        const y1 = centerY + (radius - 5) * Math.sin(angle);
+        const x2 = centerX + radius * Math.cos(angle);
+        const y2 = centerY + radius * Math.sin(angle);
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = '#909399';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // 添加刻度标签
+        const position = Math.round((i / 360) * bpCount);
+        ctx.fillStyle = '#303133';
+        ctx.font = '10px Arial';
+        ctx.fillText(position.toString(), x2 + 5, y2);
+      }
+    },
+    
+    // 绘制特征
+    drawFeatures(ctx) {
+      if (!this.plasmidData.features || this.plasmidData.features.length === 0) {
+        return;
+      }
+      
+      const centerX = 300;
+      const centerY = 300;
+      const radius = 150;
+      const bpCount = this.plasmidData.sequence.length;
+      
+      // 特征颜色映射
+      const featureColors = {
+        'gene': '#67c23a',
+        'CDS': '#409eff',
+        'promoter': '#f56c6c',
+        'terminator': '#e6a23c',
+        'origin': '#909399',
+        'default': '#9b59b6'
+      };
+      
+      this.plasmidData.features.forEach(feature => {
+        const startAngle = (feature.start / bpCount) * Math.PI * 2;
+        const endAngle = (feature.end / bpCount) * Math.PI * 2;
+        const color = featureColors[feature.type] || featureColors.default;
+        
+        // 绘制特征弧段
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 15;
+        ctx.stroke();
+        
+        // 添加特征标签
+        const midAngle = (startAngle + endAngle) / 2;
+        const labelRadius = radius + 25;
+        const x = centerX + labelRadius * Math.cos(midAngle);
+        const y = centerY + labelRadius * Math.sin(midAngle);
+        
+        ctx.fillStyle = color;
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(feature.name || feature.type, x, y);
+      });
+    },
+    
+    // 简单文本视图（最简方案）
+    async renderSimpleView() {
+      const container = this.$refs.plasmidContainer;
+      
+      // 创建信息卡片
+      const infoCard = document.createElement('div');
+      infoCard.className = 'plasmid-info-card';
+      infoCard.innerHTML = `
+        <h3>质粒信息</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">序列长度:</span>
+            <span class="value">${this.plasmidData.sequence.length} bp</span>
+          </div>
+          <div class="info-item">
+            <span class="label">特征数量:</span>
+            <span class="value">${this.plasmidData.features ? this.plasmidData.features.length : 0}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">AT含量:</span>
+            <span class="value">${this.calculateATContent()}%</span>
+          </div>
+        </div>
+        
+        <h4>特征列表</h4>
+        <div class="features-list">
+          ${this.renderFeaturesList()}
+        </div>
+        
+        <h4>序列预览</h4>
+        <div class="sequence-preview">
+          <code>${this.plasmidData.sequence.substring(0, 100)}...</code>
+        </div>
+      `;
+      
+      container.appendChild(infoCard);
+    },
+    
+    // 计算AT含量
+    calculateATContent() {
+      if (!this.plasmidData.sequence) return 0;
+      
+      const sequence = this.plasmidData.sequence.toUpperCase();
+      const atCount = (sequence.match(/[AT]/g) || []).length;
+      const total = sequence.length;
+      
+      return ((atCount / total) * 100).toFixed(1);
+    },
+    
+    // 渲染特征列表HTML
+    renderFeaturesList() {
+      if (!this.plasmidData.features) return '<p>无特征信息</p>';
+      
+      return this.plasmidData.features.map(feature => `
+        <div class="feature-item" style="border-left: 4px solid ${this.getFeatureColor(feature.type)}">
+          <div class="feature-header">
+            <strong>${feature.name || '未命名'}</strong>
+            <span class="feature-type">${feature.type || '未知'}</span>
+          </div>
+          <div class="feature-details">
+            位置: ${feature.start + 1}-${feature.end} 
+            | 长度: ${feature.end - feature.start} bp
+            ${feature.strand ? ` | 链: ${feature.strand === 1 ? '+' : '-'}` : ''}
+          </div>
+          ${feature.notes ? `<div class="feature-notes">备注: ${feature.notes}</div>` : ''}
+        </div>
+      `).join('');
+    },
+    
+    // 获取特征颜色
+    getFeatureColor(type) {
+      const colorMap = {
+        'gene': '#67c23a',
+        'CDS': '#409eff',
+        'promoter': '#f56c6c',
+        'terminator': '#e6a23c',
+        'origin': '#909399',
+        'primer': '#9b59b6',
+        'restriction_site': '#e74c3c',
+        'default': '#95a5a6'
+      };
+      return colorMap[type] || colorMap.default;
+    },
+    
+    // 转换为GenBank格式
+    convertToGenbankFormat() {
+      const features = (this.plasmidData.features || []).map(feature => ({
+        ...feature,
+        strand: feature.strand || 1,
+        type: feature.type || 'misc_feature'
+      }));
+      
+      return {
+        LOCUS: {
+          name: this.geneData.geneName || 'Unknown',
+          length: this.plasmidData.sequence.length,
+          type: 'DNA',
+          topology: 'circular'
+        },
+        DEFINITION: this.plasmidData.name || 'No definition',
+        ACCESSION: this.geneData.id || '',
+        VERSION: '1.0',
+        KEYWORDS: '.',
+        SOURCE: 'SnapGene file',
+        ORGANISM: 'Unknown organism',
+        FEATURES: features,
+        ORIGIN: this.plasmidData.sequence
+      };
+    },
+    
+    // 清理资源
+    cleanup() {
+      // 清理Canvas
+      if (this.canvas) {
+        this.canvas.remove();
+        this.canvas = null;
+      }
+      
+      // 清理查看器实例
+      if (this.jsPlasmid && this.jsPlasmid.destroy) {
+        this.jsPlasmid.destroy();
+      }
+      
+      this.jsPlasmid = null;
+    }
+  }
+};
+</script>
+
+<style scoped>
+/* 添加样式 */
+.plasmid-info-card {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.info-item {
+  padding: 10px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.info-item .label {
+  color: #6c757d;
+  margin-right: 8px;
+}
+
+.info-item .value {
+  font-weight: bold;
+  color: #495057;
+}
+
+.features-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 15px 0;
+}
+
+.feature-item {
+  padding: 10px;
+  margin: 8px 0;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.feature-type {
+  font-size: 12px;
+  padding: 2px 8px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  color: #6c757d;
+}
+
+.feature-details {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+.feature-notes {
+  font-size: 11px;
+  color: #868e96;
+  font-style: italic;
+}
+
+.sequence-preview {
+  background: #f1f3f4;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+</style>

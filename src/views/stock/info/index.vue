@@ -345,9 +345,8 @@ export default {
         quantity: null,
         supplierCode: null,
         supplierName: null,
-        isExpired: null,
-        isNotEmpty: 1,
-        params:{}
+        isExpired: null,        
+        params:{isNotEmpty: 1,}
       },
       isExpiredList:[
         {value:'','label':'全部'},

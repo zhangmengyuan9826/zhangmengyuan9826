@@ -329,6 +329,10 @@
               原文件<i class="el-icon-arrow-down el-icon--right"></i>
             </el-button>
             <el-dropdown-menu slot="dropdown">
+              <!-- 在线浏览 -->
+              <!-- <el-dropdown-item
+                :disabled="!scope.row.originalFilename"
+                @click.native="viewSnapGeneFile(scope.row)">在线浏览</el-dropdown-item> -->
               <el-dropdown-item :disabled="!scope.row.originalFilename" @click.native="downloadSnapGeneFile(scope.row)">下载文件</el-dropdown-item>
               <el-dropdown-item @click.native="uploadSnapGeneFile(scope.row)" v-hasPermi="['plasmid:gene:edit']">上传文件</el-dropdown-item>
             </el-dropdown-menu>
@@ -902,7 +906,11 @@
         <el-button @click="uploadSnapGene.open = false">取 消</el-button>
       </div>
     </el-dialog>
-
+<dna-file-parser
+    :visible="showDnaParser"
+    :gene-data="selectedGeneForParse"
+    @close="onCloseDnaParser"
+  />
   </div>
 </template>
 
@@ -920,6 +928,7 @@ import {
   getDictDataSeqListByDictType,
 } from "@/api/plasmid/dictData";
 import { listPVNames, getPlasmidVentorByName } from "@/api/plasmid/meta";
+import DnaFileParser from "../../components/dna-file-parser/index";
 import { getDicts } from "@/api/system/dict/data";
 import { listUserAll } from "@/api/system/user";
 
@@ -928,6 +937,9 @@ import { Message } from "element-ui";
 
 export default {
   name: "Gene",
+  components: {
+    DnaFileParser
+  },
   data() {
     return {
       // 遮罩层
@@ -1116,7 +1128,8 @@ export default {
       showSnapGeneFile: false,
       currentGeneId: null,
       currentGeneName: "",
-      
+      showDnaParser: false,
+      selectedGeneForParse: null
     };
   },
   computed: {},
@@ -1197,6 +1210,43 @@ export default {
     this.initData();
   },
   methods: {
+  // 查看SnapGene文件
+    // 修改你的viewSnapGeneFile方法
+    async viewSnapGeneFile(row) {
+      if (!row.originalFilename) {
+        this.$message.warning('该基因没有关联的文件');
+        return;
+      }
+      
+      // 检查文件类型
+      if (!row.originalFilename.endsWith('.dna')) {
+        this.$message.warning('仅支持.dna格式的文件');
+        return;
+      }
+      
+      try {
+        // 简单检查文件是否存在
+        const loading = this.$loading({
+          lock: true,
+          text: '正在检查文件...',
+          spinner: 'el-icon-loading'
+        });
+        
+       
+          this.selectedGeneForParse = {
+            ...row,
+            geneName: row.gene_name || row.geneName
+          };
+          this.showDnaParser = true;
+        
+        
+        loading.close();
+        
+      } catch (error) {
+        console.error('检查文件失败:', error);
+        this.$message.error('无法访问文件: ' + (error.message || '未知错误'));
+      }
+    },
   beforeUploadSnapGene(file) {
     if (file.name !== this.currentGeneName+".dna") {
         this.$message.error(`文件名"${file.name}"必须与基因名称"${this.currentGeneName}"一致！`);
@@ -1810,6 +1860,10 @@ export default {
         Message.error("获取完整序列失败，请稍后重试！");
         this.loadFullSeq = false;
       });
+    },
+    onCloseDnaParser() {
+      this.showDnaParser = false;
+      this.selectedGeneForParse = null;
     },
     /**
      * 将核酸序列翻译为蛋白质序列

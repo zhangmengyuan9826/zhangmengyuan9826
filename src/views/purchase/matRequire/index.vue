@@ -1299,7 +1299,7 @@
             <el-form-item label="货位" prop="locationCode">
               <el-select v-model="matForm.locationCode" placeholder="请选择货位" :rules="dynamicRules">
                 <el-option
-                  v-for="(item, index) in locationList"
+                  v-for="item in locationList"
                   :key="item.locationCode"
                   :label="formatLocation(item.locationCode)"
                   :value="item.locationCode"

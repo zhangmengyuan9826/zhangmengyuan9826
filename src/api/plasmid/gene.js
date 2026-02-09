@@ -90,3 +90,10 @@ export function listGeneNo() {
     method: 'get',
   })
 }
+// 下载基因的DNA文件
+export function downloadDnaFile(geneId) {
+  return request({
+    url: `/plasmid/gene/download/${geneId}`,
+    method: 'get',
+  })
+}
