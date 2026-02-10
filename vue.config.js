@@ -34,15 +34,15 @@ module.exports = {
     proxy: {
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        // target: `http://127.0.0.1:9991`,
-        target: `https://10.16.68.6:8004`,
+        target: `http://127.0.0.1:9991`,
+        // target: `https://10.16.68.6:8004`,
         changeOrigin: true,
         // pathRewrite: {
         //   ['^' + process.env.VUE_APP_BASE_API]: ''
         // }
       }
     },
-    https: true,
+    https: false,
     disableHostCheck: true
   },
   css: {
@@ -72,12 +72,11 @@ module.exports = {
   chainWebpack(config) {
     config.plugins.delete('preload') // TODO: need test
     config.plugins.delete('prefetch') // TODO: need test
-
     // set svg-sprite-loader
     config.module
       .rule('svg')
       .exclude.add(resolve('src/assets/icons'))
-      .end()
+      .end();
     config.module
       .rule('icons')
       .test(/\.svg$/)
