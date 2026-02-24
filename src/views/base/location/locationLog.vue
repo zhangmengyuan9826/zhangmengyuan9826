@@ -49,6 +49,17 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <!-- 操作类型 -->
+      <el-form-item label="操作类型" prop="operType">
+        <el-select v-model="queryParams.operType" placeholder="请选择操作类型" clearable>
+          <el-option
+            v-for="dict in operTypeDict"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -56,7 +67,7 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
+      <!-- <el-col :span="1.5">
         <el-button
           disabled
           type="danger"
@@ -66,7 +77,7 @@
           @click="handleDelete"
           v-hasPermi="['base:location_log:remove']"
         >删除</el-button>
-      </el-col>
+      </el-col> -->
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -88,13 +99,23 @@
       <el-table-column label="货架编码" align="center" prop="locationCode" />
       <el-table-column label="原-货架名" align="center" prop="locationNameOld" />
       <el-table-column label="新-货架名" align="center" prop="locationNameNew" />
-      <el-table-column label="更新日期" align="center" prop="operTime" width="180">
+      <el-table-column label="更新时间" align="center" prop="operTime" width="180">
+
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.operTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.operTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="更新者" align="center" prop="operUser" />
-      
+      <el-table-column label="操作类型" align="center" prop="operType" width="120">
+        <template slot-scope="scope">
+          <el-tag 
+            :type="getTagType(scope.row.operType)"
+            :class="getTagClass(scope.row.operType)"
+          >
+            {{ getDictLabel(operTypeDict, scope.row.operType) }}
+          </el-tag>
+        </template>
+      </el-table-column>
     </el-table>
     
     <pagination
@@ -142,7 +163,8 @@ export default {
         locationNameOld: null,
         locationNameNew: null,
         operTime: null,
-        operUser: null
+        operUser: null,
+        operType: null
       },
       // 表单参数
       form: {},
@@ -169,13 +191,43 @@ export default {
         operUser: [
           { required: true, message: "更新者不能为空", trigger: "blur" }
         ]
-      }
+      },
+      // 操作类型，operType：add-新增 edit-修改 delete-删除
+      operTypeDict: [
+        { label: "新增", value: "add" },
+        { label: "修改", value: "edit" },
+        { label: "删除", value: "delete" }
+      ]
     };
   },
   created() {
     this.getList();
   },
   methods: {
+
+
+    getDictLabel(dict, value) {
+      const item = dict.find(item => item.value === value);
+      return item ? item.label : value;
+    },
+    getTagType(operType) {
+    const typeMap = {
+      'add': 'success',
+      'edit': 'warning',
+      'delete': 'danger'
+    }
+    return typeMap[operType] || 'info'
+  },
+  
+  // 或者自定义样式类
+  getTagClass(operType) {
+    const classMap = {
+      'add': 'tag-add',
+      'edit': 'tag-edit',
+      'delete': 'tag-delete'
+    }
+    return classMap[operType] || ''
+  },
     /** 查询货架变更记录列表 */
     getList() {
       this.loading = true;
@@ -198,7 +250,8 @@ export default {
         locationNameOld: null,
         locationNameNew: null,
         operTime: null,
-        operUser: null
+        operUser: null,
+        operType: null
       };
       this.resetForm("form");
     },
